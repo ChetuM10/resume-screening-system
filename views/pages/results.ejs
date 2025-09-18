@@ -1,0 +1,139 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+
+<div class="container my-4">
+  <!-- Back Button -->
+  <a href="/screening" class="back-button">
+    <i class="fas fa-arrow-left"></i>
+    Back to Screening
+  </a>
+
+  <!-- Page Header -->
+  <div class="detail-header">
+    <h1 class="detail-title">
+      <i class="fas fa-search"></i>
+      Screening Results
+    </h1>
+    <p class="detail-subtitle">
+      <% if (typeof jobTitle !== 'undefined') { %>
+        Position: <%= jobTitle %>
+      <% } %>
+    </p>
+    <p class="detail-subtitle">
+      Found <%= totalCandidates || 0 %> candidates in database
+    </p>
+  </div>
+
+  <!-- Results Section -->
+  <% if (results && results.length > 0) { %>
+    <div class="screening-results-grid">
+      <% results.forEach((r, i) => { %>
+        <div class="candidate-result-card position-relative">
+          <!-- Match Score Badge -->
+          <div class="match-score-display">
+            <%= Math.round(r.matchScore || 0) %>%
+          </div>
+
+          <!-- Candidate Header -->
+          <div class="row">
+            <div class="col-md-8">
+              <h5 class="candidate-name mb-3">
+                <i class="fas fa-user-circle text-primary me-2"></i>
+                <%= r.candidateName || 'Unknown Candidate' %>
+              </h5>
+              
+              <!-- Contact Information -->
+              <div class="candidate-info-text">
+                <% if (r.email) { %>
+                  <p class="mb-2">
+                    <i class="fas fa-envelope text-muted me-2"></i>
+                    <strong>Email:</strong> <%= r.email %>
+                  </p>
+                <% } %>
+                
+                <% if (r.phone) { %>
+                  <p class="mb-2">
+                    <i class="fas fa-phone text-muted me-2"></i>
+                    <strong>Phone:</strong> <%= r.phone %>
+                  </p>
+                <% } %>
+                
+                <p class="mb-2">
+                  <i class="fas fa-hashtag text-muted me-2"></i>
+                  <strong>Rank:</strong> #<%= r.overallRank || (i+1) %>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Skills Match Section -->
+          <% if (r.skillsMatch && r.skillsMatch.matched && r.skillsMatch.matched.length > 0) { %>
+            <div class="skill-match-details">
+              <h6><i class="fas fa-check-circle text-success me-2"></i>Matched Skills</h6>
+              <div class="resume-skills">
+                <% r.skillsMatch.matched.forEach(skill => { %>
+                  <span class="skill-badge"><%= skill %></span>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Match Reasons -->
+          <% if (r.reasons && r.reasons.length > 0) { %>
+            <div class="skill-match-details">
+              <h6><i class="fas fa-info-circle text-info me-2"></i>Match Reasons</h6>
+              <div class="candidate-details-text">
+                <% r.reasons.forEach(reason => { %>
+                  <p class="mb-1"><i class="fas fa-chevron-right me-2"></i><%= reason %></p>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Experience & Education -->
+          <div class="candidate-info-text mt-3">
+            <% if (r.experience && r.experience.years) { %>
+              <span class="badge me-2">
+                <i class="fas fa-briefcase me-1"></i>
+                <%= r.experience.years %> years exp.
+              </span>
+            <% } %>
+            
+            <% if (r.education && r.education.degree) { %>
+              <span class="badge me-2">
+                <i class="fas fa-graduation-cap me-1"></i>
+                <%= r.education.degree %>
+              </span>
+            <% } %>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="card-actions mt-3">
+            <% if (r.resumeId || r._id) { %>
+              <a href="/candidate/<%= r.resumeId || r._id %>" class="btn-primary">
+                <i class="fas fa-eye"></i>
+                View Details
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <!-- Empty State -->
+    <div class="empty-state">
+      <i class="fas fa-search"></i>
+      <h3>No Candidates Found</h3>
+      <p>No candidates match your screening criteria.</p>
+      <p>Try adjusting your requirements or upload more resumes.</p>
+      <div class="card-actions mt-3">
+        <a href="/upload" class="btn-primary">
+          <i class="fas fa-upload"></i>
+          Upload More Resumes
+        </a>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

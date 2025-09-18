@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Top Match Scores' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            padding: 2rem 0;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            color: white;
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .page-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+        
+        /* ✅ EQUAL HEIGHT CARDS FIX */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .col-lg-6, .col-xl-4 {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        .candidate-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px; /* Fixed minimum height */
+            width: 100%;
+        }
+        
+        .action-buttons {
+            margin-top: auto; /* Push buttons to bottom */
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .candidate-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ffd700, #ff8c00, #ff6b6b, #4ecdc4, #45b7d1);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .candidate-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        
+        .candidate-name {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .match-score {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+        
+        .score-excellent { color: #28a745; }
+        .score-good { color: #ffc107; }
+        .score-average { color: #fd7e14; }
+        .score-poor { color: #dc3545; }
+        
+        .trophy-gold { color: #ffd700; }
+        .trophy-silver { color: #c0c0c0; }
+        .trophy-bronze { color: #cd7f32; }
+        
+        .job-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .screening-date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .candidate-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .detail-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .skills-section {
+            margin: 1.5rem 0;
+        }
+        
+        .skills-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .skills-count {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .skill-tag {
+            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 0.3rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+        }
+        
+        .btn-profile, .btn-screening, .btn-delete {
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .btn-profile {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-screening {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .btn-screening:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        }
+        
+        .btn-delete:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            background: #6c757d !important;
+        }
+        
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            text-decoration: none;
+            transform: translateX(-3px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 20px;
+            margin: 2rem 0;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .summary-stats {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            display: block;
+        }
+        
+        .stat-label {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Back Button -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="/" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-trophy me-3 trophy-gold"></i>
+                Top-Scoring Candidates
+            </h1>
+            <p class="page-subtitle">
+                <%= pageSubtitle || 'Highest scoring candidates across all screenings' %>
+            </p>
+            <p class="text-white">
+                Showing top candidates from the most recent screening sessions. Rankings are based on overall match scores across skills, experience, and education requirements.
+            </p>
+        </div>
+
+        <!-- Summary Statistics -->
+        <% if (typeof candidates !== 'undefined' && candidates && Array.isArray(candidates) && candidates.length > 0) { %>
+            <div class="summary-stats">
+                <div class="stats-grid">
+                    <div>
+                        <span class="stat-number"><%= candidates.length %></span>
+                        <span class="stat-label">Top Candidates</span>
+                    </div>
+                    <div>
+                        <span class="stat-number">
+                            <%= candidates.filter(c => c.matchScore >= 80).length %>
+                        </span>
+                        <span class="stat-label">High Scorers (80%+)</span>
+                    </div>
+                    <div>
+                        <span class="stat-number">
+                            <%= averageScore || (candidates.length > 0 ? Math.round(candidates.reduce((sum, c) => sum + (c.matchScore || 0), 0) / candidates.length) : 0) %>%
+                        </span>
+                        <span class="stat-label">Average Score</span>
+                    </div>
+                    <div>
+                        <span class="stat-number">
+                            <%= candidates.length > 0 ? Math.max(...candidates.map(c => c.matchScore || 0)) : 0 %>%
+                        </span>
+                        <span class="stat-label">Highest Score</span>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Top Candidates List -->
+        <div class="row">
+            <% if (typeof candidates !== 'undefined' && candidates && Array.isArray(candidates) && candidates.length > 0) { %>
+                <% candidates.forEach((candidate, index) => { %>
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="candidate-card" id="candidate-<%= candidate.resumeId %>">
+                            <!-- Candidate Header -->
+                            <div class="candidate-header">
+                                <div class="flex-grow-1">
+                                    <h3 class="candidate-name">
+                                        <% if (index < 3) { %>
+                                            <i class="fas fa-trophy me-2 trophy-<%= index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze' %>"></i>
+                                        <% } %>
+                                        <%= candidate.candidateName || 'Unknown Candidate' %>
+                                    </h3>
+                                </div>
+                                <div class="text-end">
+                                    <div class="match-score score-<%= (candidate.matchScore || 0) >= 80 ? 'excellent' : (candidate.matchScore || 0) >= 60 ? 'good' : (candidate.matchScore || 0) >= 40 ? 'average' : 'poor' %>">
+                                        <%= candidate.matchScore || 0 %>%
+                                    </div>
+                                    <small class="text-muted">Match Score</small>
+                                </div>
+                            </div>
+
+                            <!-- Job Info -->
+                            <% if (candidate.jobTitle) { %>
+                                <div class="job-info">
+                                    <div class="job-title">
+                                        <i class="fas fa-briefcase me-2"></i>
+                                        <%= candidate.jobTitle %>
+                                    </div>
+                                    <div class="screening-date">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        Screened: <%= candidate.screeningDate ? new Date(candidate.screeningDate).toLocaleDateString() : 'Unknown' %>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <!-- Candidate Details -->
+                            <div class="candidate-details">
+                                <% if (candidate.email) { %>
+                                    <div class="detail-item">
+                                        <i class="fas fa-envelope text-primary"></i>
+                                        <span><%= candidate.email %></span>
+                                    </div>
+                                <% } %>
+
+                                <% if (candidate.phone) { %>
+                                    <div class="detail-item">
+                                        <i class="fas fa-phone text-success"></i>
+                                        <span><%= candidate.phone %></span>
+                                    </div>
+                                <% } %>
+
+                                <% if (candidate.experienceYears !== undefined) { %>
+                                    <div class="detail-item">
+                                        <i class="fas fa-user-tie text-info"></i>
+                                        <span><%= candidate.experienceYears %> years experience</span>
+                                    </div>
+                                <% } %>
+
+                                <div class="detail-item">
+                                    <i class="fas fa-chart-line text-warning"></i>
+                                    <span>Rank #<%= candidate.overallRank || (index + 1) %> overall</span>
+                                </div>
+                            </div>
+
+                            <!-- Skills Section -->
+                            <% if (candidate.skills && Array.isArray(candidate.skills) && candidate.skills.length > 0) { %>
+                                <div class="skills-section">
+                                    <div class="skills-header">
+                                        <strong class="text-muted">
+                                            <i class="fas fa-tools me-2"></i>Skills
+                                        </strong>
+                                        <span class="skills-count">
+                                            <%= candidate.skills.length %> total
+                                        </span>
+                                    </div>
+                                    <div class="skills-container">
+                                        <% candidate.skills.slice(0, 8).forEach(skill => { %>
+                                            <span class="skill-tag"><%= skill %></span>
+                                        <% }) %>
+                                        <% if (candidate.skills.length > 8) { %>
+                                            <span class="skill-tag" style="background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);">
+                                                +<%= candidate.skills.length - 8 %> more
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <!-- ✅ ACTION BUTTONS WITH DELETE FUNCTIONALITY -->
+                            <div class="action-buttons">
+                                <% if (candidate.resumeId) { %>
+                                    <a href="/profile/<%= candidate.resumeId %>" class="btn-profile">
+                                        <i class="fas fa-user-circle me-2"></i>
+                                        View Profile
+                                    </a>
+                                <% } %>
+                                
+                                <% if (candidate.screeningId) { %>
+                                    <a href="/screening/results/<%= candidate.screeningId %>" class="btn-screening">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        View Screening
+                                    </a>
+                                <% } %>
+                                
+                                <!-- ✅ DELETE BUTTON -->
+                                <% if (candidate.resumeId) { %>
+                                    <button class="btn-delete" 
+                                            data-resume-id="<%= candidate.resumeId %>" 
+                                            data-candidate-name="<%= candidate.candidateName || 'Unknown Candidate' %>">
+                                        <i class="fas fa-trash me-2"></i>
+                                        Delete
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <!-- Empty State -->
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-trophy"></i>
+                        <h3>No Top Matches Yet</h3>
+                        <p class="text-muted">Complete some screening sessions to see top-scoring candidates here.</p>
+                        <div class="mt-4">
+                            <a href="/screening" class="btn-profile me-3">
+                                <i class="fas fa-search me-2"></i>
+                                Start Screening
+                            </a>
+                            <a href="/upload" class="btn-screening">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Resumes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- ✅ DELETE FUNCTIONALITY JAVASCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Top-scores page loaded');
+
+            // ✅ DELETE BUTTON FUNCTIONALITY
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    const resumeId = this.getAttribute('data-resume-id');
+                    const candidateName = this.getAttribute('data-candidate-name');
+                    const candidateCard = this.closest('.candidate-card');
+                    
+                    // Confirm deletion with detailed warning
+                    if (!confirm(`⚠️ DELETE CANDIDATE\n\nCandidate: ${candidateName}\n\nThis will permanently remove:\n• Resume from database\n• All screening results\n• Cannot be undone!\n\nAre you sure?`)) {
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const originalHTML = this.innerHTML;
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+                    
+                    try {
+                        console.log(`🗑️ Deleting candidate: ${candidateName} (${resumeId})`);
+                        
+                        const response = await fetch(`/api/resumes/${resumeId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            console.log('✅ Candidate deleted successfully:', result);
+                            
+                            // Show success state
+                            this.innerHTML = '<i class="fas fa-check me-2"></i>Deleted!';
+                            this.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                            
+                            // Animate card removal
+                            candidateCard.style.transition = 'all 0.6s ease';
+                            candidateCard.style.opacity = '0';
+                            candidateCard.style.transform = 'scale(0.8) translateY(-30px)';
+                            
+                            setTimeout(() => {
+                                candidateCard.remove();
+                                
+                                // Check if no candidates left
+                                const remainingCandidates = document.querySelectorAll('.candidate-card');
+                                if (remainingCandidates.length === 0) {
+                                    alert('✅ All candidates have been removed!\n\nReloading page to show empty state...');
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1000);
+                                } else {
+                                    // Show success notification
+                                    const notification = document.createElement('div');
+                                    notification.innerHTML = `
+                                        <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>${candidateName}</strong> has been deleted successfully!
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    `;
+                                    document.body.appendChild(notification);
+                                    
+                                    setTimeout(() => {
+                                        notification.remove();
+                                    }, 5000);
+                                }
+                            }, 600);
+                            
+                        } else {
+                            throw new Error(result.message || 'Failed to delete candidate');
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Delete error:', error);
+                        alert(`❌ Error deleting candidate:\n\n${error.message}\n\nPlease try again or contact support.`);
+                        
+                        // Restore button state
+                        this.disabled = false;
+                        this.innerHTML = originalHTML;
+                        this.style.background = '';
+                    }
+                });
+            });
+
+            // ✅ ENHANCED CARD INTERACTIONS
+            const candidateCards = document.querySelectorAll('.candidate-card');
+            candidateCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // ✅ KEYBOARD SHORTCUTS
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'r') {
+                    e.preventDefault();
+                    location.reload();
+                }
+                if (e.key === 'Escape') {
+                    window.history.back();
+                }
+            });
+
+            // ✅ ANIMATE CARDS ON LOAD
+            candidateCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 150);
+            });
+
+            console.log(`🎯 Loaded ${candidateCards.length} candidate cards with delete functionality`);
+        });
+    </script>
+</body>
+</html>

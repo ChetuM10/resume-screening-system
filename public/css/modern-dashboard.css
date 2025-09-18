@@ -1,0 +1,1979 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+
+Resume Screening System - Complete Enhanced CSS v2.0
+
+Includes ALL functionality + candidate detail page enhancements + improved UX
+
+═══════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
+
+/* ───────────────── CSS CUSTOM PROPERTIES ───────────────── */
+
+:root {
+/* Core Gradients */
+--primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+--uploaded-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+--processed-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+--screenings-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+--score-gradient: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+
+/* Supporting Gradients */
+--success-gradient: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+--warning-gradient: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
+--danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+--info-gradient: var(--screenings-gradient);
+
+/* Shadows & Effects */
+--card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+--hover-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+--soft-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+--medium-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+
+/* Transitions */
+--transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+--transition-fast: all 0.3s ease;
+
+/* Border Radius */
+--radius-sm: 8px;
+--radius-md: 12px;
+--radius-lg: 16px;
+--radius-xl: 20px;
+--radius-full: 50px;
+}
+
+/* ───────────────── RESET & BASE ───────────────── */
+
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Nunito', sans-serif;
+background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+min-height: 100vh;
+color: #2c3e50;
+line-height: 1.6;
+overflow-x: hidden;
+}
+
+/* ───────────────── TYPOGRAPHY ───────────────── */
+
+h1, h2, h3, h4, h5, h6 {
+font-weight: 700;
+color: #2c3e50;
+margin-bottom: 1rem;
+}
+
+h1 {
+font-size: 2.5rem;
+background: var(--primary-gradient);
+background-clip: text;
+-webkit-background-clip: text;
+color: transparent;
+-webkit-text-fill-color: transparent;
+animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+0% { filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.5)); }
+100% { filter: drop-shadow(0 0 15px rgba(118, 75, 162, 0.8)); }
+}
+
+h2 {
+font-size: 2rem;
+font-weight: 600;
+}
+
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+h1, .brand-name, .text-gradient {
+background: none !important;
+color: #667eea !important;
+}
+}
+
+/* ───────────────── MODERN HEADER ───────────────── */
+
+.modern-header {
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(20px);
+padding: 1rem 2rem;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+display: flex;
+justify-content: space-between;
+align-items: center;
+position: sticky;
+top: 0;
+z-index: 100;
+border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modern-header::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+0% { left: -100%; }
+100% { left: 100%; }
+}
+
+.brand-name {
+font-size: 1.8rem;
+font-weight: 800;
+background: var(--primary-gradient);
+background-clip: text;
+-webkit-background-clip: text;
+color: transparent;
+-webkit-text-fill-color: transparent;
+cursor: pointer;
+transition: var(--transition);
+position: relative;
+z-index: 1;
+}
+
+.brand-name:hover {
+transform: scale(1.05);
+filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.3));
+}
+
+/* ───────────────── CONTAINERS ───────────────── */
+
+.container, .dashboard-container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 2rem;
+}
+
+/* ───────────────── DASHBOARD TITLE ───────────────── */
+
+.dashboard-title {
+text-align: center;
+font-size: 2.8rem;
+font-weight: 800;
+margin-bottom: 3rem;
+background: var(--primary-gradient);
+background-clip: text;
+-webkit-background-clip: text;
+color: transparent;
+-webkit-text-fill-color: transparent;
+position: relative;
+animation: fadeInUp 1s ease-out;
+}
+
+.dashboard-title::after {
+content: '';
+position: absolute;
+bottom: -15px;
+left: 50%;
+transform: translateX(-50%);
+width: 100px;
+height: 4px;
+background: var(--primary-gradient);
+border-radius: 2px;
+animation: expandLine 1.2s ease-out 0.4s both;
+}
+
+@keyframes fadeInUp {
+0% { opacity: 0; transform: translateY(30px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes expandLine {
+0% { width: 0; }
+100% { width: 100px; }
+}
+
+.dashboard-title i {
+margin-right: 0.75rem;
+animation: iconFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes iconFloat {
+0% { transform: translateY(0px); }
+100% { transform: translateY(-5px); }
+}
+
+/* ───────────────── STATS GRID - FIXED FOR EQUAL WIDTH ───────────────── */
+
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr); /* ✅ FIXED: Force exactly 4 equal columns */
+gap: 2rem;
+margin-bottom: 3rem;
+}
+
+/* Desktop: exactly 4 columns */
+@media (min-width: 992px) {
+.stats-grid {
+grid-template-columns: repeat(4, 1fr);
+}
+}
+
+/* Below 992px: responsive auto-fit */
+@media (max-width: 991.98px) {
+.stats-grid {
+grid-template-columns: repeat(2, 1fr); /* ✅ FIXED: 2 columns on tablet */
+gap: 1.5rem;
+}
+}
+
+@media (max-width: 768px) {
+.stats-grid {
+grid-template-columns: 1fr; /* ✅ FIXED: 1 column on mobile */
+gap: 1.5rem;
+}
+}
+
+/* ───────────────── CLICKABLE CARD LINKS ───────────────── */
+
+.stat-card-link {
+text-decoration: none;
+color: inherit;
+display: block;
+transition: var(--transition);
+border-radius: var(--radius-lg);
+}
+
+.stat-card-link:hover {
+text-decoration: none;
+color: inherit;
+transform: translateY(-8px) scale(1.02);
+}
+
+.stat-card-link:focus {
+outline: 3px solid #667eea;
+outline-offset: 2px;
+}
+
+/* ───────────────── STAT CARDS - FIXED FOR EQUAL SIZE ───────────────── */
+
+.stat-card {
+position: relative;
+cursor: pointer;
+overflow: hidden;
+padding: 2.5rem 2rem;
+border-radius: var(--radius-xl);
+color: white;
+text-align: center;
+transition: var(--transition);
+box-shadow: var(--card-shadow);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+animation: cardSlideIn 0.8s ease-out forwards;
+opacity: 0;
+min-height: 200px; /* ✅ FIXED: Consistent height for all cards */
+width: 100%; /* ✅ FIXED: Full width of grid cell */
+display: flex; /* ✅ FIXED: Flexbox for proper centering */
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+@keyframes cardSlideIn {
+0% { opacity: 0; transform: translateY(50px) scale(0.9); }
+100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 4px;
+background: var(--primary-gradient);
+border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* Animated background effect */
+.stat-card::after {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+transition: left 0.8s ease;
+}
+
+.stat-card:hover::after {
+left: 100%;
+}
+
+.clickable-card {
+cursor: pointer;
+position: relative;
+transition: var(--transition);
+}
+
+.clickable-card:hover {
+transform: translateY(-12px) scale(1.03);
+box-shadow: var(--hover-shadow);
+}
+
+/* Card Color Variants */
+.stat-card.uploaded {
+background: var(--uploaded-gradient);
+box-shadow: 0 15px 35px rgba(106, 17, 203, 0.3);
+}
+
+.stat-card.uploaded::before {
+background: var(--uploaded-gradient);
+}
+
+.stat-card.uploaded:hover {
+box-shadow: 0 25px 50px rgba(106, 17, 203, 0.4);
+}
+
+.stat-card.processed {
+background: var(--processed-gradient);
+box-shadow: 0 15px 35px rgba(17, 153, 142, 0.3);
+}
+
+.stat-card.processed::before {
+background: var(--processed-gradient);
+}
+
+.stat-card.processed:hover {
+box-shadow: 0 25px 50px rgba(17, 153, 142, 0.4);
+}
+
+.stat-card.screenings {
+background: var(--screenings-gradient);
+box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
+}
+
+.stat-card.screenings::before {
+background: var(--screenings-gradient);
+}
+
+.stat-card.screenings:hover {
+box-shadow: 0 25px 50px rgba(99, 102, 241, 0.4);
+}
+
+.stat-card.score {
+background: var(--score-gradient);
+box-shadow: 0 15px 35px rgba(247, 151, 30, 0.3);
+}
+
+.stat-card.score::before {
+background: var(--score-gradient);
+}
+
+.stat-card.score:hover {
+box-shadow: 0 25px 50px rgba(247, 151, 30, 0.4);
+}
+
+.stat-value {
+font-size: 3.5rem;
+font-weight: 900;
+margin-bottom: 0.75rem;
+text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+transition: var(--transition);
+position: relative;
+color: white; /* ✅ FIXED: Ensure numbers are white */
+}
+
+.stat-card:hover .stat-value {
+transform: scale(1.1);
+filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+/* Animated counter effect */
+.stat-value::after {
+content: '';
+position: absolute;
+bottom: -5px;
+left: 50%;
+transform: translateX(-50%);
+width: 0;
+height: 2px;
+background: rgba(255, 255, 255, 0.5);
+transition: width 0.8s ease;
+}
+
+.stat-card:hover .stat-value::after {
+width: 80%;
+}
+
+/* ✅ FIXED: Make text below numbers white */
+.stat-label {
+font-size: 1.1rem;
+font-weight: 600;
+color: white !important; /* ✅ FIXED: Force white color */
+opacity: 1 !important; /* ✅ FIXED: Full opacity */
+text-transform: uppercase;
+letter-spacing: 1.5px;
+margin-bottom: 0.5rem;
+transition: var(--transition);
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+}
+
+.stat-label i {
+font-size: 1.2rem;
+transition: var(--transition);
+color: white !important; /* ✅ FIXED: White icons too */
+}
+
+.stat-card:hover .stat-label i {
+transform: rotate(360deg) scale(1.2);
+}
+
+/* ✅ FIXED: Ensure text stays white on all card variants */
+.stat-card.uploaded .stat-label,
+.stat-card.processed .stat-label,
+.stat-card.screenings .stat-label,
+.stat-card.score .stat-label {
+color: white !important;
+}
+
+.card-action {
+position: absolute;
+bottom: 1rem;
+right: 1rem;
+font-size: 0.85rem;
+opacity: 0;
+transition: var(--transition);
+background: rgba(255, 255, 255, 0.2);
+padding: 0.4rem 0.8rem;
+border-radius: 20px;
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+pointer-events: none;
+font-weight: 500;
+}
+
+.clickable-card:hover .card-action {
+opacity: 1;
+transform: translateY(-5px);
+}
+
+/* ───────────────── DETAIL PAGE STYLES ───────────────── */
+
+.detail-header {
+background: var(--primary-gradient);
+color: white;
+padding: 2rem;
+margin-bottom: 2rem;
+border-radius: var(--radius-lg);
+text-align: center;
+box-shadow: var(--card-shadow);
+position: relative;
+overflow: hidden;
+}
+
+.detail-title {
+font-size: 2.5rem;
+font-weight: 700;
+margin-bottom: 0.5rem;
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.detail-subtitle {
+opacity: 0.9;
+font-size: 1.1rem;
+font-weight: 400;
+}
+
+/* ================ CANDIDATE DETAIL PAGE SPECIFIC STYLES ================ */
+
+/* Candidate Avatar */
+.candidate-avatar {
+font-size: 4rem;
+color: rgba(255, 255, 255, 0.8);
+margin-bottom: 1rem;
+display: block;
+}
+
+.detail-header .col-md-8 {
+position: relative;
+padding-left: 6rem;
+}
+
+/* File Info Styles */
+.file-info {
+background: #f8f9fa;
+padding: 1.5rem;
+border-radius: var(--radius-md);
+margin: 1rem 0;
+}
+
+.info-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 0.75rem 0;
+border-bottom: 1px solid #e9ecef;
+}
+
+.info-item:last-child {
+border-bottom: none;
+}
+
+.info-item .label {
+font-weight: 600;
+color: #495057;
+flex: 1;
+}
+
+.info-item .value {
+color: #2c3e50;
+font-weight: 500;
+}
+
+/* Analysis Metrics */
+.analysis-metric {
+margin-bottom: 1.5rem;
+}
+
+.analysis-metric h6 {
+color: #495057;
+font-weight: 600;
+margin-bottom: 0.5rem;
+font-size: 0.9rem;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.analysis-metric .progress {
+height: 8px;
+border-radius: 10px;
+background: #e9ecef;
+}
+
+.analysis-metric .progress-bar {
+border-radius: 10px;
+position: relative;
+overflow: visible;
+}
+
+/* Quick Stats Grid */
+.stats-grid-small {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1rem;
+text-align: center;
+}
+
+.stat-item {
+padding: 1rem 0;
+border-radius: var(--radius-md);
+background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.stat-number {
+display: block;
+font-size: 1.8rem;
+font-weight: 700;
+color: #667eea;
+margin-bottom: 0.25rem;
+}
+
+/* Tab Enhancements */
+.nav-tabs {
+border-bottom: 2px solid #e9ecef;
+margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+border: none;
+color: #6c757d;
+font-weight: 600;
+padding: 1rem 1.5rem;
+border-radius: 0;
+position: relative;
+transition: var(--transition-fast);
+}
+
+.nav-tabs .nav-link:hover {
+color: #667eea;
+background: transparent;
+border: none;
+}
+
+.nav-tabs .nav-link.active {
+color: #667eea;
+background: transparent;
+border: none;
+border-bottom: 3px solid #667eea;
+}
+
+.nav-tabs .nav-link i {
+margin-right: 0.5rem;
+}
+
+/* Content visibility fixes specific to candidate detail */
+.tab-content {
+min-height: 300px;
+}
+
+.tab-pane {
+color: #2c3e50 !important;
+}
+
+.tab-pane h5, .tab-pane h6 {
+color: #1a202c !important;
+font-weight: 700;
+}
+
+.tab-pane .list-unstyled li {
+padding: 0.5rem 0;
+border-bottom: 1px solid #f1f3f4;
+}
+
+.tab-pane .list-unstyled li:last-child {
+border-bottom: none;
+}
+
+/* Progress bars in candidate detail */
+.progress {
+height: 10px;
+border-radius: 10px;
+background: #e9ecef;
+overflow: visible;
+}
+
+.progress-bar {
+border-radius: 10px;
+position: relative;
+}
+
+/* Skills toggle button */
+#moreSkillsToggle {
+background: #6c757d !important;
+cursor: pointer;
+transition: var(--transition-fast);
+}
+
+#moreSkillsToggle:hover {
+background: #495057 !important;
+transform: translateY(-1px);
+}
+
+/* Enhanced match score display */
+.detail-header .match-score-display {
+position: static;
+font-size: 2rem;
+padding: 1rem 1.5rem;
+border-radius: 15px;
+min-width: 100px;
+margin-bottom: 0.5rem;
+}
+
+/* Fade in animation for tab content */
+@keyframes fadeInTab {
+0% { opacity: 0; transform: translateY(20px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+
+.tab-pane.show.active {
+animation: fadeInTab 0.4s ease-out;
+}
+
+/* ───────────────── RESUME CARDS - WHITE BACKGROUND (UPDATED) ───────────────── */
+
+.resume-card {
+background: white !important;
+border-radius: var(--radius-lg);
+box-shadow: var(--card-shadow);
+padding: 2rem;
+margin-bottom: 1.5rem;
+transition: var(--transition);
+border: 1px solid rgba(0, 0, 0, 0.08);
+color: #2c3e50;
+position: relative;
+}
+
+.resume-card:hover {
+transform: translateY(-5px);
+box-shadow: var(--hover-shadow);
+border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* Resume card header */
+.resume-card h3,
+.resume-card .resume-name {
+color: #2c3e50 !important;
+font-weight: 700;
+margin-bottom: 1rem;
+font-size: 1.4rem;
+}
+
+/* Contact information */
+.resume-card .contact-info {
+display: flex;
+flex-wrap: wrap;
+gap: 1.5rem;
+margin-bottom: 1.5rem;
+padding-bottom: 1.5rem;
+border-bottom: 1px solid #e9ecef;
+}
+
+.resume-card .contact-item {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+color: #6c757d;
+font-size: 0.95rem;
+}
+
+.resume-card .contact-item i {
+color: #667eea;
+font-size: 1rem;
+width: 16px;
+}
+
+/* Resume info items */
+.resume-info {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+margin-bottom: 1.5rem;
+padding-bottom: 1.5rem;
+border-bottom: 1px solid #e9ecef;
+}
+
+.resume-info-item {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+color: #2c3e50;
+font-size: 1rem;
+}
+
+.resume-info-item i {
+color: #667eea;
+font-size: 1rem;
+width: 18px;
+}
+
+/* Experience and Education badges */
+.resume-card .badge {
+background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+color: #495057;
+border: 1px solid #dee2e6;
+padding: 0.4rem 0.8rem;
+border-radius: 20px;
+font-size: 0.85rem;
+font-weight: 500;
+margin-right: 0.5rem;
+}
+
+/* Skills section */
+.resume-card .skills-section {
+margin-top: 1.5rem;
+padding-top: 1.5rem;
+border-top: 1px solid #f1f3f4;
+}
+
+.resume-card .skills-section h5 {
+color: #2c3e50;
+font-size: 1.1rem;
+font-weight: 600;
+margin-bottom: 1rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.resume-card .skills-section h5 i {
+color: #667eea;
+}
+
+.resume-skills {
+display: flex;
+flex-wrap: wrap;
+gap: 0.5rem;
+margin-top: 1rem;
+}
+
+.skill-badge,
+.resume-card .skill-tag {
+background: var(--primary-gradient) !important;
+color: white !important;
+padding: 0.3rem 0.8rem;
+border-radius: 15px;
+font-size: 0.8rem;
+font-weight: 500;
+margin-right: 0.5rem;
+margin-bottom: 0.5rem;
+display: inline-block;
+box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+transition: var(--transition);
+}
+
+.skill-badge:hover,
+.resume-card .skill-tag:hover {
+transform: translateY(-1px);
+box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Status indicators */
+.resume-card .status-badge {
+position: absolute;
+top: 1rem;
+right: 1rem;
+background: var(--success-gradient);
+color: white;
+padding: 0.3rem 0.8rem;
+border-radius: 20px;
+font-size: 0.75rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+/* Action buttons */
+.resume-card .card-actions {
+margin-top: 1.5rem;
+padding-top: 1.5rem;
+border-top: 1px solid #f1f3f4;
+display: flex;
+gap: 0.75rem;
+flex-wrap: wrap;
+}
+
+.resume-card .btn-view {
+background: var(--primary-gradient);
+color: white;
+padding: 0.5rem 1.2rem;
+border: none;
+border-radius: 25px;
+font-size: 0.85rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+transition: var(--transition);
+text-decoration: none;
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.resume-card .btn-view:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+color: white;
+text-decoration: none;
+}
+
+.resume-card .btn-reprocess {
+background: var(--warning-gradient);
+color: #1a202c;
+padding: 0.5rem 1.2rem;
+border: none;
+border-radius: 25px;
+font-size: 0.85rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+transition: var(--transition);
+text-decoration: none;
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.resume-card .btn-reprocess:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 20px rgba(247, 151, 30, 0.3);
+color: #1a202c;
+text-decoration: none;
+}
+
+/* Processing date */
+.resume-card .processing-date {
+color: #6c757d;
+font-size: 0.85rem;
+margin-top: 0.5rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.resume-card .processing-date i {
+color: #28a745;
+font-size: 0.9rem;
+}
+
+/* ───────────────── EMPTY STATE ───────────────── */
+
+.empty-state {
+text-align: center;
+padding: 3rem;
+color: #6c757d;
+}
+
+.empty-state i {
+font-size: 4rem;
+margin-bottom: 1rem;
+opacity: 0.5;
+color: #667eea;
+}
+
+.empty-state h3 {
+margin-bottom: 1rem;
+color: #2c3e50;
+}
+
+/* ───────────────── BUTTONS ───────────────── */
+
+.back-button {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+margin-bottom: 2rem;
+padding: 0.8rem 1.5rem;
+background: var(--primary-gradient);
+color: white;
+text-decoration: none;
+border-radius: var(--radius-full);
+font-weight: 600;
+transition: var(--transition-fast);
+font-size: 0.9rem;
+box-shadow: var(--soft-shadow);
+}
+
+.back-button:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+color: white;
+text-decoration: none;
+}
+
+/* Modern Buttons */
+.btn-primary, .btn-success {
+min-width: 150px;
+padding: 0.75rem 2rem;
+border: none;
+border-radius: var(--radius-full);
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+transition: var(--transition-fast);
+position: relative;
+overflow: hidden;
+}
+
+.btn-primary {
+background: var(--uploaded-gradient);
+box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+color: white;
+}
+
+.btn-primary:hover {
+background: linear-gradient(135deg, #5a0db8 0%, #1e63d4 100%);
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(106, 17, 203, 0.4);
+color: white;
+}
+
+.btn-success {
+background: var(--processed-gradient);
+box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+color: white;
+}
+
+.btn-success:hover {
+background: linear-gradient(135deg, #0e8074 0%, #2dd865 100%);
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+color: white;
+}
+
+/* ───────────────── ACTION BUTTONS ───────────────── */
+
+.actions-container {
+display: flex;
+justify-content: center;
+gap: 2rem;
+flex-wrap: wrap;
+margin: 3rem 0;
+}
+
+.action-btn {
+padding: 1.25rem 3rem;
+border: none;
+border-radius: var(--radius-full);
+font-size: 1.2rem;
+font-weight: 700;
+text-decoration: none;
+transition: var(--transition);
+cursor: pointer;
+position: relative;
+overflow: hidden;
+text-transform: uppercase;
+letter-spacing: 1px;
+display: inline-flex;
+align-items: center;
+gap: 0.75rem;
+box-shadow: var(--card-shadow);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+min-width: 220px;
+justify-content: center;
+}
+
+/* Animated button shine effect */
+.action-btn::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+transition: left 0.6s ease;
+}
+
+.action-btn:hover::before {
+left: 100%;
+}
+
+.action-btn:hover {
+transform: translateY(-5px) scale(1.05);
+box-shadow: var(--hover-shadow);
+text-decoration: none;
+color: white;
+}
+
+.btn-upload {
+background: var(--uploaded-gradient);
+color: white;
+box-shadow: 0 10px 25px rgba(106, 17, 203, 0.3);
+}
+
+.btn-upload:hover {
+background: linear-gradient(135deg, #5a0db8 0%, #1e63d4 100%);
+color: white;
+}
+
+.btn-screen {
+background: var(--processed-gradient);
+color: white;
+box-shadow: 0 10px 25px rgba(17, 153, 142, 0.3);
+}
+
+.btn-screen:hover {
+background: linear-gradient(135deg, #0e8074 0%, #2dd865 100%);
+color: white;
+}
+
+.action-btn .icon {
+font-size: 1.4rem;
+transition: var(--transition);
+}
+
+.action-btn:hover .icon {
+transform: scale(1.2) rotate(5deg);
+}
+
+.btn-sm {
+padding: 0.5rem 1rem;
+font-size: 0.9rem;
+min-width: auto;
+}
+
+/* ───────────────── TABLES ───────────────── */
+
+.table {
+background: white;
+border-radius: var(--radius-md);
+overflow: hidden;
+box-shadow: var(--soft-shadow);
+border: none;
+}
+
+.table th {
+background: var(--primary-gradient);
+color: white;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+border: none;
+padding: 1rem;
+vertical-align: middle;
+}
+
+.table td {
+vertical-align: middle;
+padding: 1rem;
+border-bottom: 1px solid #f1f3f4;
+}
+
+.table tbody tr:hover {
+background-color: #f8f9fe;
+}
+
+.table tbody tr:last-child td {
+border-bottom: none;
+}
+
+/* ───────────────── FORM ELEMENTS ───────────────── */
+
+.form-control, .form-select {
+box-shadow: none !important;
+border: 2px solid #e9ecef;
+border-radius: var(--radius-sm);
+padding: 0.75rem 1rem;
+font-size: 1rem;
+transition: var(--transition-fast);
+background: white;
+}
+
+.form-control:focus, .form-select:focus {
+border-color: #667eea;
+background: white;
+outline: none;
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+}
+
+.form-label {
+font-weight: 600;
+color: #2c3e50;
+margin-bottom: 0.5rem;
+}
+
+/* ───────────────── CARDS ───────────────── */
+
+.card {
+border: none;
+border-radius: var(--radius-md);
+box-shadow: var(--soft-shadow);
+transition: var(--transition-fast);
+background: white;
+}
+
+.card:hover {
+transform: translateY(-2px);
+box-shadow: var(--medium-shadow);
+}
+
+.card-header {
+background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+border-bottom: 1px solid #dee2e6;
+font-weight: 600;
+color: #2c3e50;
+}
+
+/* ─────────────── FOOTER ─────────────── */
+
+footer {
+font-size: 0.9rem;
+color: #666;
+text-align: center;
+padding: 2rem 0;
+background: white;
+margin-top: 3rem;
+box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ───────────────── ICONS ───────────────── */
+
+.icon {
+font-size: 1.2rem;
+}
+
+/* ───────────────── LOADING STATES ───────────────── */
+
+.loading {
+position: relative;
+}
+
+.loading::after {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+0% { transform: translateX(-100%); }
+100% { transform: translateX(100%); }
+}
+
+/* Loading overlay for buttons and cards */
+.loading-overlay {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(255, 255, 255, 0.8);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.2rem;
+color: #667eea;
+border-radius: inherit;
+}
+
+/* ───────────────── BADGES ───────────────── */
+
+.badge {
+padding: 0.4rem 0.8rem;
+border-radius: 20px;
+font-weight: 600;
+font-size: 0.85rem;
+}
+
+.bg-success {
+background: var(--processed-gradient) !important;
+color: white !important;
+}
+
+/* ───────────────── UTILITY CLASSES ───────────────── */
+
+.text-gradient {
+background: var(--primary-gradient);
+background-clip: text;
+-webkit-background-clip: text;
+color: transparent;
+-webkit-text-fill-color: transparent;
+}
+
+.text-success { color: #38ef7d !important; }
+.shadow-soft { box-shadow: var(--soft-shadow); }
+.shadow-medium { box-shadow: var(--medium-shadow); }
+.border-radius-lg { border-radius: var(--radius-md); }
+
+/* Spacing Utilities */
+.ms-2 { margin-left: 0.5rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.fs-6 { font-size: 1rem; }
+
+/* Fade in utility class */
+.fade-in {
+animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+0% { opacity: 0; transform: translateY(20px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ───────────────── ACCESSIBILITY ───────────────── */
+
+.btn:focus,
+.stat-card:focus,
+.stat-card-link:focus,
+.form-control:focus,
+.form-select:focus,
+.action-btn:focus {
+outline: 3px solid #667eea;
+outline-offset: 2px;
+}
+
+/* ───────────────── RESPONSIVE DESIGN ───────────────── */
+
+@media (max-width: 768px) {
+.container, .dashboard-container {
+padding: 1rem;
+}
+
+h1, .dashboard-title {
+font-size: 2.2rem;
+}
+
+.stat-card {
+padding: 2rem 1.5rem;
+min-height: 180px; /* ✅ FIXED: Smaller height on mobile */
+}
+
+.stat-value {
+font-size: 2.8rem;
+}
+
+.actions-container {
+flex-direction: column;
+align-items: center;
+gap: 1rem;
+}
+
+.action-btn {
+width: 100%;
+max-width: 300px;
+}
+
+.modern-header {
+padding: 1rem;
+}
+
+.brand-name {
+font-size: 1.5rem;
+}
+
+.detail-title {
+font-size: 2rem;
+}
+
+.detail-header {
+padding: 1.5rem;
+}
+
+.back-button {
+font-size: 0.85rem;
+padding: 0.7rem 1.2rem;
+}
+
+/* Resume card responsive adjustments */
+.resume-card {
+padding: 1.5rem;
+margin-bottom: 1rem;
+}
+
+.resume-card .contact-info {
+flex-direction: column;
+gap: 0.75rem;
+}
+
+.resume-card .card-actions {
+flex-direction: column;
+}
+
+.resume-card .btn-view,
+.resume-card .btn-reprocess {
+width: 100%;
+justify-content: center;
+}
+
+/* Mobile responsiveness for candidate detail */
+.detail-header .col-md-8 {
+padding-left: 2rem;
+text-align: center;
+}
+
+.candidate-avatar {
+position: static;
+transform: none;
+text-align: center;
+margin-bottom: 1rem;
+font-size: 3rem; /* ✅ FIXED: Smaller avatar on mobile */
+}
+
+.detail-title {
+font-size: 1.8rem;
+}
+
+.stats-grid-small {
+grid-template-columns: 1fr;
+gap: 0.75rem;
+}
+
+.contact-info {
+flex-direction: column;
+gap: 1rem; /* ✅ FIXED: Better spacing on mobile */
+}
+
+.nav-tabs .nav-link {
+padding: 0.75rem 1rem;
+font-size: 0.9rem;
+}
+}
+
+@media (max-width: 480px) {
+h1, .dashboard-title {
+font-size: 1.8rem;
+}
+
+.stat-value {
+font-size: 2.2rem;
+}
+
+.stat-label {
+font-size: 0.95rem;
+}
+
+.container, .dashboard-container {
+padding: 0.5rem;
+}
+
+.detail-title {
+font-size: 1.8rem;
+}
+
+.resume-card {
+padding: 1rem;
+}
+
+.resume-name {
+font-size: 1.1rem;
+}
+
+.stat-card {
+padding: 1.5rem;
+border-radius: var(--radius-lg);
+}
+
+.action-btn {
+padding: 1rem 2rem;
+font-size: 1rem;
+}
+
+.detail-header {
+padding: 1.5rem;
+}
+
+.skill-badge {
+font-size: 0.75rem;
+padding: 0.25rem 0.6rem;
+}
+}
+
+/* ───────────────── REDUCED MOTION SUPPORT ───────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+.stat-card,
+.stat-card-link,
+.clickable-card,
+.action-btn,
+.btn-primary,
+.btn-success,
+.card,
+.dashboard-title {
+animation: none !important;
+transition: none !important;
+}
+
+.stat-card:hover,
+.stat-card-link:hover,
+.action-btn:hover,
+.card:hover {
+transform: none;
+}
+
+.clickable-card::after { display: none; }
+.card-action { opacity: 1; }
+}
+
+/* ───────────────── TEST PAGE SPECIFIC STYLES ───────────────── */
+
+body.test-page {
+padding: 20px;
+}
+
+body.test-page h1 {
+text-align: center;
+margin-bottom: 2rem;
+}
+
+body.test-page p {
+font-size: 1.2rem;
+text-align: center;
+margin-bottom: 2rem;
+color: #34495e;
+}
+
+/* Ensure test card displays properly */
+body.test-page .stat-card {
+max-width: 300px;
+margin: 0 auto;
+}
+
+/* ───────────────── DARK MODE SUPPORT ───────────────── */
+
+@media (prefers-color-scheme: dark) {
+body {
+background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+color: #e2e8f0;
+}
+
+.modern-header {
+background: rgba(15, 23, 42, 0.95);
+}
+
+.stat-card {
+background: rgba(30, 41, 59, 0.85);
+border: 1px solid rgba(71, 85, 105, 0.35);
+}
+
+h1, h2, h3, h4, h5, h6, .dashboard-title {
+color: #f1f5f9;
+}
+
+.card {
+background: rgba(30, 41, 59, 0.8);
+border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.table {
+background: rgba(30, 41, 59, 0.8);
+}
+
+.form-control, .form-select {
+background: rgba(30, 41, 59, 0.8);
+border-color: rgba(71, 85, 105, 0.5);
+color: #e2e8f0;
+}
+
+/* Dark mode support for resume cards */
+.resume-card {
+background: rgba(255, 255, 255, 0.95) !important;
+border-color: rgba(0, 0, 0, 0.1);
+}
+
+.resume-card h3,
+.resume-card .resume-name {
+color: #1a202c !important;
+}
+}
+
+/* ───────────────── PERFORMANCE OPTIMIZATIONS ───────────────── */
+
+.stat-card,
+.action-btn,
+.stat-value {
+will-change: transform;
+}
+
+/* ───────────────── PRINT STYLES ───────────────── */
+
+@media print {
+.actions-container,
+.modern-header {
+display: none;
+}
+
+.stat-card {
+box-shadow: none;
+border: 1px solid #ccc !important;
+color: #333 !important;
+background: white !important;
+}
+
+.stat-value,
+.stat-label {
+color: #333 !important;
+}
+}
+
+/* ================ TEXT VISIBILITY FIXES ================ */
+
+/* Fix for Candidate Detail Page - Extracted Resume Text */
+.extracted-text-container,
+.extracted-resume-text,
+.resume-text-display {
+background: #ffffff !important;
+color: #2c3e50 !important;
+border: 1px solid #e9ecef;
+border-radius: var(--radius-md);
+padding: 1.5rem;
+margin-top: 1rem;
+font-family: 'Courier New', monospace;
+font-size: 0.9rem;
+line-height: 1.6;
+white-space: pre-wrap;
+word-wrap: break-word;
+max-height: 500px;
+overflow-y: auto;
+box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Fix for Screening Results Cards - Candidate Details */
+.screening-candidate-card,
+.candidate-result-card {
+background: #ffffff !important;
+color: #2c3e50 !important;
+border: 1px solid #e9ecef;
+border-radius: var(--radius-md);
+padding: 1.5rem;
+margin-bottom: 1.5rem;
+box-shadow: var(--soft-shadow);
+transition: var(--transition-fast);
+}
+
+.screening-candidate-card:hover,
+.candidate-result-card:hover {
+transform: translateY(-3px);
+box-shadow: var(--medium-shadow);
+border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* Fix for match score displays */
+.match-score-display {
+background: var(--primary-gradient) !important;
+color: white !important;
+padding: 0.5rem 1rem;
+border-radius: 20px;
+font-weight: 700;
+position: absolute;
+top: 1rem;
+right: 1rem;
+min-width: 60px;
+text-align: center;
+box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Fix for skill match details */
+.skill-match-details,
+.skills-matched-section {
+background: #f8f9fa !important;
+color: #495057 !important;
+padding: 1rem;
+border-radius: var(--radius-sm);
+margin: 1rem 0;
+border-left: 4px solid #667eea;
+}
+
+.skill-match-details h6,
+.skills-matched-section h6 {
+color: #2c3e50 !important;
+font-weight: 600;
+margin-bottom: 0.5rem;
+}
+
+/* Fix for candidate information text */
+.candidate-info-text,
+.candidate-details-text {
+color: #495057 !important;
+line-height: 1.6;
+}
+
+.candidate-info-text strong,
+.candidate-details-text strong {
+color: #2c3e50 !important;
+}
+
+/* Fix for screening results grid items */
+.screening-results-grid .result-item {
+background: #ffffff !important;
+color: #2c3e50 !important;
+padding: 1.5rem;
+border-radius: var(--radius-md);
+border: 1px solid #e9ecef;
+margin-bottom: 1rem;
+box-shadow: var(--soft-shadow);
+}
+
+.screening-results-grid .result-item h5 {
+color: #2c3e50 !important;
+font-weight: 700;
+margin-bottom: 1rem;
+}
+
+/* Fix for any remaining light text on light backgrounds */
+.light-bg-fix {
+background: #ffffff !important;
+color: #2c3e50 !important;
+}
+
+.light-bg-fix h1,
+.light-bg-fix h2,
+.light-bg-fix h3,
+.light-bg-fix h4,
+.light-bg-fix h5,
+.light-bg-fix h6 {
+color: #2c3e50 !important;
+}
+
+/* Specific fix for screening page match details */
+.match-details-container {
+background: #ffffff !important;
+color: #2c3e50 !important;
+padding: 1.5rem;
+border-radius: var(--radius-md);
+border: 1px solid #e9ecef;
+box-shadow: var(--soft-shadow);
+}
+
+/* Fix for any pre or code blocks */
+.extracted-text-container pre,
+.resume-text-display pre,
+pre.resume-content {
+background: #f8f9fa !important;
+color: #2c3e50 !important;
+padding: 1rem;
+border-radius: var(--radius-sm);
+border: 1px solid #e9ecef;
+overflow-x: auto;
+font-size: 0.85rem;
+line-height: 1.5;
+}
+
+/* Fix for small text elements */
+.text-muted-fix {
+color: #6c757d !important;
+}
+
+/* Ensure proper contrast for all text elements */
+.container .text-white-fix {
+color: #2c3e50 !important;
+}
+
+/* Fix for any remaining invisible text issues */
+.visibility-fix * {
+color: #2c3e50 !important;
+}
+
+.visibility-fix h1,
+.visibility-fix h2,
+.visibility-fix h3,
+.visibility-fix h4,
+.visibility-fix h5,
+.visibility-fix h6 {
+color: #1a202c !important;
+}
+
+/* ================ END TEXT VISIBILITY FIXES ================ */
+
+/* ================ ADDITIONAL FIXES FOR BUTTONS AND TEXT VISIBILITY ================ */
+
+/* Fix for screening results - candidate names visibility */
+.screening-candidate-card h5,
+.candidate-result-card h5,
+.screening-results-grid .result-item h5,
+.candidate-name,
+.candidate-title {
+color: #1a202c !important;
+font-weight: 700 !important;
+font-size: 1.25rem !important;
+margin-bottom: 1rem !important;
+}
+
+/* Enhanced button styling for card actions */
+.resume-card .card-actions {
+margin-top: 2rem;
+padding-top: 1.5rem;
+border-top: 1px solid #e9ecef;
+display: flex;
+gap: 1rem;
+flex-wrap: wrap;
+justify-content: flex-start;
+}
+
+/* Primary action button (View Details/View All) */
+.card-actions .btn-primary,
+.card-actions .btn-view,
+.resume-card .btn-view {
+background: var(--primary-gradient) !important;
+color: white !important;
+padding: 0.75rem 1.5rem !important;
+border: none !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 600 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.5px !important;
+transition: var(--transition-fast) !important;
+text-decoration: none !important;
+display: inline-flex !important;
+align-items: center !important;
+gap: 0.5rem !important;
+box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+cursor: pointer !important;
+min-width: 140px !important;
+justify-content: center !important;
+}
+
+.card-actions .btn-primary:hover,
+.card-actions .btn-view:hover,
+.resume-card .btn-view:hover {
+transform: translateY(-2px) !important;
+box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+color: white !important;
+text-decoration: none !important;
+}
+
+/* Secondary action button (Reprocess/View All Resumes) */
+.card-actions .btn-secondary,
+.card-actions .btn-reprocess,
+.resume-card .btn-reprocess {
+background: var(--warning-gradient) !important;
+color: #1a202c !important;
+padding: 0.75rem 1.5rem !important;
+border: none !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 600 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.5px !important;
+transition: var(--transition-fast) !important;
+text-decoration: none !important;
+display: inline-flex !important;
+align-items: center !important;
+gap: 0.5rem !important;
+box-shadow: 0 4px 15px rgba(247, 151, 30, 0.3) !important;
+cursor: pointer !important;
+min-width: 140px !important;
+justify-content: center !important;
+}
+
+.card-actions .btn-secondary:hover,
+.card-actions .btn-reprocess:hover,
+.resume-card .btn-reprocess:hover {
+transform: translateY(-2px) !important;
+box-shadow: 0 8px 25px rgba(247, 151, 30, 0.4) !important;
+color: #1a202c !important;
+text-decoration: none !important;
+}
+
+/* Success button variant */
+.card-actions .btn-success {
+background: var(--success-gradient) !important;
+color: white !important;
+padding: 0.75rem 1.5rem !important;
+border: none !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 600 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.5px !important;
+transition: var(--transition-fast) !important;
+text-decoration: none !important;
+display: inline-flex !important;
+align-items: center !important;
+gap: 0.5rem !important;
+box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+cursor: pointer !important;
+min-width: 140px !important;
+justify-content: center !important;
+}
+
+.card-actions .btn-success:hover {
+transform: translateY(-2px) !important;
+box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+color: white !important;
+text-decoration: none !important;
+}
+
+/* Button icons */
+.card-actions .btn i,
+.resume-card .btn i {
+font-size: 1rem !important;
+margin-right: 0.25rem !important;
+}
+
+/* Ensure screening result candidate names are visible */
+.screening-results .candidate-name,
+.result-candidate-name,
+.screening-card .candidate-name {
+color: #1a202c !important;
+font-weight: 700 !important;
+font-size: 1.3rem !important;
+margin-bottom: 0.5rem !important;
+}
+
+/* Fix for any remaining text visibility issues in screening results */
+.screening-results-container,
+.screening-results-grid {
+color: #2c3e50 !important;
+}
+
+.screening-results-container h5,
+.screening-results-grid h5,
+.screening-results-container .candidate-name,
+.screening-results-grid .candidate-name {
+color: #1a202c !important;
+font-weight: 700 !important;
+}
+
+/* Enhanced match score positioning */
+.candidate-result-card .match-score-display {
+position: absolute;
+top: 1rem;
+right: 1rem;
+background: var(--primary-gradient) !important;
+color: white !important;
+padding: 0.5rem 1rem;
+border-radius: 20px;
+font-weight: 700;
+font-size: 1rem;
+min-width: 60px;
+text-align: center;
+box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+z-index: 10;
+}
+
+/* Responsive button adjustments */
+@media (max-width: 768px) {
+.card-actions {
+flex-direction: column;
+gap: 0.75rem;
+}
+
+.card-actions .btn-primary,
+.card-actions .btn-view,
+.card-actions .btn-secondary,
+.card-actions .btn-reprocess,
+.card-actions .btn-success {
+width: 100% !important;
+min-width: unset !important;
+justify-content: center !important;
+}
+}
+
+/* Fix for any remaining link-style buttons */
+a.btn-view,
+a.btn-reprocess,
+a.btn-primary,
+a.btn-secondary,
+a.btn-success {
+text-decoration: none !important;
+}
+
+a.btn-view:hover,
+a.btn-reprocess:hover,
+a.btn-primary:hover,
+a.btn-secondary:hover,
+a.btn-success:hover {
+text-decoration: none !important;
+}
+
+/* ================ END ADDITIONAL FIXES ================ */
+
+/* Add this to your CSS file or in a <style> block */
+.screening-card {
+    background-color: #ffffff !important;
+    color: #212529 !important; /* Dark text */
+}
+
+.screening-card .stat-number {
+    color: #212529 !important; /* Dark numbers */
+    font-weight: 700 !important;
+}
+
+.screening-card .stat-label {
+    color: #6c757d !important; /* Gray labels */
+}
+
+.screening-card h3,
+.screening-card h4,
+.screening-card h5 {
+    color: #212529 !important; /* Dark headings */
+}
+
+.screening-card .badge {
+    background-color: #007bff !important;
+    color: #ffffff !important;
+}
+
+/* Fix progress bar text */
+.qualification-rate,
+.screening-stats span {
+    color: #212529 !important;
+}

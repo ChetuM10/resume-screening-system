@@ -1,0 +1,554 @@
+<%- include('../partials/head') %>
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background: var(--primary-gradient);
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .screening-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .screening-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-item {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    /* ✅ FIX: Make stat labels visible */
+    .stat-label {
+        color: #4a5568 !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .job-types-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    /* ✅ FIX: Ensure all job card text is visible */
+    .job-type-card {
+        color: #1a202c !important;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .job-type-card h5 {
+        color: #2d3748 !important;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .job-type-card p {
+        color: #4a5568 !important;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .job-type-card small {
+        color: #718096 !important;
+        font-size: 0.8rem;
+    }
+
+    .job-type-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    }
+
+    .job-type-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    }
+
+    /* ✅ FIX: Form elements visibility */
+    .form-label {
+        color: #2d3748 !important;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        color: #1a202c !important;
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af !important;
+    }
+
+    /* ✅ FIX: Headings and text in screening cards */
+    .screening-card h1 {
+        color: #1a202c !important;
+        font-weight: bold;
+    }
+
+    .screening-card h3 {
+        color: #2d3748 !important;
+        font-weight: 600;
+    }
+
+    .screening-card p {
+        color: #4a5568 !important;
+    }
+
+    .screening-card .lead {
+        color: #4a5568 !important;
+    }
+
+    /* ✅ FIX: Table text visibility */
+    .table {
+        color: #1a202c !important;
+    }
+
+    .table th {
+        color: #2d3748 !important;
+        font-weight: 600;
+    }
+
+    .table td {
+        color: #4a5568 !important;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        color: white !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white !important;
+    }
+
+    /* ✅ FIX: Badge text */
+    .badge {
+        color: white !important;
+    }
+
+    /* ✅ FIX: Button text */
+    .btn-outline-primary {
+        color: #667eea !important;
+        border-color: #667eea !important;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #667eea !important;
+        color: white !important;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .loading-content h4 {
+        color: #2d3748 !important;
+    }
+
+    .loading-content p {
+        color: #4a5568 !important;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* ✅ FIX: General text color overrides */
+    .text-muted {
+        color: #718096 !important;
+    }
+
+    /* ✅ FIX: Ensure all text is visible by default */
+    * {
+        color: inherit;
+    }
+
+    /* ✅ FIX: Override any Bootstrap overrides */
+    .screening-card * {
+        color: inherit !important;
+    }
+
+    .screening-card h1,
+    .screening-card h2,
+    .screening-card h3,
+    .screening-card h4,
+    .screening-card h5 {
+        color: #2d3748 !important;
+    }
+
+    .screening-card p,
+    .screening-card span,
+    .screening-card div:not(.btn):not(.badge) {
+        color: #4a5568 !important;
+    }
+</style>
+
+<%- include('../partials/navbar') %>
+
+<div class="screening-container">
+    <!-- Header -->
+    <div class="screening-card">
+        <div class="text-center mb-4">
+            <h1 class="display-4 mb-3">🎯 Enhanced Candidate Screening</h1>
+            <p class="lead">Define job requirements to find the best matching candidates</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number"><%= resumeCount %></div>
+                <div class="stat-label">Total Resumes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number"><%= processedCount %></div>
+                <div class="stat-label">Processed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number"><%= totalScreeningsCount %></div>
+                <div class="stat-label">Total Screenings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number"><%= averageScore %>%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="screening-card">
+        <h3 class="mb-3">🚀 Quick Start</h3>
+        <div class="job-types-grid">
+            <div class="job-type-card" data-job="network_engineer">
+                <h5>🌐 Network Engineer</h5>
+                <p>Infrastructure, routing protocols, monitoring tools</p>
+                <small class="text-muted">For networking and infrastructure roles</small>
+            </div>
+            <div class="job-type-card" data-job="full_stack_developer">
+                <h5>💻 Full Stack Developer</h5>
+                <p>Modern web applications, frontend + backend</p>
+                <small class="text-muted">For comprehensive development roles</small>
+            </div>
+            <div class="job-type-card" data-job="software_developer">
+                <h5>⚡ Software Developer</h5>
+                <p>Entry-level programming and development</p>
+                <small class="text-muted">For general programming positions</small>
+            </div>
+            <div class="job-type-card" data-job="finance_intern">
+                <h5>💰 Finance Intern</h5>
+                <p>Financial analysis and accounting processes</p>
+                <small class="text-muted">For finance and accounting roles</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Screening Form -->
+    <div class="screening-card">
+        <h3 class="mb-3">🎨 Custom Screening</h3>
+        <form id="screeningForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="jobTitle" class="form-label">Job Title *</label>
+                        <input type="text" class="form-control" id="jobTitle" name="jobTitle" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="experienceRange" class="form-label">Experience Range</label>
+                        <select class="form-control" id="experienceRange" name="experienceRange">
+                            <option value="0-1">0-1 years (Fresher)</option>
+                            <option value="1-3">1-3 years (Junior)</option>
+                            <option value="3-5">3-5 years (Mid-level)</option>
+                            <option value="5-10">5-10 years (Senior)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="requiredSkills" class="form-label">Required Skills (comma-separated) *</label>
+                <textarea class="form-control" id="requiredSkills" name="requiredSkills" rows="3" 
+                    placeholder="e.g., JavaScript, React, Node.js, MongoDB"></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="jobDescription" class="form-label">Job Description</label>
+                <textarea class="form-control" id="jobDescription" name="jobDescription" rows="4" 
+                    placeholder="Describe the role, responsibilities, and requirements..."></textarea>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-search me-2"></i>Start Custom Screening
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Multi-JD Screening -->
+    <div class="screening-card">
+        <h3 class="mb-3">🎯 Multi-JD Screening</h3>
+        <p>Screen candidates against multiple job descriptions simultaneously to find the best fit for each role.</p>
+        <div class="text-center">
+            <button id="multiJDBtn" class="btn btn-primary btn-lg">
+                <i class="fas fa-layer-group me-2"></i>Start Multi-JD Screening
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Screenings -->
+    <% if (recentScreenings && recentScreenings.length > 0) { %>
+    <div class="screening-card">
+        <h3 class="mb-3">📋 Recent Screenings</h3>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Type</th>
+                        <th>Candidates</th>
+                        <th>Qualification Rate</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% recentScreenings.forEach(screening => { %>
+                    <tr>
+                        <td><%= screening.jobTitle %></td>
+                        <td><span class="badge bg-primary"><%= screening.typeLabel %></span></td>
+                        <td><%= screening.candidateCount %></td>
+                        <td><%= screening.qualificationRate %>%</td>
+                        <td><%= new Date(screening.createdAt).toLocaleDateString() %></td>
+                        <td>
+                            <a href="/screening/results/<%= screening._id %>" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <% } %>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h4>Please wait while we analyze candidates...</h4>
+        <p>This may take a few moments depending on the number of resumes.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const jobTypeCards = document.querySelectorAll('.job-type-card');
+    const screeningForm = document.getElementById('screeningForm');
+    const multiJDBtn = document.getElementById('multiJDBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    let selectedJobType = null;
+
+    // Job type selection
+    jobTypeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            jobTypeCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedJobType = this.dataset.job;
+            startPredefinedScreening(selectedJobType);
+        });
+    });
+
+    // Custom screening form
+    screeningForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        startCustomScreening();
+    });
+
+    // Multi-JD screening
+    multiJDBtn.addEventListener('click', function() {
+        startMultiJDScreening();
+    });
+
+    async function startPredefinedScreening(jobType) {
+        showLoading();
+        
+        try {
+            const response = await fetch('/screening', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    jobType: jobType,
+                    usePredefined: true
+                })
+            });
+
+            const result = await response.json();
+            hideLoading();
+
+            if (result.success) {
+                window.location.href = result.resultsUrl;
+            } else {
+                alert('Screening failed: ' + result.error);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Screening failed: ' + error.message);
+        }
+    }
+
+    async function startCustomScreening() {
+        const formData = new FormData(screeningForm);
+        const data = {
+            jobTitle: formData.get('jobTitle'),
+            jobDescription: formData.get('jobDescription'),
+            requiredSkills: formData.get('requiredSkills').split(',').map(s => s.trim()),
+            experienceRange: formData.get('experienceRange')
+        };
+
+        // Parse experience range
+        const [minExp, maxExp] = data.experienceRange.split('-').map(Number);
+        data.minExp = minExp;
+        data.maxExp = maxExp;
+
+        showLoading();
+
+        try {
+            const response = await fetch('/screening', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            hideLoading();
+
+            if (result.success) {
+                window.location.href = result.resultsUrl;
+            } else {
+                alert('Screening failed: ' + result.error);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Screening failed: ' + error.message);
+        }
+    }
+
+    async function startMultiJDScreening() {
+        showLoading();
+
+        try {
+            const response = await fetch('/screening/multi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    usePredefined: true
+                })
+            });
+
+            const result = await response.json();
+            hideLoading();
+
+            if (result.success) {
+                window.location.href = result.resultsUrl;
+            } else {
+                alert('Multi-JD screening failed: ' + result.error);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Multi-JD screening failed: ' + error.message);
+        }
+    }
+
+    function showLoading() {
+        loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>

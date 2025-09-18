@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'All Screenings' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/modern-dashboard.css" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .screening-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+        }
+        
+        .screening-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .screening-card.excellent { border-left-color: #28a745; }
+        .screening-card.good { border-left-color: #ffc107; }
+        .screening-card.average { border-left-color: #fd7e14; }
+        .screening-card.poor { border-left-color: #dc3545; }
+        
+        .screening-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .screening-title {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .screening-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .screening-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .screening-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            text-decoration: none;
+            transform: translateX(-3px);
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .page-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+        
+        .delete-btn-card {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #dc3545;
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .screening-card:hover .delete-btn-card {
+            opacity: 1;
+        }
+        
+        .delete-btn-card:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+        
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .skill-tag {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body class="dashboard-container">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h4>Loading...</h4>
+            <p>Please wait while we process your request...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Back Button -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="/" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-clipboard-list me-3"></i>
+                <%= pageTitle || 'All Screenings' %>
+            </h1>
+            <p class="page-subtitle">
+                <%= pageSubtitle || 'Manage and review your candidate screening sessions' %>
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <a href="/screening" class="btn btn-view me-3">
+                    <i class="fas fa-plus me-2"></i>
+                    New Screening
+                </a>
+                <button onclick="refreshScreenings()" class="btn btn-outline-light">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Screenings List -->
+        <div class="row">
+            <% if (screenings && screenings.length > 0) { %>
+                <% screenings.forEach((screening) => { %>
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="screening-card <%= 
+                            screening.statistics && screening.statistics.averageBestScore >= 80 ? 'excellent' : 
+                            screening.statistics && screening.statistics.averageBestScore >= 60 ? 'good' : 
+                            screening.statistics && screening.statistics.averageBestScore >= 40 ? 'average' : 'poor' 
+                        %>">
+                            <!-- Delete Button -->
+                            <button class="delete-btn-card" 
+                                    data-screening-id="<%= screening._id %>" 
+                                    data-job-title="<%= screening.jobTitle %>"
+                                    title="Delete Screening"
+                                    onclick="deleteScreening('<%= screening._id %>', '<%= screening.jobTitle %>')">
+                                <i class="fas fa-times"></i>
+                            </button>
+
+                            <!-- Screening Header -->
+                            <div class="screening-header">
+                                <div class="flex-grow-1">
+                                    <h3 class="screening-title"><%= screening.jobTitle %></h3>
+                                    <p class="screening-date">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        <%= screening.createdAt ? screening.createdAt.toLocaleDateString() : 'Unknown date' %>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Job Categories for Multi-JD -->
+                            <% if (screening.jobCategories && screening.jobCategories.length > 0) { %>
+                                <div class="skill-tags">
+                                    <% screening.jobCategories.slice(0, 4).forEach((category) => { %>
+                                        <span class="skill-tag">
+                                            <%= category.replace(/_/g, ' ') %>
+                                        </span>
+                                    <% }) %>
+                                    <% if (screening.jobCategories.length > 4) { %>
+                                        <span class="skill-tag">+<%= screening.jobCategories.length - 4 %> more</span>
+                                    <% } %>
+                                </div>
+                            <% } else if (screening.requiredSkills && screening.requiredSkills.length > 0) { %>
+                                <div class="skill-tags">
+                                    <% screening.requiredSkills.slice(0, 4).forEach((skill) => { %>
+                                        <span class="skill-tag"><%= skill %></span>
+                                    <% }) %>
+                                    <% if (screening.requiredSkills.length > 4) { %>
+                                        <span class="skill-tag">+<%= screening.requiredSkills.length - 4 %> more</span>
+                                    <% } %>
+                                </div>
+                            <% } %>
+
+                            <!-- Statistics -->
+                            <% if (screening.statistics) { %>
+                                <div class="screening-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-number">
+                                            <%= screening.statistics.totalCandidates || screening.totalCandidates || 0 %>
+                                        </span>
+                                        <span class="stat-label">Candidates</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number">
+                                            <%= screening.statistics.qualifiedCandidates || 0 %>
+                                        </span>
+                                        <span class="stat-label">Qualified</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number">
+                                            <%= screening.statistics.averageBestScore || screening.statistics.averageScore || 0 %>%
+                                        </span>
+                                        <span class="stat-label">Avg Score</span>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-info-circle"></i>
+                                    No statistics available
+                                </div>
+                            <% } %>
+
+                            <!-- Progress Bar -->
+                            <% 
+                                const totalCandidates = screening.statistics?.totalCandidates || screening.totalCandidates || 1;
+                                const qualified = screening.statistics?.qualifiedCandidates || 0;
+                                const qualificationRate = Math.round((qualified / totalCandidates) * 100);
+                            %>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Qualification Rate</small>
+                                    <small class="text-muted"><%= qualificationRate %>%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div 
+                                        class="progress-bar <%= qualificationRate >= 50 ? 'bg-success' : qualificationRate >= 25 ? 'bg-warning' : 'bg-danger' %>" 
+                                        style="width: <%= qualificationRate %>%;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Experience & Education Info -->
+                            <div class="row text-center mt-3">
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-briefcase me-1"></i>
+                                        <% if (screening.experienceLevel) { %>
+                                            <%= screening.experienceLevel.min || 0 %>-<%= screening.experienceLevel.max || 50 %> years
+                                        <% } else { %>
+                                            Any experience
+                                        <% } %>
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-graduation-cap me-1"></i>
+                                        <%= screening.educationLevel || 'Any' %>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <% if (screening.location) { %>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        <%= screening.location %>
+                                    </small>
+                                </div>
+                            <% } %>
+
+                            <!-- Action Button -->
+                            <div class="screening-actions">
+                                <% if (screening.screeningType === 'multi-jd') { %>
+                                    <a href="/screening/multi-results/<%= screening._id %>" class="btn btn-view">
+                                        <i class="fas fa-eye me-2"></i>
+                                        View Results
+                                    </a>
+                                <% } else { %>
+                                    <a href="/screening/results/<%= screening._id %>" class="btn btn-view">
+                                        <i class="fas fa-eye me-2"></i>
+                                        View Results
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <!-- Empty State -->
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>No Completed Screenings</h3>
+                        <p class="text-muted">You haven't created any candidate screenings yet.</p>
+                        <a href="/screening" class="btn btn-view mt-3">
+                            <i class="fas fa-plus me-2"></i>
+                            Create Your First Screening
+                        </a>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Enhanced JavaScript Functions -->
+    <script>
+        // Enhanced delete screening function with better error handling
+        async function deleteScreening(screeningId, jobTitle) {
+            if (!confirm(`Are you sure you want to delete the screening for "${jobTitle}"?`)) {
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const deleteBtn = document.querySelector(`[data-screening-id="${screeningId}"]`);
+            const originalContent = deleteBtn.innerHTML;
+            
+            try {
+                loadingOverlay.style.display = 'flex';
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                deleteBtn.disabled = true;
+
+                const response = await fetch(`/api/screenings/${screeningId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const screeningCard = deleteBtn.closest('.col-lg-6');
+                    screeningCard.style.opacity = '0';
+                    screeningCard.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        screeningCard.remove();
+                        
+                        const remainingCards = document.querySelectorAll('[data-screening-id]');
+                        if (remainingCards.length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+
+                    showMessage(`Successfully deleted screening for "${jobTitle}"`, 'success');
+                } else {
+                    throw new Error(result.message || 'Delete operation failed');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                
+                deleteBtn.innerHTML = originalContent;
+                deleteBtn.disabled = false;
+                
+                showMessage(`Failed to delete screening: ${error.message}`, 'error');
+                alert(`Error: ${error.message || 'An unknown error occurred'}`);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Enhanced message display function
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            messageDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+            messageDiv.innerHTML = `
+                <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Refresh screenings function
+        function refreshScreenings() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+            location.reload();
+        }
+
+        // Initialize tooltips when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

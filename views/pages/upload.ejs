@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Resumes - Resume Screening System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+      }
+
+      body {
+        background: var(--primary-gradient);
+        min-height: 100vh;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow-x: hidden;
+      }
+
+      .upload-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+
+      .back-button {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+      }
+
+      .upload-card {
+        background: white;
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: var(--card-shadow);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s ease;
+      }
+
+      .upload-card:hover {
+        box-shadow: var(--hover-shadow);
+        transform: translateY(-5px);
+      }
+
+      .upload-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .upload-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+
+      .upload-icon i {
+        font-size: 2rem;
+        color: white;
+      }
+
+      .upload-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+      }
+
+      /* ✅ FALLBACK for browsers that don't support background-clip */
+      @supports not (-webkit-background-clip: text) {
+        .upload-title {
+          background: none !important;
+          color: #667eea !important;
+        }
+      }
+
+      .upload-subtitle {
+        color: #64748b;
+        font-size: 1.2rem;
+        font-weight: 400;
+      }
+
+      /* ✅ FIXED: Statistics Grid with Proper Visibility */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2.5rem 0;
+      }
+
+      .stat-card {
+        background: var(--primary-gradient) !important; /* ✅ FIX: Gradient background */
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        color: white !important; /* ✅ FIX: Force white text */
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      }
+
+      /* ✅ FIXED: Stat Numbers - Always White */
+      .stat-number {
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: white !important; /* ✅ FIX: Force white color */
+        margin-bottom: 0.5rem !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ✅ FIXED: Stat Labels - Always White and Visible */
+      .stat-label {
+        color: white !important; /* ✅ FIX: Force white color */
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        opacity: 1 !important; /* ✅ FIX: Full opacity */
+      }
+
+      .drop-zone {
+        border: 3px dashed #e2e8f0;
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        margin: 2rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .drop-zone::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .drop-zone:hover::before {
+        left: 100%;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+      }
+
+      .drop-zone-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .drop-zone-icon {
+        width: 100px;
+        height: 100px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        transition: all 0.3s ease;
+      }
+
+      .drop-zone:hover .drop-zone-icon {
+        transform: rotate(10deg) scale(1.1);
+      }
+
+      .drop-zone-icon i {
+        font-size: 3rem;
+        color: white;
+      }
+
+      .drop-zone-text {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+      }
+
+      .drop-zone-subtext {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .file-info {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 1px solid #93c5fd;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        color: #1e40af;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .file-info-icon {
+        width: 40px;
+        height: 40px;
+        background: #3b82f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .selected-files {
+        margin: 2rem 0;
+      }
+
+      .files-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      .file-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+      }
+
+      .file-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .file-details {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .file-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--primary-gradient);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+      }
+
+      .file-info-text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .file-name {
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.25rem;
+      }
+
+      .file-size {
+        color: #64748b;
+        font-size: 0.9rem;
+      }
+
+      .remove-file {
+        background: var(--danger-gradient);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .remove-file:hover {
+        transform: scale(1.1) rotate(90deg);
+      }
+
+      .upload-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2.5rem;
+      }
+
+      .btn-upload {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.4s ease;
+        min-width: 200px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-upload::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .btn-upload:hover::before {
+        left: 100%;
+      }
+
+      .btn-upload:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        color: white;
+      }
+
+      .btn-upload:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .progress-container {
+        margin: 2rem 0;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-radius: 15px;
+        border: 1px solid #86efac;
+        display: none;
+      }
+
+      .progress {
+        height: 12px;
+        border-radius: 6px;
+        background: #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 1rem;
+      }
+
+      .progress-bar {
+        background: var(--success-gradient);
+        border-radius: 6px;
+        transition: width 0.3s ease;
+      }
+
+      .progress-text {
+        text-align: center;
+        color: #166534;
+        font-weight: 500;
+      }
+
+      .alert {
+        border-radius: 15px;
+        border: none;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        font-weight: 500;
+      }
+
+      .alert-success {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
+        border: 1px solid #86efac;
+      }
+
+      .alert-danger {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #991b1b;
+        border: 1px solid #f87171;
+      }
+
+      .alert-warning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+        border: 1px solid #f59e0b;
+      }
+
+      /* ✅ MOBILE RESPONSIVE FIXES */
+      @media (max-width: 768px) {
+        .upload-card {
+          margin: 1rem;
+          padding: 2rem 1.5rem;
+        }
+
+        .upload-title {
+          font-size: 2rem;
+        }
+
+        .stat-card {
+          padding: 1.5rem 1rem;
+        }
+
+        .stat-number {
+          font-size: 2rem !important;
+        }
+
+        .stat-label {
+          font-size: 0.9rem !important;
+        }
+
+        .drop-zone {
+          padding: 3rem 1rem;
+        }
+
+        .file-item {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
+
+        .upload-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="upload-container">
+      <a href="/" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+      </a>
+
+      <div class="upload-card">
+        <!-- Header -->
+        <div class="upload-header">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <h1 class="upload-title">Upload Resumes</h1>
+          <p class="upload-subtitle">
+            Transform your hiring process with intelligent resume screening
+          </p>
+        </div>
+
+        <!-- ✅ FIXED: Statistics with Proper Visibility -->
+        <% if (typeof statistics !== 'undefined' && statistics) { %>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number"><%= statistics.totalResumes || 0 %></div>
+            <div class="stat-label">Total Uploaded</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number"><%= statistics.processedResumes || 0 %></div>
+            <div class="stat-label">Processed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number"><%= statistics.processingRate || 0 %>%</div>
+            <div class="stat-label">Success Rate</div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Upload Form -->
+        <form id="uploadForm" enctype="multipart/form-data">
+          <!-- Drop Zone -->
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-content">
+              <div class="drop-zone-icon">
+                <i class="fas fa-file-upload"></i>
+              </div>
+              <div class="drop-zone-text">Choose your resume files</div>
+              <div class="drop-zone-subtext">or drag and drop them here</div>
+              <input
+                type="file"
+                name="resumes"
+                id="fileInput"
+                class="file-input"
+                multiple
+                accept=".pdf,.doc,.docx"
+              />
+            </div>
+          </div>
+
+          <!-- File Info -->
+          <div class="file-info">
+            <div class="file-info-icon">
+              <i class="fas fa-info-circle"></i>
+            </div>
+            <div>
+              <strong>Supported formats:</strong> PDF, DOC, DOCX<br />
+              <strong>Limits:</strong> 10MB per file • Up to 20 files per upload
+            </div>
+          </div>
+
+          <!-- Selected Files -->
+          <div id="selectedFiles" class="selected-files" style="display: none">
+            <div class="files-header">
+              <i class="fas fa-list-ul"></i>
+              Selected Files
+            </div>
+            <div id="filesList"></div>
+          </div>
+
+          <!-- Progress -->
+          <div class="progress-container" id="progressContainer">
+            <div class="progress">
+              <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                id="progressBar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="progress-text" id="progressText">
+              Uploading files...
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="upload-actions">
+            <button type="submit" class="btn btn-upload" id="uploadBtn" disabled>
+              <i class="fas fa-cloud-upload-alt me-2"></i>
+              Upload Resumes
+            </button>
+          </div>
+        </form>
+
+        <!-- Results -->
+        <div id="resultsContainer">
+          <% if (typeof message !== 'undefined' && message) { %>
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <%= message %>
+            <% if (typeof processed !== 'undefined' && processed) { %>
+            <br /><strong>Processed:</strong> <%= processed %> file(s)
+            <% } %>
+            <% if (typeof failed !== 'undefined' && failed) { %>
+            <br /><strong>Failed:</strong> <%= failed %> file(s)
+            <% } %>
+          </div>
+          <% } %>
+          
+          <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <%= error %>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Enhanced upload functionality
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const selectedFiles = document.getElementById("selectedFiles");
+      const filesList = document.getElementById("filesList");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const uploadForm = document.getElementById("uploadForm");
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const resultsContainer = document.getElementById("resultsContainer");
+
+      let files = [];
+      const maxFiles = 20;
+      const maxFileSize = 10 * 1024 * 1024; // 10MB
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+
+      // Drag and drop handlers
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        dropZone.classList.add("dragover");
+      }
+
+      function unhighlight(e) {
+        dropZone.classList.remove("dragover");
+      }
+
+      dropZone.addEventListener("drop", handleDrop, false);
+      fileInput.addEventListener("change", handleFileSelect, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const droppedFiles = dt.files;
+        handleFiles(Array.from(droppedFiles));
+      }
+
+      function handleFileSelect(e) {
+        handleFiles(Array.from(e.target.files));
+      }
+
+      function handleFiles(newFiles) {
+        // Validate and filter files
+        const validFiles = newFiles.filter((file) => {
+          if (files.length >= maxFiles) {
+            showAlert("Maximum 20 files allowed", "warning");
+            return false;
+          }
+
+          if (!allowedTypes.includes(file.type)) {
+            showAlert(`Invalid file type: ${file.name}`, "warning");
+            return false;
+          }
+
+          if (file.size > maxFileSize) {
+            showAlert(
+              `File too large: ${file.name} (${formatFileSize(file.size)})`,
+              "warning"
+            );
+            return false;
+          }
+
+          // Check for duplicates
+          if (files.some((f) => f.name === file.name && f.size === file.size)) {
+            return false;
+          }
+
+          return true;
+        });
+
+        files.push(...validFiles);
+        updateFilesDisplay();
+        updateUploadButton();
+      }
+
+      function updateFilesDisplay() {
+        if (files.length === 0) {
+          selectedFiles.style.display = "none";
+          return;
+        }
+
+        selectedFiles.style.display = "block";
+        filesList.innerHTML = "";
+
+        files.forEach((file, index) => {
+          const fileItem = document.createElement("div");
+          fileItem.className = "file-item";
+
+          const fileIcon = getFileIcon(file.type);
+
+          fileItem.innerHTML = `
+            <div class="file-details">
+              <div class="file-icon">
+                <i class="${fileIcon}"></i>
+              </div>
+              <div class="file-info-text">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+              </div>
+            </div>
+            <button type="button" class="remove-file" onclick="removeFile(${index})" title="Remove file">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+
+          filesList.appendChild(fileItem);
+        });
+      }
+
+      function getFileIcon(fileType) {
+        switch (fileType) {
+          case "application/pdf":
+            return "fas fa-file-pdf";
+          case "application/msword":
+          case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            return "fas fa-file-word";
+          default:
+            return "fas fa-file";
+        }
+      }
+
+      function removeFile(index) {
+        files.splice(index, 1);
+        updateFilesDisplay();
+        updateUploadButton();
+      }
+
+      function updateUploadButton() {
+        const hasFiles = files.length > 0;
+        uploadBtn.disabled = !hasFiles;
+
+        if (hasFiles) {
+          uploadBtn.innerHTML = `
+            <i class="fas fa-cloud-upload-alt me-2"></i>
+            Upload ${files.length} File${files.length > 1 ? "s" : ""}
+          `;
+        } else {
+          uploadBtn.innerHTML = `
+            <i class="fas fa-cloud-upload-alt me-2"></i>
+            Select Files to Upload
+          `;
+        }
+      }
+
+      // ✅ FIXED: Form submission with proper error handling
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (files.length === 0) return;
+
+        const formData = new FormData();
+        files.forEach((file) => formData.append("resumes", file));
+
+        // Show progress
+        progressContainer.style.display = "block";
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+
+        try {
+          console.log(`📁 Starting upload of ${files.length} files`);
+
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+
+          console.log(`📡 Response status: ${response.status}`);
+          progressContainer.style.display = "none";
+
+          if (!response.ok) {
+            let errorMessage = 'Upload failed';
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+              console.error('❌ Upload error:', errorData);
+            } catch (parseError) {
+              console.error('❌ Could not parse error response');
+              errorMessage = `Upload failed with status ${response.status}`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+          console.log('✅ Upload successful:', result);
+
+          if (result.success) {
+            showSuccessResult(result);
+            resetForm();
+          } else {
+            showErrorResult(result);
+          }
+
+        } catch (error) {
+          console.error('💥 Upload error:', error);
+          progressContainer.style.display = "none";
+          showAlert("Upload failed: " + error.message, "danger");
+        } finally {
+          updateUploadButton();
+        }
+      });
+
+      function showSuccessResult(result) {
+        const processedCount = result.summary?.successful || result.processed || 0;
+        const failedCount = result.summary?.failed || result.failed || 0;
+
+        let successHTML = `
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Upload Successful!</strong><br>
+            ${result.message || `Processed ${processedCount} files successfully`}
+            ${failedCount > 0 ? `<br>Failed: ${failedCount} files` : ""}
+        `;
+
+        if (result.results && result.results.length > 0) {
+          const candidatesList = result.results.slice(0, 5).map(r => 
+            `• ${r.candidateName || 'Unknown'} (${(r.skills || []).length} skills)`
+          ).join('<br>');
+          
+          successHTML += `
+            <br><br>
+            <strong>Processed Candidates:</strong><br>
+            ${candidatesList}
+            ${result.results.length > 5 ? `<br><em>...and ${result.results.length - 5} more</em>` : ''}
+          `;
+        }
+
+        successHTML += `
+            <div class="mt-3">
+              <a href="/dashboard/resumes/processed" class="btn btn-success me-2">
+                <i class="fas fa-eye me-1"></i>View Results
+              </a>
+              <button onclick="location.reload()" class="btn btn-outline-success">
+                <i class="fas fa-plus me-1"></i>Upload More
+              </button>
+            </div>
+          </div>
+        `;
+
+        resultsContainer.innerHTML = successHTML;
+
+        // Auto-redirect after 5 seconds
+        setTimeout(() => {
+          window.location.href = '/dashboard/resumes/processed';
+        }, 5000);
+      }
+
+      function showErrorResult(result) {
+        resultsContainer.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Upload Failed</strong><br>
+            ${result.error || "Duplicate Resume detected!"}
+            ${result.code ? `<br><small>Error code: ${result.code}</small>` : ""}
+            <div class="mt-3">
+              <button onclick="resetResults()" class="btn btn-outline-danger">
+                <i class="fas fa-redo me-1"></i>Try Again
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function showAlert(message, type) {
+        const alertClass = type === "success" ? "alert-success" : 
+                          type === "danger" ? "alert-danger" : "alert-warning";
+        const icon = type === "success" ? "fa-check-circle" : 
+                     type === "danger" ? "fa-exclamation-triangle" : "fa-exclamation-circle";
+
+        resultsContainer.innerHTML = `
+          <div class="alert ${alertClass} alert-dismissible fade show">
+            <i class="fas ${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        `;
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      function resetForm() {
+        files = [];
+        fileInput.value = "";
+        updateFilesDisplay();
+        updateUploadButton();
+      }
+
+      function resetResults() {
+        resultsContainer.innerHTML = "";
+      }
+
+      // Initialize
+      updateUploadButton();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+﻿{
+  "networking": [
+    "TCP/IP", "OSPF", "HSRP", "VLAN", "DHCP", "STP", "BGP", "SNMP", 
+    "Cisco Meraki", "ThousandEyes", "Network Monitoring", "Network Security",
+    "Routing", "Switching", "LAN", "WAN", "VPN", "Firewalls", "Load Balancers",
+    "CCNA", "CCNP", "Network Infrastructure", "Network Troubleshooting",
+    "ping", "traceroute", "tracert", "Network Optimization", "ITIL",
+    "Network Engineering", "Network Administration", "Network Design",
+    "Cloud Networking", "Network Basics", "DNS", "Active Directory", 
+    "Windows Server", "System Administration", "IT Support", "Hardware",
+    "Software Installation", "Technical Support", "Help Desk", "Troubleshooting"
+  ],
+  
+  "development": [
+    "JavaScript", "Node.js", "Express", "Express.js", "React", "React.js", 
+    "Angular", "Vue", "Vue.js", "Python", "Java", "C#", "C++", "PHP", 
+    "Ruby", "Go", "Rust", "TypeScript", "Kotlin", "Swift", "Scala",
+    "HTML", "HTML5", "CSS", "CSS3", "SASS", "LESS", "Bootstrap", 
+    "Tailwind CSS", "jQuery", "AJAX", "REST", "REST API", "GraphQL", 
+    "JSON", "XML", "SOAP", "API", "Microservices", "Django", "Flask", 
+    "FastAPI", "Spring", "Spring Boot", "Laravel", "Next.js", "Nuxt.js", 
+    "Nest.js", "Full Stack Development", "Frontend Development", 
+    "Backend Development", "Web Development", "Software Development", 
+    "Programming", "MVC Architecture", "Object-Oriented Programming",
+    "Functional Programming"
+  ],
+  
+  "database": [
+    "SQL", "MySQL", "PostgreSQL", "SQLite", "Oracle", "NoSQL", "MongoDB",
+    "Redis", "Cassandra", "DynamoDB", "MariaDB", "Database Design",
+    "Database Management", "Database Administration", "Data Modeling",
+    "Query Optimization", "Database Security"
+  ],
+  
+  "cloud_devops": [
+    "AWS", "Azure", "Google Cloud", "GCP", "Docker", "Kubernetes", 
+    "Jenkins", "DevOps", "CI/CD", "Terraform", "Ansible", "CircleCI", 
+    "GitLab CI", "Containerization", "Infrastructure as Code", 
+    "Continuous Integration", "Continuous Deployment", "Configuration Management",
+    "Cloud Computing", "Serverless", "Microservices Architecture"
+  ],
+  
+  "version_control": [
+    "Git", "GitHub", "GitLab", "Version Control", "Source Control",
+    "Code Repository", "Branching", "Merging", "Pull Requests"
+  ],
+  
+  "operating_systems": [
+    "Linux", "Unix", "Windows", "Ubuntu", "CentOS", "Debian", 
+    "Windows Server", "System Administration", "Shell Scripting",
+    "PowerShell", "Bash"
+  ],
+  
+  "testing": [
+    "Testing", "Unit Testing", "Integration Testing", "Automation Testing", 
+    "Selenium", "Jest", "Cypress", "QA", "Quality Assurance", 
+    "Test-Driven Development", "Behavior-Driven Development", 
+    "Performance Testing", "Load Testing", "Security Testing"
+  ],
+  
+  "mobile_development": [
+    "Android", "iOS", "React Native", "Flutter", "Xamarin", "Cordova",
+    "Swift", "Kotlin", "Mobile App Development", "Cross-platform Development",
+    "Native Development", "Hybrid Apps"
+  ],
+  
+  "data_science": [
+    "Machine Learning", "Data Analysis", "Data Science", "NLP", 
+    "Natural Language Processing", "TensorFlow", "PyTorch", "Pandas", 
+    "NumPy", "Matplotlib", "Scikit-learn", "Data Mining", "Statistical Analysis",
+    "Predictive Modeling", "Deep Learning", "Computer Vision", "Big Data",
+    "R", "Jupyter", "Data Visualization", "Feature Engineering"
+  ],
+  
+  "business_intelligence": [
+    "Tableau", "Power BI", "Data Visualization", "Business Intelligence",
+    "Reporting", "Analytics", "Dashboard Creation", "KPI", "Metrics",
+    "Business Analysis", "Data Warehousing", "ETL"
+  ],
+  
+  "methodologies": [
+    "Agile", "Scrum", "Kanban", "Waterfall", "Lean", "Six Sigma",
+    "ITIL", "Project Management", "Agile Methodologies", "Sprint Planning",
+    "Retrospectives", "Daily Standups"
+  ],
+  
+  "design": [
+    "UI/UX", "User Interface", "User Experience", "Responsive Design", 
+    "Web Design", "Photoshop", "Illustrator", "Figma", "Sketch", 
+    "Adobe Creative Suite", "Wireframing", "Prototyping", "Design Systems",
+    "User Research", "Usability Testing", "Information Architecture"
+  ],
+  
+  "security": [
+    "Security", "Cybersecurity", "Information Security", "Network Security",
+    "Penetration Testing", "Vulnerability Assessment", "OWASP", 
+    "Ethical Hacking", "Security Auditing", "Compliance", "Risk Assessment",
+    "Incident Response", "Security Architecture", "Cryptography"
+  ],
+  
+  "monitoring_logging": [
+    "Monitoring", "Logging", "Elasticsearch", "Kibana", "Logstash", 
+    "Splunk", "Application Performance Monitoring", "Infrastructure Monitoring",
+    "Log Analysis", "Alerting", "Observability"
+  ],
+  
+  "blockchain": [
+    "Blockchain", "Ethereum", "Smart Contracts", "Cryptocurrency", 
+    "DeFi", "Web3", "Solidity", "Bitcoin", "Distributed Ledger"
+  ],
+  
+  "finance": [
+    "Financial Analysis", "Accounting", "Budgeting", "Financial Modeling",
+    "Audit", "Financial Reporting", "Accounts Payable", "Accounts Receivable",
+    "Tally ERP9", "Tally", "QuickBooks", "SAP", "ERP", "GST", "Taxation", 
+    "Tax Planning", "Financial Planning", "Budget Analysis", "Cost Analysis", 
+    "Variance Analysis", "Financial Statements", "Cash Flow", "Working Capital",
+    "Investment Analysis", "Risk Management", "Corporate Finance",
+    "Management Accounting", "Financial Controls", "Compliance"
+  ],
+  
+  "office_productivity": [
+    "Microsoft Office", "Excel", "PowerPoint", "Word", "Outlook", 
+    "SharePoint", "Teams", "Google Workspace", "Google Sheets", 
+    "Google Docs", "Office 365", "Spreadsheets", "Presentations",
+    "Document Management", "Email Management", "Calendar Management"
+  ],
+  
+  "marketing_sales": [
+    "Digital Marketing", "SEO", "Social Media", "Content Marketing",
+    "Email Marketing", "PPC", "Google Analytics", "Marketing Analytics",
+    "Lead Generation", "CRM", "Salesforce", "HubSpot", "Customer Relations",
+    "Sales", "Account Management", "Business Development", "Market Research",
+    "Brand Management", "Campaign Management", "Conversion Optimization"
+  ],
+  
+  "content_writing": [
+    "Content Writing", "Copywriting", "Technical Writing", "Creative Writing",
+    "Blog Writing", "SEO Writing", "Social Media Content", "Content Strategy",
+    "Editorial", "Proofreading", "WordPress", "Content Management"
+  ],
+  
+  "soft_skills": [
+    "Communication", "Leadership", "Teamwork", "Team Collaboration",
+    "Problem Solving", "Problem-Solving", "Critical Thinking", "Analytical",
+    "Analytical Thinking", "Project Management", "Time Management", 
+    "Organizational", "Organization Skills", "Presentation", "Public Speaking",
+    "Writing", "Documentation", "Research", "Attention to Detail",
+    "Adaptability", "Creativity", "Innovation", "Decision Making",
+    "Conflict Resolution", "Negotiation", "Customer Service", "Mentoring",
+    "Training", "Coaching", "Strategic Thinking", "Planning"
+  ],
+  
+  "general_it": [
+    "Customer Service", "Help Desk", "Technical Support", "IT Support",
+    "System Administration", "Network Administration", "Hardware", 
+    "Software Installation", "Troubleshooting", "User Support",
+    "IT Service Management", "Asset Management", "Backup and Recovery",
+    "Disaster Recovery", "Change Management"
+  ]
+}

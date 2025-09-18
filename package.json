@@ -1,0 +1,132 @@
+{
+  "name": "resume-screening-system",
+  "version": "1.0.0",
+  "description": "A resume screening system using Node.js, Express, MongoDB, EJS, and Bootstrap - Deployed on Render",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Build complete - Ready for Render'",
+    "render-build": "npm install",
+    "postinstall": "echo 'Dependencies installed successfully'",
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit",
+    "test:watch": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --watch",
+    "test:coverage": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --coverage --forceExit",
+    "test:unit": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles tests/unit",
+    "test:integration": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles tests/integration",
+    "test:all": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles",
+    "test:verbose": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --verbose --forceExit",
+    "test:debug": "cross-env NODE_ENV=test DEBUG=jest-mongodb:* jest --runInBand --detectOpenHandles --verbose",
+    "test:watch:integration": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --watch tests/integration",
+    "lint": "echo \"Linting not configured\"",
+    "clean": "rm -rf node_modules package-lock.json && npm install",
+    "health-check": "curl -f http://localhost:$PORT/health || exit 1"
+  },
+  "keywords": [
+    "resume",
+    "screening",
+    "nlp",
+    "nodejs",
+    "express",
+    "mongodb",
+    "ejs",
+    "bootstrap",
+    "ai",
+    "machine-learning",
+    "hr-tech",
+    "testing",
+    "jest",
+    "render",
+    "cloud",
+    "deployment",
+    "production"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "compromise": "^14.14.4",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.9",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.2.1",
+    "fs": "^0.0.1-security",
+    "fuse.js": "^7.1.0",
+    "gridfs-stream": "^1.1.1",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "mammoth": "^1.10.0",
+    "ml-knn": "^3.0.0",
+    "ml-matrix": "^6.12.1",
+    "mongoose": "^8.18.0",
+    "morgan": "^1.10.1",
+    "multer": "^1.4.5-lts.1",
+    "natural": "^6.12.0",
+    "path": "^0.12.7",
+    "pdf-parse": "^1.1.1",
+    "pdf2json": "^3.2.0",
+    "pdfjs-dist": "^5.4.149",
+    "stemmer": "^2.0.1",
+    "stopword": "^3.1.5"
+  },
+  "devDependencies": {
+    "@shelf/jest-mongodb": "^5.2.2",
+    "cross-env": "^10.0.0",
+    "form-data": "^4.0.4",
+    "jest": "^30.1.1",
+    "mime-types": "^3.0.1",
+    "mongodb-memory-server": "^10.2.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "preset": "@shelf/jest-mongodb",
+    "testEnvironment": "node",
+    "verbose": true,
+    "testTimeout": 20000,
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "controllers/**/*.js",
+      "services/**/*.js",
+      "models/**/*.js",
+      "routes/**/*.js",
+      "utils/**/*.js",
+      "!node_modules/**",
+      "!tests/**",
+      "!coverage/**",
+      "!server.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js",
+      "**/tests/**/*.spec.js"
+    ],
+    "maxWorkers": 1,
+    "detectOpenHandles": true,
+    "forceExit": true
+  },
+  "engines": {
+    "node": ">=18.x",
+    "npm": ">=8.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/resume-screening-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/resume-screening-system/issues"
+  },
+  "homepage": "https://resume-screening-system.onrender.com"
+}
