@@ -6,26 +6,34 @@
     <title><%= title %></title>
   <% } %>
 </head>
-<body>
+<body class="bg-light">
   <%- include('../partials/navbar') %>
   
-  <main class="container-fluid my-4">
+  <!-- Full-width main content area -->
+  <main class="container-fluid p-0 m-0" style="min-height: calc(100vh - 120px);">
     <!-- Success/Error Messages -->
     <% if (typeof successMessage !== 'undefined' && successMessage) { %>
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <%= successMessage %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="container-fluid px-3 pt-3">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= successMessage %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
       </div>
     <% } %>
     
     <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <%= errorMessage %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="container-fluid px-3 pt-3">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= errorMessage %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
       </div>
     <% } %>
     
-    <%- body %>
+    <!-- Full-width content area -->
+    <div class="container-fluid p-3">
+      <%- body %>
+    </div>
   </main>
   
   <%- include('../partials/footer') %>

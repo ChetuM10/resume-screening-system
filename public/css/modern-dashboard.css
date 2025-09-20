@@ -59,6 +59,146 @@ line-height: 1.6;
 overflow-x: hidden;
 }
 
+/* ───────────────── FULL WIDTH LAYOUT FIXES - COMPLETE ───────────────── */
+body {
+margin: 0 !important;
+padding: 0 !important;
+width: 100% !important;
+overflow-x: hidden;
+}
+
+.container-fluid {
+width: 100% !important;
+max-width: 100% !important;
+margin: 0 !important;
+padding-left: 15px !important;
+padding-right: 15px !important;
+}
+
+main.container-fluid {
+width: 100vw !important;
+max-width: 100vw !important;
+padding-left: 0 !important;
+padding-right: 0 !important;
+margin: 0 !important;
+}
+
+.navbar {
+width: 100% !important;
+margin: 0 !important;
+border-radius: 0 !important;
+}
+
+footer {
+width: 100% !important;
+margin: 0 !important;
+border-radius: 0 !important;
+}
+
+/* CONTENT CONTAINERS - NORMAL WIDTH FOR ALL CARDS */
+.container, .dashboard-container {
+max-width: 1200px !important;
+width: 100% !important;
+margin: 0 auto !important;
+padding: 2rem 20px !important;
+}
+
+/* Screening page content wrapper */
+.screening-content,
+.results-content,
+.content-wrapper {
+max-width: 1200px !important;
+margin: 0 auto !important;
+padding: 0 20px !important;
+}
+
+/* All card containers should be centered and limited width */
+.candidates-grid,
+.results-grid,
+.screening-results,
+.multi-results-container,
+.screening-cards-container {
+max-width: 1200px !important;
+margin: 0 auto !important;
+}
+
+/* Stats grids - normal width */
+.stats-grid {
+max-width: 1200px !important;
+margin: 0 auto !important;
+}
+
+/* Screening page specific content */
+.screening-page-content {
+max-width: 1200px !important;
+margin: 0 auto !important;
+padding: 0 20px !important;
+}
+
+/* Results page specific content */
+.results-page-content {
+max-width: 1200px !important;
+margin: 0 auto !important;
+padding: 0 20px !important;
+}
+
+/* Quick Start section */
+.quick-start-section {
+max-width: 1200px !important;
+margin: 0 auto !important;
+padding: 0 20px !important;
+}
+
+/* Enhanced screening section */
+.enhanced-screening-section {
+max-width: 1200px !important;
+margin: 0 auto !important;
+padding: 0 20px !important;
+}
+
+.modern-header {
+width: 100% !important;
+}
+
+@media (max-width: 768px) {
+.container, 
+.dashboard-container,
+.screening-content,
+.results-content,
+.content-wrapper,
+.screening-page-content,
+.results-page-content,
+.quick-start-section,
+.enhanced-screening-section {
+padding: 1rem 10px !important;
+}
+
+.modern-header {
+padding: 1rem 10px !important;
+}
+}
+
+@media (max-width: 480px) {
+.container, 
+.dashboard-container,
+.screening-content,
+.results-content,
+.content-wrapper,
+.screening-page-content,
+.results-page-content,
+.quick-start-section,
+.enhanced-screening-section {
+padding: 0.5rem 5px !important;
+}
+
+.modern-header {
+padding: 1rem 5px !important;
+}
+}
+
+
+
+
 /* ───────────────── TYPOGRAPHY ───────────────── */
 
 h1, h2, h3, h4, h5, h6 {
@@ -1341,6 +1481,45 @@ font-size: 0.85rem;
 padding: 0.7rem 1.2rem;
 }
 
+/* ───────────────── HIDE BREADCRUMB NAVIGATION ───────────────── */
+/* Hide the breadcrumb/secondary navigation that shows "Resume Screener" */
+.breadcrumb,
+.breadcrumb-item,
+[class*="breadcrumb"],
+.navbar ~ div:first-child,
+.container > div:first-child:contains("Resume Screener"),
+.container-fluid > div:first-child:contains("Resume Screener") {
+    display: none !important;
+}
+
+/* Hide any back navigation or breadcrumb links */
+.nav-breadcrumb,
+.page-breadcrumb,
+.back-nav,
+[class*="back-"],
+a[href="/"]::before {
+    display: none !important;
+}
+
+/* Hide any text element that contains "Resume Screener" but not the navbar brand */
+div:not(.navbar-brand):contains("Resume Screener") {
+    display: none !important;
+}
+
+/* More specific selectors for common breadcrumb patterns */
+.main-content > div:first-child,
+.content-wrapper > div:first-child,
+.page-header:contains("Resume Screener") {
+    display: none !important;
+}
+
+/* Hide any secondary navigation */
+.secondary-nav,
+.sub-nav,
+.page-nav {
+    display: none !important;
+}
+
 /* Resume card responsive adjustments */
 .resume-card {
 padding: 1.5rem;
@@ -1977,3 +2156,625 @@ text-decoration: none !important;
 .screening-stats span {
     color: #212529 !important;
 }
+
+
+/* ───────────────── PROFESSIONAL SCREENING RESULTS - MULTI-JD STYLE ───────────────── */
+
+/* Light blue header section */
+.screening-results-header,
+.results-summary-header {
+background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+color: #1565c0 !important;
+padding: 2rem !important;
+border-radius: var(--radius-lg) !important;
+margin-bottom: 2rem !important;
+text-align: center !important;
+box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1) !important;
+border: 1px solid rgba(21, 101, 192, 0.1) !important;
+}
+
+.screening-results-header h1,
+.results-summary-header h1 {
+color: #1565c0 !important;
+font-size: 2rem !important;
+font-weight: 700 !important;
+margin-bottom: 1rem !important;
+display: flex !important;
+align-items: center !important;
+justify-content: center !important;
+gap: 0.75rem !important;
+}
+
+.screening-results-header .summary-text,
+.results-summary-header .summary-text {
+color: #1976d2 !important;
+font-size: 1.1rem !important;
+font-weight: 500 !important;
+margin: 0 !important;
+}
+
+/* Professional candidate cards - WHITE background */
+.screening-results .candidate-card,
+.results-grid .candidate-card {
+background: white !important;
+border: 1px solid #e3f2fd !important;
+border-radius: var(--radius-lg) !important;
+box-shadow: 0 4px 20px rgba(21, 101, 192, 0.08) !important;
+margin-bottom: 1.5rem !important;
+transition: var(--transition) !important;
+overflow: hidden !important;
+}
+
+.screening-results .candidate-card:hover,
+.results-grid .candidate-card:hover {
+transform: translateY(-8px) !important;
+box-shadow: 0 12px 40px rgba(21, 101, 192, 0.15) !important;
+border-color: #2196f3 !important;
+}
+
+/* Blue header for each candidate card */
+.screening-results .candidate-header,
+.results-grid .candidate-header {
+background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+color: white !important;
+padding: 1.5rem 2rem !important;
+display: flex !important;
+justify-content: space-between !important;
+align-items: center !important;
+position: relative !important;
+}
+
+.screening-results .candidate-name,
+.results-grid .candidate-name {
+font-size: 1.4rem !important;
+font-weight: 700 !important;
+color: white !important;
+margin: 0 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.5px !important;
+}
+
+/* Score and rank badges */
+.screening-results .candidate-badges,
+.results-grid .candidate-badges {
+display: flex !important;
+gap: 0.75rem !important;
+align-items: center !important;
+}
+
+.screening-results .score-badge,
+.results-grid .score-badge {
+background: rgba(255, 255, 255, 0.95) !important;
+color: #1976d2 !important;
+padding: 0.5rem 1.2rem !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 700 !important;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.screening-results .rank-badge,
+.results-grid .rank-badge {
+background: #ff9800 !important;
+color: white !important;
+padding: 0.5rem 1.2rem !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 700 !important;
+box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3) !important;
+}
+
+/* WHITE card body with professional styling */
+.screening-results .candidate-body,
+.results-grid .candidate-body {
+background: white !important;
+padding: 2rem !important;
+color: #333 !important;
+}
+
+/* Contact information - DARK text on white background */
+.screening-results .contact-info,
+.results-grid .contact-info {
+display: flex !important;
+flex-wrap: wrap !important;
+gap: 1.5rem !important;
+margin-bottom: 2rem !important;
+padding-bottom: 1.5rem !important;
+border-bottom: 1px solid #f0f4f8 !important;
+}
+
+.screening-results .contact-item,
+.results-grid .contact-item {
+display: flex !important;
+align-items: center !important;
+gap: 0.75rem !important;
+color: #555 !important;
+font-size: 0.95rem !important;
+font-weight: 500 !important;
+}
+
+.screening-results .contact-item i,
+.results-grid .contact-item i {
+color: #2196f3 !important;
+font-size: 1.1rem !important;
+width: 20px !important;
+text-align: center !important;
+}
+
+/* Match reasons with professional styling */
+.screening-results .match-reasons,
+.results-grid .match-reasons {
+margin-top: 1.5rem !important;
+}
+
+.screening-results .match-reasons h6,
+.results-grid .match-reasons h6 {
+color: #1976d2 !important;
+font-weight: 600 !important;
+margin-bottom: 1.2rem !important;
+display: flex !important;
+align-items: center !important;
+gap: 0.5rem !important;
+font-size: 1rem !important;
+text-transform: uppercase !important;
+letter-spacing: 0.5px !important;
+}
+
+.screening-results .reason-item,
+.results-grid .reason-item {
+background: rgba(76, 175, 80, 0.08) !important;
+color: #2e7d32 !important;
+padding: 0.75rem 1.2rem !important;
+border-radius: 25px !important;
+font-size: 0.9rem !important;
+font-weight: 500 !important;
+margin-bottom: 0.75rem !important;
+display: flex !important;
+align-items: center !important;
+gap: 0.75rem !important;
+border: 1px solid rgba(76, 175, 80, 0.2) !important;
+transition: var(--transition) !important;
+}
+
+.screening-results .reason-item:hover,
+.results-grid .reason-item:hover {
+background: rgba(76, 175, 80, 0.12) !important;
+transform: translateX(5px) !important;
+}
+
+.screening-results .reason-item i,
+.results-grid .reason-item i {
+color: #4caf50 !important;
+font-size: 1rem !important;
+}
+
+/* Professional action buttons */
+.screening-results .candidate-actions,
+.results-grid .candidate-actions {
+margin-top: 2rem !important;
+padding-top: 1.5rem !important;
+border-top: 1px solid #f0f4f8 !important;
+display: flex !important;
+gap: 1rem !important;
+}
+
+.screening-results .btn-view-details,
+.results-grid .btn-view-details,
+.screening-results .btn-view,
+.results-grid .btn-view {
+background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%) !important;
+color: white !important;
+padding: 0.875rem 2rem !important;
+border: none !important;
+border-radius: 30px !important;
+font-size: 0.9rem !important;
+font-weight: 600 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.8px !important;
+transition: var(--transition) !important;
+text-decoration: none !important;
+display: inline-flex !important;
+align-items: center !important;
+gap: 0.75rem !important;
+box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3) !important;
+}
+
+.screening-results .btn-view-details:hover,
+.results-grid .btn-view-details:hover,
+.screening-results .btn-view:hover,
+.results-grid .btn-view:hover {
+transform: translateY(-3px) !important;
+box-shadow: 0 8px 30px rgba(156, 39, 176, 0.4) !important;
+color: white !important;
+text-decoration: none !important;
+}
+
+.screening-results .btn-download,
+.results-grid .btn-download {
+background: rgba(76, 175, 80, 0.08) !important;
+color: #2e7d32 !important;
+border: 2px solid #4caf50 !important;
+padding: 0.875rem 2rem !important;
+border-radius: 30px !important;
+font-size: 0.9rem !important;
+font-weight: 600 !important;
+text-transform: uppercase !important;
+letter-spacing: 0.8px !important;
+transition: var(--transition) !important;
+text-decoration: none !important;
+display: inline-flex !important;
+align-items: center !important;
+gap: 0.75rem !important;
+}
+
+.screening-results .btn-download:hover,
+.results-grid .btn-download:hover {
+background: #4caf50 !important;
+color: white !important;
+transform: translateY(-3px) !important;
+box-shadow: 0 8px 30px rgba(76, 175, 80, 0.4) !important;
+text-decoration: none !important;
+}
+
+/* Grid layout for results */
+.screening-results .results-grid,
+.results-grid {
+display: grid !important;
+grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important;
+gap: 2rem !important;
+margin-top: 2rem !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+.screening-results .results-grid,
+.results-grid {
+grid-template-columns: 1fr !important;
+gap: 1.5rem !important;
+}
+
+.screening-results .candidate-header,
+.results-grid .candidate-header {
+flex-direction: column !important;
+gap: 1rem !important;
+text-align: center !important;
+padding: 1.5rem !important;
+}
+
+.screening-results .contact-info,
+.results-grid .contact-info {
+flex-direction: column !important;
+gap: 1rem !important;
+}
+
+.screening-results .candidate-actions,
+.results-grid .candidate-actions {
+flex-direction: column !important;
+}
+
+.screening-results .btn-view-details,
+.results-grid .btn-view-details,
+.screening-results .btn-view,
+.results-grid .btn-view,
+.screening-results .btn-download,
+.results-grid .btn-download {
+width: 100% !important;
+justify-content: center !important;
+}
+}
+
+/* Additional professional touches */
+.screening-results,
+.results-container {
+background: transparent !important;
+}
+
+/* Ensure all text in cards is dark */
+.screening-results .candidate-card *:not(.candidate-header *):not(.score-badge *):not(.rank-badge *),
+.results-grid .candidate-card *:not(.candidate-header *):not(.score-badge *):not(.rank-badge *) {
+color: #333 !important;
+}
+
+/* ───────────────── MAKE GREEN TEXT WHITE FOR VISIBILITY ───────────────── */
+
+/* Change green reason items to white text */
+.reason-item,
+.match-reason,
+.qualification-item,
+.candidate-card .reason-item {
+    color: white !important;
+    background: rgba(76, 175, 80, 0.2) !important;
+}
+
+/* Make all green colored text white for better contrast */
+.text-success,
+.success-text {
+    color: white !important;
+}
+
+/* Fix green skill matches and experience text */
+.skill-match,
+.experience-match,
+.education-match,
+.project-match {
+    color: white !important;
+}
+
+/* Specifically target the green match items in candidate cards */
+.candidate-card ul li,
+.candidate-card .match-item,
+.candidate-card .qualification-point {
+    color: white !important;
+}
+
+/* Fix any green checkmark items */
+.fa-check + *,
+.fa-check-circle + *,
+.check-item,
+[class*="check"] {
+    color: white !important;
+}
+
+/* Target specific green text elements */
+.candidate-result-card .text-success,
+.multi-results-container .text-success,
+.results-container .text-success {
+    color: white !important;
+}
+
+/* Make sure all list items in dark cards are white */
+.candidate-card li,
+.candidate-result-card li {
+    color: white !important;
+}
+
+/* Fix any remaining green text issues */
+.candidate-body .text-success,
+.candidate-content .text-success {
+    color: white !important;
+}
+
+/* Override Bootstrap success color specifically */
+.text-success,
+.text-success a,
+.text-success:hover {
+    color: white !important;
+}
+
+/* Target any elements with green color specifically */
+[style*="color: green"],
+[style*="color: #4caf50"],
+[style*="color: #28a745"],
+[style*="color: rgb(76, 175, 80)"] {
+    color: white !important;
+}
+
+/* ───────────────── CUSTOM SCREENING RESULTS TEXT VISIBILITY ───────────────── */
+
+/* Target CUSTOM screening results specifically */
+.screening-results .candidate-card,
+.results-grid .candidate-card,
+.custom-screening-results .candidate-card {
+    color: white !important;
+}
+
+/* Make all text in custom screening cards white */
+.screening-results .candidate-card *:not(.btn):not(.badge),
+.results-grid .candidate-card *:not(.btn):not(.badge),
+.custom-screening-results .candidate-card *:not(.btn):not(.badge) {
+    color: white !important;
+}
+
+/* Specifically target contact information in custom screening */
+.screening-results .contact-info,
+.screening-results .contact-item,
+.results-grid .contact-info,
+.results-grid .contact-item {
+    color: white !important;
+}
+
+/* Target match reasons in custom screening */
+.screening-results .match-reasons,
+.screening-results .match-reasons *,
+.results-grid .match-reasons,
+.results-grid .match-reasons * {
+    color: white !important;
+}
+
+/* Make sure list items are white in custom screening */
+.screening-results ul,
+.screening-results li,
+.results-grid ul,
+.results-grid li {
+    color: white !important;
+}
+
+/* Target the candidate body content in custom screening */
+.screening-results .candidate-body,
+.screening-results .candidate-content,
+.results-grid .candidate-body,
+.results-grid .candidate-content {
+    color: white !important;
+}
+
+/* Override any remaining text color issues in custom screening */
+.screening-results p,
+.screening-results span:not(.badge),
+.screening-results div:not(.btn):not(.badge),
+.results-grid p,
+.results-grid span:not(.badge),
+.results-grid div:not(.btn):not(.badge) {
+    color: white !important;
+}
+
+/* Force white text on all elements in screening results containers */
+.screening-results,
+.results-grid {
+    color: white !important;
+}
+
+.screening-results *:not(.candidate-header *):not(.btn *):not(.badge *),
+.results-grid *:not(.candidate-header *):not(.btn *):not(.badge *) {
+    color: white !important;
+}
+
+/* ───────────────── PROFESSIONAL SCORE AND RANK BADGES DESIGN ───────────────── */
+
+/* Modern Score Badge Design */
+.score-badge,
+.candidate-header .score-badge,
+.screening-results .score-badge,
+.results-grid .score-badge {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    color: #2c3e50 !important;
+    border: 2px solid #e9ecef !important;
+    padding: 0.7rem 1.5rem !important;
+    border-radius: 30px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    text-shadow: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Score Badge Icon */
+.score-badge::before {
+    content: "📊" !important;
+    margin-right: 0.5rem !important;
+    font-size: 0.9rem !important;
+}
+
+/* Rank Badge Modern Design */
+.rank-badge,
+.candidate-header .rank-badge,
+.screening-results .rank-badge,
+.results-grid .rank-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%) !important;
+    color: #2c3e50 !important;
+    border: 2px solid #f6d55c !important;
+    padding: 0.7rem 1.5rem !important;
+    border-radius: 30px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Rank Badge Icon */
+.rank-badge::before {
+    content: "🏆" !important;
+    margin-right: 0.5rem !important;
+    font-size: 0.9rem !important;
+}
+
+/* Different rank colors */
+.rank-badge:contains("#1")::before {
+    content: "🥇" !important;
+}
+
+.rank-badge:contains("#2")::before {
+    content: "🥈" !important;
+}
+
+.rank-badge:contains("#3")::before {
+    content: "🥉" !important;
+}
+
+/* Hover Effects */
+.score-badge:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    border-color: #dee2e6 !important;
+}
+
+.rank-badge:hover {
+    background: linear-gradient(135deg, #ffed4a 0%, #fcd34d 100%) !important;
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4) !important;
+    border-color: #f59e0b !important;
+}
+
+/* Badge Container Styling */
+.candidate-badges {
+    display: flex !important;
+    gap: 1.2rem !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+}
+
+/* Shimmer Effect for Score Badge */
+.score-badge::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+    transition: left 0.5s !important;
+}
+
+.score-badge:hover::after {
+    left: 100% !important;
+}
+
+/* Pulse Effect for Rank Badge */
+@keyframes pulse {
+    0% { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5); }
+    100% { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
+}
+
+.rank-badge {
+    animation: pulse 2s ease-in-out infinite !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .candidate-badges {
+        justify-content: center !important;
+        gap: 0.8rem !important;
+    }
+    
+    .score-badge,
+    .rank-badge {
+        padding: 0.6rem 1.2rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .score-badge::before,
+    .rank-badge::before {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Ensure text is always black */
+.score-badge,
+.score-badge *,
+.rank-badge,
+.rank-badge * {
+    color: #2c3e50 !important;
+}
+
+/* Fix for overlapping text */
+.candidate-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 1.8rem 2rem !important;
+    min-height: 80px !important;
+}
+
+.candidate-name {
+    flex: 1 !important;
+    margin-right: 1rem !important;
+}
+
