@@ -1,7 +1,7 @@
 /**
- * @fileoverview Results Controller - SIMPLIFIED VERSION
+ * @fileoverview Results Controller - FIXED VERSION
  * @author Resume Screening System
- * @version 3.0.0
+ * @version 3.1.0 - Fixed variable passing to templates
  */
 
 const Screening = require('../models/Screening');
@@ -21,21 +21,39 @@ const getScreeningResults = async (req, res) => {
       });
     }
 
+    // Sort results by match score
     if (sc.results && sc.results.length > 0) {
       sc.results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     }
 
-    res.render('pages/results', {
-      title: `Results - ${sc.jobTitle}`,
-      jobTitle: sc.jobTitle,
-      totalCandidates: sc.statistics?.totalCandidates || 0,
-      qualifiedCandidates: sc.statistics?.qualifiedCandidates || 0,
-      averageScore: Math.round(sc.statistics?.averageScore || 0),
-      results: sc.results || [],
-      screeningId: sc._id,
-      createdAt: sc.createdAt,
-      currentYear: new Date().getFullYear()
+    // ✅ CRITICAL FIX: Ensure all template variables are defined
+    const templateData = {
+      title: `Results - ${sc.jobTitle || 'Unknown Position'}`,
+      jobTitle: sc.jobTitle || 'Unknown Position',                    // ✅ FIXED: Always defined
+      totalCandidates: sc.statistics?.totalCandidates || 0,           // ✅ FIXED: Always defined
+      qualifiedCandidates: sc.statistics?.qualifiedCandidates || 0,   // ✅ FIXED: Always defined
+      averageScore: Math.round(sc.statistics?.averageScore || 0),     // ✅ FIXED: Always defined
+      results: sc.results || [],                                      // ✅ FIXED: Always defined
+      screeningId: sc._id,                                           // ✅ ADDED: For template use
+      createdAt: sc.createdAt,                                       // ✅ FIXED: Always defined
+      currentYear: new Date().getFullYear(),
+      // ✅ ADDED: Additional data for backup/compatibility
+      screening: {
+        ...sc,
+        createdAtFormatted: new Date(sc.createdAt).toLocaleDateString()
+      },
+      statistics: sc.statistics || {},
+      hasResults: (sc.results && sc.results.length > 0)
+    };
+
+    console.log('✅ Template data being passed:', {
+      jobTitle: templateData.jobTitle,
+      totalCandidates: templateData.totalCandidates,
+      resultsCount: templateData.results.length
     });
+
+    res.render('pages/results', templateData);
+
   } catch (err) {
     console.error('Error loading screening results:', err);
     res.status(500).render('pages/error', {
@@ -64,7 +82,6 @@ const getCandidateDetail = async (req, res) => {
 
     // Fetch candidate data from Resume model
     const resume = await Resume.findById(candidateId).lean();
-
     if (!resume) {
       console.log('❌ Candidate not found in database');
       return res.status(404).render('pages/error', {
@@ -80,7 +97,7 @@ const getCandidateDetail = async (req, res) => {
     // ✅ SIMPLIFIED: Just pass basic resume data, no complex calculations
     res.render('pages/candidateDetail', {
       title: `${resume.candidateName || 'Unknown Candidate'} - Profile`,
-      resume: resume,
+      resume: resume,                                                 // ✅ FIXED: Always defined
       currentYear: new Date().getFullYear()
     });
 
@@ -115,6 +132,7 @@ const getResultsJson = async (req, res, next) => {
       success: true,
       data: sc
     });
+
   } catch (err) {
     console.error('Error fetching screening JSON:', err);
     next(err);

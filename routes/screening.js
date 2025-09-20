@@ -176,7 +176,7 @@ router.get('/results/:id', async (req, res) => {
   try {
     const { id } = req.params;
     logScreeningOperation('view-results', `ID: ${id}`);
-
+    
     if (!isValidObjectId(id)) {
       return res.status(400).render('pages/error', {
         title: 'Invalid Request',
@@ -185,7 +185,10 @@ router.get('/results/:id', async (req, res) => {
       });
     }
 
-    const screening = await Screening.findById(id).lean();
+    const screening = await Screening.findById(id)
+      .populate('results.resumeId')
+      .lean();
+
     if (!screening) {
       return res.status(404).render('pages/error', {
         title: 'Not Found',
@@ -194,25 +197,37 @@ router.get('/results/:id', async (req, res) => {
       });
     }
 
+    // Sort results by match score
+    if (screening.results && screening.results.length > 0) {
+      screening.results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    }
+
     const enhancedResults = screening.results?.map((candidate, index) => ({
       ...candidate,
       displayRank: index + 1,
       scoreClass: candidate.matchScore >= 80 ? 'score-excellent' :
-                 candidate.matchScore >= 60 ? 'score-good' :
-                 candidate.matchScore >= 40 ? 'score-average' : 'score-poor'
+                  candidate.matchScore >= 60 ? 'score-good' :
+                  candidate.matchScore >= 40 ? 'score-average' : 'score-poor'
     })) || [];
 
     console.log(`✅ Loaded ${enhancedResults.length} results for screening: ${screening.jobTitle}`);
 
+    // ✅ FIXED: Pass all required variables to template
     res.render('pages/results', {
-      title: `${screening.jobTitle} - Results`,
-      screening: {
+      title: `Results - ${screening.jobTitle}`,
+      jobTitle: screening.jobTitle || 'Unknown Position',                          // ✅ CRITICAL FIX
+      totalCandidates: screening.statistics?.totalCandidates || 0,                 // ✅ FIXED
+      qualifiedCandidates: screening.statistics?.qualifiedCandidates || 0,         // ✅ FIXED  
+      averageScore: Math.round(screening.statistics?.averageScore || 0),           // ✅ FIXED
+      results: enhancedResults,                                                    // ✅ FIXED
+      screeningId: screening._id,                                                  // ✅ ADDED
+      createdAt: screening.createdAt,                                             // ✅ FIXED
+      currentYear: new Date().getFullYear(),
+      screening: {                                                                // ✅ BACKUP DATA
         ...screening,
         createdAtFormatted: new Date(screening.createdAt).toLocaleDateString()
       },
-      results: enhancedResults,
       statistics: screening.statistics,
-      totalCandidates: screening.totalCandidates,
       hasResults: enhancedResults.length > 0
     });
 
@@ -225,6 +240,7 @@ router.get('/results/:id', async (req, res) => {
     });
   }
 });
+
 
 /**
  * ✅ CRITICAL FIX: Multi-JD results route with enhanced score handling

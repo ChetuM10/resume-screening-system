@@ -1,110 +1,315 @@
-<div class="screening-results">
+<div class="container-fluid py-4">
   <!-- Header Section -->
   <div class="row mb-4">
     <div class="col-12">
-      <% if (typeof jobTitle !== 'undefined') { %>
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h1 class="display-6 text-primary mb-2">🎯 Screening Results</h1>
-            <p class="lead mb-0">Position: <strong><%= jobTitle %></strong></p>
-          </div>
-          <div class="text-end">
-            <span class="badge bg-info fs-6 px-3 py-2">
-              Found <strong><%= totalCandidates || 0 %></strong> candidates
-            </span>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fas fa-search-plus text-primary"></i>
+            Screening Results
+          </h1>
+          <p class="text-muted mb-0">Position: <strong><%= jobTitle || 'Unknown Position' %></strong></p>
+        </div>
+        <div class="text-end">
+          <a href="/screening" class="btn btn-outline-primary">
+            <i class="fas fa-plus"></i> New Screening
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-users fa-2x text-info mb-2"></i>
+          <h4 class="mb-1"><%= totalCandidates || 0 %></h4>
+          <p class="text-muted mb-0">Total Candidates</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+          <h4 class="mb-1"><%= qualifiedCandidates || 0 %></h4>
+          <p class="text-muted mb-0">Qualified</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+          <h4 class="mb-1"><%= averageScore || 0 %>%</h4>
+          <p class="text-muted mb-0">Average Score</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-calendar fa-2x text-secondary mb-2"></i>
+          <h4 class="mb-1"><%= new Date(createdAt).toLocaleDateString() %></h4>
+          <p class="text-muted mb-0">Screening Date</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="row">
+    <div class="col-12">
+      <% if (results && results.length > 0) { %>
+        <!-- Filter Controls -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <label for="minMatchScore" class="form-label">Filter by minimum match score:</label>
+                <input type="range" class="form-range" id="minMatchScore" min="0" max="100" value="0">
+                <small class="text-muted">Score: <span id="scoreDisplay">0</span>%</small>
+              </div>
+              <div class="col-md-6">
+                <label for="sortResults" class="form-label">Sort by:</label>
+                <select class="form-select" id="sortResults">
+                  <option value="score-desc">Match Score (High to Low)</option>
+                  <option value="score-asc">Match Score (Low to High)</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Candidates Grid -->
+        <div class="row" id="candidatesContainer">
+          <% results.forEach((result, index) => { %>
+            <div class="col-lg-4 col-md-6 mb-4 candidate-result-card" data-score="<%= result.matchScore || 0 %>">
+              <div class="card border-0 shadow-sm h-100 candidate-card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">
+                    <i class="fas fa-user"></i>
+                    <%= result.resumeId?.candidateName || result.candidateName || 'Unknown Candidate' %>
+                  </h5>
+                  <span class="badge bg-light text-primary fs-6">
+                    Rank #<%= index + 1 %>
+                  </span>
+                </div>
+                
+                <div class="card-body">
+                  <!-- Match Score -->
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Match Score:</span>
+                    <span class="badge bg-<%= (result.matchScore || 0) >= 75 ? 'success' : (result.matchScore || 0) >= 50 ? 'warning' : 'danger' %> fs-6 match-score-display">
+                      <%= Math.round(result.matchScore || 0) %>%
+                    </span>
+                  </div>
+
+                  <!-- Contact Info -->
+                  <div class="mb-3">
+                    <% if (result.resumeId?.email || result.email) { %>
+                      <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-envelope text-muted me-2"></i>
+                        <small class="text-truncate"><%= result.resumeId?.email || result.email %></small>
+                      </div>
+                    <% } %>
+                    <% if (result.resumeId?.phone || result.phone) { %>
+                      <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-phone text-muted me-2"></i>
+                        <small><%= result.resumeId?.phone || result.phone %></small>
+                      </div>
+                    <% } %>
+                  </div>
+
+                  <!-- Match Reasons -->
+                  <div class="mb-3">
+                    <h6 class="text-primary">
+                      <i class="fas fa-check-circle"></i> Match Reasons:
+                    </h6>
+                    <% if (result.matchReasons && result.matchReasons.length > 0) { %>
+                      <% result.matchReasons.forEach(reason => { %>
+                        <div class="d-flex align-items-center mb-1">
+                          <i class="fas fa-dot-circle text-success me-2" style="font-size: 0.5rem;"></i>
+                          <small class="text-muted"><%= reason %></small>
+                        </div>
+                      <% }); %>
+                    <% } else { %>
+                      <small class="text-muted">No specific match reasons available</small>
+                    <% } %>
+                  </div>
+
+                  <!-- Experience -->
+                  <% if (result.resumeId?.experience?.years !== undefined) { %>
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between">
+                        <span class="text-muted">Experience:</span>
+                        <span class="badge bg-info">
+                          <%= result.resumeId.experience.years %> years
+                        </span>
+                      </div>
+                    </div>
+                  <% } %>
+
+                  <!-- Skills Preview -->
+                  <% if (result.resumeId?.skills && result.resumeId.skills.length > 0) { %>
+                    <div class="mb-3">
+                      <h6 class="text-secondary mb-2">Top Skills:</h6>
+                      <div class="d-flex flex-wrap gap-1">
+                        <% result.resumeId.skills.slice(0, 3).forEach(skill => { %>
+                          <span class="badge bg-secondary"><%= skill %></span>
+                        <% }); %>
+                        <% if (result.resumeId.skills.length > 3) { %>
+                          <span class="badge bg-light text-dark">+<%= result.resumeId.skills.length - 3 %> more</span>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% } %>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card-footer bg-transparent">
+                  <div class="d-flex gap-2">
+                    <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>" 
+                       class="btn btn-primary flex-fill">
+                      <i class="fas fa-eye"></i> VIEW DETAILS
+                    </a>
+                    <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>/download" 
+                       class="btn btn-outline-secondary" 
+                       target="_blank">
+                      <i class="fas fa-download"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+
+        <!-- Results Summary -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i>
+              Showing <strong><span id="visibleCount"><%= results.length %></span></strong> of <strong><%= results.length %></strong> candidates
+            </div>
+          </div>
+        </div>
+
       <% } else { %>
-        <h1 class="display-6 text-primary mb-3">📊 Screening Results</h1>
-        <div class="alert alert-info">
-          <p class="mb-0">Found <strong><%= totalCandidates || 0 %></strong> candidates in database</p>
+        <!-- No Results -->
+        <div class="text-center py-5">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body py-5">
+              <i class="fas fa-search fa-4x text-muted mb-4"></i>
+              <h3 class="text-muted mb-3">No candidates match your screening criteria</h3>
+              <p class="text-muted mb-4">
+                Found <%= totalCandidates || 0 %> candidates in database, but none meet the specified requirements.
+              </p>
+              <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="/screening" class="btn btn-primary">
+                  <i class="fas fa-cog"></i> Adjust Screening Criteria
+                </a>
+                <a href="/upload" class="btn btn-outline-secondary">
+                  <i class="fas fa-upload"></i> Upload More Resumes
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       <% } %>
     </div>
   </div>
-  
-  <!-- Results Grid -->
-  <% if (results && results.length > 0) { %>
-    <div class="row g-4">
-      <% results.forEach((r, i) => { %>
-        <div class="col-xl-4 col-lg-6 col-md-6">
-          <div class="card h-100 shadow-sm border-0">
-            <div class="card-header bg-gradient bg-primary text-white">
-              <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 text-white"><%= r.candidateName || 'Unknown Candidate' %></h5>
-                <div>
-                  <span class="badge bg-light text-primary me-2">Score: <%= r.matchScore || r.score || 0 %>%</span>
-                  <span class="badge bg-warning text-dark">Rank: #<%= r.overallRank || (i+1) %></span>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-12 mb-3">
-                  <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-envelope text-primary me-2"></i>
-                    <strong>Email:</strong>
-                    <span class="ms-2"><%= r.email %></span>
-                  </div>
-                  <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-phone text-success me-2"></i>
-                    <strong>Phone:</strong>
-                    <span class="ms-2"><%= r.phone %></span>
-                  </div>
-                </div>
-                
-                <% if (r.reasons && r.reasons.length > 0) { %>
-                  <div class="col-12">
-                    <h6 class="text-muted mb-2">🔍 Match Reasons:</h6>
-                    <ul class="list-unstyled mb-3">
-                      <% r.reasons.forEach(reason => { %>
-                        <li class="text-success mb-1">
-                          <i class="fas fa-check-circle me-2"></i><%= reason %>
-                        </li>
-                      <% }) %>
-                    </ul>
-                  </div>
-                <% } %>
-              </div>
-            </div>
-            <div class="card-footer bg-transparent border-top-0">
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-primary btn-sm">
-                  <i class="fas fa-eye me-1"></i>View Details
-                </button>
-                <button class="btn btn-outline-success btn-sm">
-                  <i class="fas fa-download me-1"></i>Download Resume
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }) %>
-    </div>
-  <% } else { %>
-    <div class="row">
-      <div class="col-12">
-        <div class="alert alert-warning border-0 shadow-sm">
-          <div class="text-center py-4">
-            <i class="fas fa-search fa-3x text-warning mb-3"></i>
-            <h4>No Results Found</h4>
-            <p class="mb-3">No candidates match your screening criteria.</p>
-            <p class="text-muted">Try adjusting your requirements or upload more resumes.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  <% } %>
-  
-  <!-- Action Buttons -->
-  <div class="row mt-5">
-    <div class="col-12 text-center">
-      <a href="/screening" class="btn btn-success btn-lg me-3">
-        <i class="fas fa-arrow-left me-2"></i>Back to Screening
-      </a>
-      <a href="/dashboard" class="btn btn-info btn-lg">
-        <i class="fas fa-chart-dashboard me-2"></i>Dashboard
-      </a>
-    </div>
-  </div>
 </div>
+
+<!-- Include Results JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Score filter functionality
+  const scoreSlider = document.getElementById('minMatchScore');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const candidateCards = document.querySelectorAll('.candidate-result-card');
+  const visibleCountSpan = document.getElementById('visibleCount');
+
+  if (scoreSlider) {
+    scoreSlider.addEventListener('input', function() {
+      const minScore = parseInt(this.value);
+      scoreDisplay.textContent = minScore;
+      
+      let visibleCount = 0;
+      candidateCards.forEach(card => {
+        const cardScore = parseInt(card.dataset.score || 0);
+        if (cardScore >= minScore) {
+          card.style.display = '';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      
+      if (visibleCountSpan) {
+        visibleCountSpan.textContent = visibleCount;
+      }
+    });
+  }
+
+  // Sort functionality
+  const sortSelect = document.getElementById('sortResults');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const container = document.getElementById('candidatesContainer');
+      const cards = Array.from(container.children);
+      
+      cards.sort((a, b) => {
+        switch (this.value) {
+          case 'score-desc':
+            return parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0);
+          case 'score-asc':
+            return parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0);
+          case 'name-asc':
+            const nameA = a.querySelector('.card-header h5').textContent.trim().toLowerCase();
+            const nameB = b.querySelector('.card-header h5').textContent.trim().toLowerCase();
+            return nameA.localeCompare(nameB);
+          case 'name-desc':
+            const nameA2 = a.querySelector('.card-header h5').textContent.trim().toLowerCase();
+            const nameB2 = b.querySelector('.card-header h5').textContent.trim().toLowerCase();
+            return nameB2.localeCompare(nameA2);
+          default:
+            return 0;
+        }
+      });
+      
+      // Re-append sorted cards
+      cards.forEach(card => container.appendChild(card));
+    });
+  }
+});
+</script>
+
+<style>
+.candidate-card {
+  transition: all 0.3s ease;
+}
+
+.candidate-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.match-score-display {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card-header {
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+#scoreDisplay {
+  font-weight: 600;
+  color: #0d6efd;
+}
+</style>
