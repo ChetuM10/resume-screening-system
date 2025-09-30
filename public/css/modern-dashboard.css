@@ -2778,3 +2778,112 @@ color: #333 !important;
     margin-right: 1rem !important;
 }
 
+/* === Candidate Profile: dark sidebar contrast fix (minimal) === */
+.profile-sidebar,
+.candidate-profile-sidebar,
+.candidate-left-pane {
+  color: #e9ecef !important;
+}
+
+.profile-sidebar .section-title,
+.profile-sidebar .label,
+.profile-sidebar .resume-info-label,
+.profile-sidebar .candidate-name,
+.profile-sidebar .candidate-title {
+  color: #ffffff !important;
+}
+
+.profile-sidebar .contact-item,
+.profile-sidebar .resume-info-item,
+.profile-sidebar .resume-meta small {
+  color: #e9ecef !important;
+}
+
+.profile-sidebar .contact-item i,
+.profile-sidebar .icon,
+.profile-sidebar .bi,
+.profile-sidebar .fa {
+  color: #9ec1ff !important;
+}
+
+/* Links and file names on dark background */
+.profile-sidebar a,
+.profile-sidebar .resume-file-name {
+  color: #cfe1ff !important;
+  text-decoration: none;
+}
+.profile-sidebar a:hover,
+.profile-sidebar .resume-file-name:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
+
+/* Badges/chips on dark panels */
+.profile-sidebar .badge,
+.profile-sidebar .chip,
+.profile-sidebar .tag {
+  background: rgba(255,255,255,0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+/* Ensure muted text is readable on dark pane */
+.profile-sidebar .text-muted,
+.profile-sidebar .text-secondary {
+  color: #cbd5e1 !important;
+}
+
+/* === Candidate Resume Content: readability fix (scoped) === */
+.resume-card {
+  background: #0b1220 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 1rem 1.25rem !important;
+}
+
+.resume-card h5 { color: #ffffff !important; }
+
+.extracted-text-container pre,
+.resume-card pre {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  line-height: 1.55 !important;
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+}
+
+.resume-card .text-muted,
+.resume-card .text-secondary { color: #334155 !important; }
+
+/* === Processed Resumes page: ensure info text is white === */
+.processed-resumes .card,
+.processed-resumes .card p,
+.processed-resumes .card span,
+.processed-resumes .card small,
+.processed-resumes .card .text-muted,
+.processed-resumes .card .text-secondary,
+.processed-resumes .card .resume-file-name,
+.processed-resumes .card .contact-item,
+.processed-resumes .card .resume-meta,
+.processed-resumes .card .meta,
+.processed-resumes .card .label,
+.processed-resumes .card .value {
+  color: #ffffff !important;
+}
+
+/* Keep badges/pills readable on dark cards */
+.processed-resumes .card .badge,
+.processed-resumes .card .chip,
+.processed-resumes .card .tag {
+  color: #ffffff !important;
+}
+
+/* Icons can be a softer white-blue for contrast */
+.processed-resumes .card i,
+.processed-resumes .card .fa,
+.processed-resumes .card .bi {
+  color: #cfe1ff !important;
+}

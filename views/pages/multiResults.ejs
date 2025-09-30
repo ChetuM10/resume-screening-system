@@ -233,7 +233,8 @@
                           </div>
                           <div class="progress mb-2" style="height: 4px;">
                             <div class="progress-bar bg-<%= jobScore >= 75 ? 'success' : jobScore >= 50 ? 'warning' : 'danger' %>" 
-                                 style="width: <%= jobScore %>%;"></div>
+                                 style="width: <%= jobScore || 0 %>%;"
+                                 title="Score: <%= Math.round(jobScore) %>%"></div>
                           </div>
                         <% }); %>
                         <% if (Object.keys(candidate.allJobScores).length > 3) { %>
