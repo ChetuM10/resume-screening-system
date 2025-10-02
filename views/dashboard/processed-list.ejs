@@ -8,220 +8,275 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/css/modern-dashboard.css" rel="stylesheet">
     <style>
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #dc3545;
-            border: none;
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            opacity: 0;
-            z-index: 10;
-        }
-        
-        .resume-card {
-            position: relative;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-            border-left: 4px solid #28a745;
-        }
-        
-        .resume-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        }
-        
-        .resume-card:hover .delete-btn {
-            opacity: 1;
-        }
-        
-        .delete-btn:hover {
-            background: #c82333;
-            transform: scale(1.1);
-        }
-        
-        .bulk-actions {
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .danger-btn {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .danger-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
-            color: white;
-        }
+    /* ✅ DARK CARD WITH WHITE TEXT */
+    .resume-card {
+        position: relative;
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid #28a745;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .resume-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(40, 167, 69, 0.3);
+        border-color: rgba(40, 167, 69, 0.5);
+    }
 
-        .processed-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-        }
+    /* ✅ WHITE TEXT FOR CANDIDATE NAME */
+    .resume-name {
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
 
-        .delete-animation {
-            animation: fadeOut 0.5s ease-out forwards;
-        }
+    /* ✅ WHITE TEXT FOR ALL INFO ITEMS */
+    .resume-info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #e2e8f0 !important;
+    }
 
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.8); }
-        }
+    .resume-info-item i {
+        width: 16px;
+        text-align: center;
+        color: inherit;
+    }
 
-        .resume-info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.3rem;
-            font-size: 0.9rem;
-        }
+    .resume-info-item span {
+        color: #e2e8f0 !important;
+    }
 
-        .resume-info-item i {
-            width: 16px;
-            text-align: center;
-        }
+    /* ✅ LIGHT GRAY FOR MUTED TEXT */
+    .resume-info-item .text-muted {
+        color: #a0aec0 !important;
+    }
 
-        .skill-badge.bg-secondary {
-            background: #6c757d !important;
-        }
+    .text-muted.small {
+        color: #a0aec0 !important;
+        font-style: italic;
+        margin-top: 0.5rem;
+    }
 
-        .text-muted.small {
-            font-style: italic;
-            margin-top: 0.5rem;
-        }
+    /* ✅ WHITE TEXT FOR SKILLS LABEL */
+    .resume-skills small {
+        color: #cbd5e0 !important;
+        font-weight: 600;
+    }
 
-        .processing-info {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
+    /* ✅ PURPLE SKILL BADGES */
+    .resume-skills .skill-badge {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white !important;
+        padding: 0.3rem 0.7rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-right: 0.3rem;
+        margin-bottom: 0.3rem;
+        display: inline-block;
+    }
 
-        .processing-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 0.5rem;
-            margin: 1rem 0;
-        }
+    .skill-badge.bg-secondary {
+        background: #6c757d !important;
+        color: white !important;
+    }
 
-        .processing-stat {
-            text-align: center;
-            padding: 0.5rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-        }
+    /* DELETE BUTTON */
+    .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0;
+        z-index: 10;
+    }
+    
+    .resume-card:hover .delete-btn {
+        opacity: 1;
+    }
+    
+    .delete-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    /* BULK ACTIONS */
+    .bulk-actions {
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .danger-btn {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .danger-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+        color: white;
+    }
 
-        .processing-stat-number {
-            font-size: 1.2rem;
-            font-weight: 700;
-            display: block;
-        }
+    /* PROCESSED BADGE */
+    .processed-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
 
-        .processing-stat-label {
-            font-size: 0.7rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-        }
+    /* DELETE ANIMATION */
+    .delete-animation {
+        animation: fadeOut 0.5s ease-out forwards;
+    }
 
-        .ml-info {
-            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
-            color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-            display: inline-block;
-        }
+    @keyframes fadeOut {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.8); }
+    }
 
-        .quality-indicator {
-            position: absolute;
-            top: 50px;
-            left: 10px;
-            padding: 0.2rem 0.6rem;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
+    /* PROCESSING INFO BANNER */
+    .processing-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
 
-        .quality-high { background: #d4edda; color: #155724; }
-        .quality-medium { background: #fff3cd; color: #856404; }
-        .quality-low { background: #f8d7da; color: #721c24; }
+    .processing-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
 
-        .loading-resume {
-            opacity: 0.6;
-            pointer-events: none;
-            position: relative;
-        }
+    .processing-stat {
+        text-align: center;
+        padding: 0.5rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+    }
 
-        .loading-resume::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #28a745;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+    .processing-stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: block;
+        color: white;
+    }
 
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
+    .processing-stat-label {
+        font-size: 0.7rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        color: white;
+    }
 
-        .reprocess-btn {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-            border: none;
-            color: white;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-            margin-left: 0.5rem;
-        }
+    /* ML INFO BADGE */
+    .ml-info {
+        background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        display: inline-block;
+    }
 
-        .reprocess-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
-            color: white;
-        }
-    </style>
+    /* QUALITY INDICATORS */
+    .quality-indicator {
+        position: absolute;
+        top: 50px;
+        left: 10px;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .quality-high { background: #d4edda; color: #155724; }
+    .quality-medium { background: #fff3cd; color: #856404; }
+    .quality-low { background: #f8d7da; color: #721c24; }
+
+    /* LOADING STATE */
+    .loading-resume {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+
+    .loading-resume::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 30px;
+        height: 30px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #28a745;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* REPROCESS BUTTON */
+    .reprocess-btn {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        border: none;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        margin-left: 0.5rem;
+    }
+
+    .reprocess-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        color: white;
+    }
+</style>
+
 </head>
 <body>
     <div class="dashboard-container">
@@ -316,7 +371,7 @@
                                 <i class="fas fa-times"></i>
                             </button>
                             
-                            <h5 class="resume-name" style="margin-top: 1rem;">
+                            <h5 class="resume-name" style="margin-top: 1rem; color: #ffffff !important;">
                                 <%= resume.candidateName && resume.candidateName !== 'Unknown Candidate' ? resume.candidateName : 'Name not extracted' %>
                             </h5>
                             

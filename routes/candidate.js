@@ -4,10 +4,10 @@
  * @version 2.0.0
  */
 
-const express = require('express');
-const Resume = require('../models/Resume');
-const Screening = require('../models/Screening');
-const resultsController = require('../controllers/resultsController');
+const express = require("express");
+const Resume = require("../models/Resume");
+const Screening = require("../models/Screening");
+const resultsController = require("../controllers/resultsController");
 
 const router = express.Router();
 
@@ -17,9 +17,13 @@ function isValidObjectId(id) {
   return /^[0-9a-fA-F]{24}$/.test(id);
 }
 
-function logCandidateOperation(operation, candidateId, candidateName = '') {
+function logCandidateOperation(operation, candidateId, candidateName = "") {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] Candidate ${operation}: ${candidateId} ${candidateName ? `(${candidateName})` : ''}`);
+  console.log(
+    `[${timestamp}] Candidate ${operation}: ${candidateId} ${
+      candidateName ? `(${candidateName})` : ""
+    }`
+  );
 }
 
 // ==================== CANDIDATE DETAIL ROUTE ====================
@@ -28,7 +32,7 @@ function logCandidateOperation(operation, candidateId, candidateName = '') {
  * GET route - Display candidate profile details
  * Accessible at: /candidate/:id
  */
-router.get('/:id', resultsController.getCandidateDetail);
+router.get("/:id", resultsController.getCandidateDetail);
 
 // ✅ REMOVED: Download route completely removed
 
@@ -36,13 +40,13 @@ router.get('/:id', resultsController.getCandidateDetail);
  * GET route - Candidate API data (JSON)
  * Accessible at: /candidate/:id/json
  */
-router.get('/:id/json', async (req, res) => {
+router.get("/:id/json", async (req, res) => {
   try {
     const candidateId = req.params.id;
     if (!isValidObjectId(candidateId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid candidate ID format'
+        error: "Invalid candidate ID format",
       });
     }
 
@@ -50,29 +54,32 @@ router.get('/:id/json', async (req, res) => {
     if (!candidate) {
       return res.status(404).json({
         success: false,
-        error: 'Candidate not found'
+        error: "Candidate not found",
       });
     }
 
     // Find screening results for this candidate
     const screeningResults = await Screening.find({
-      'results.resumeId': candidateId
-    }).select('jobTitle createdAt results.$').limit(5).lean();
+      "results.resumeId": candidateId,
+    })
+      .select("jobTitle createdAt results.$")
+      .limit(5)
+      .lean();
 
-    logCandidateOperation('api_request', candidateId, candidate.candidateName);
+    logCandidateOperation("api_request", candidateId, candidate.candidateName);
 
     res.json({
       success: true,
       data: {
         candidate: candidate,
-        screeningHistory: screeningResults
-      }
+        screeningHistory: screeningResults,
+      },
     });
   } catch (error) {
-    console.error('❌ Error fetching candidate API data:', error);
+    console.error("❌ Error fetching candidate API data:", error);
     res.status(500).json({
       success: false,
-      error: 'Server error fetching candidate data'
+      error: "Server error fetching candidate data",
     });
   }
 });
@@ -81,7 +88,7 @@ router.get('/:id/json', async (req, res) => {
  * POST route - Update candidate notes/status
  * Accessible at: /candidate/:id/update
  */
-router.post('/:id/update', async (req, res) => {
+router.post("/:id/update", async (req, res) => {
   try {
     const candidateId = req.params.id;
     const { notes, status } = req.body;
@@ -89,7 +96,7 @@ router.post('/:id/update', async (req, res) => {
     if (!isValidObjectId(candidateId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid candidate ID format'
+        error: "Invalid candidate ID format",
       });
     }
 
@@ -97,31 +104,29 @@ router.post('/:id/update', async (req, res) => {
     if (notes !== undefined) updateData.notes = notes;
     if (status !== undefined) updateData.status = status;
 
-    const candidate = await Resume.findByIdAndUpdate(
-      candidateId,
-      updateData,
-      { new: true }
-    );
+    const candidate = await Resume.findByIdAndUpdate(candidateId, updateData, {
+      new: true,
+    });
 
     if (!candidate) {
       return res.status(404).json({
         success: false,
-        error: 'Candidate not found'
+        error: "Candidate not found",
       });
     }
 
-    logCandidateOperation('update', candidateId, candidate.candidateName);
+    logCandidateOperation("update", candidateId, candidate.candidateName);
 
     res.json({
       success: true,
-      message: 'Candidate updated successfully',
-      data: candidate
+      message: "Candidate updated successfully",
+      data: candidate,
     });
   } catch (error) {
-    console.error('❌ Error updating candidate:', error);
+    console.error("❌ Error updating candidate:", error);
     res.status(500).json({
       success: false,
-      error: 'Server error updating candidate'
+      error: "Server error updating candidate",
     });
   }
 });
@@ -132,26 +137,26 @@ router.post('/:id/update', async (req, res) => {
  * GET route - Health check for candidate service
  * Accessible at: /candidate/health/check
  */
-router.get('/health/check', async (req, res) => {
+router.get("/health/check", async (req, res) => {
   try {
     const candidateCount = await Resume.countDocuments({});
     const processedCount = await Resume.countDocuments({ isProcessed: true });
 
     res.json({
-      status: 'healthy',
-      service: 'candidate-routes',
+      status: "healthy",
+      service: "candidate-routes",
       totalCandidates: candidateCount,
       processedCandidates: processedCount,
       timestamp: new Date().toISOString(),
-      version: '2.0.0'
+      version: "2.0.0",
     });
   } catch (error) {
-    console.error('❌ Candidate service health check failed:', error);
+    console.error("❌ Candidate service health check failed:", error);
     res.status(500).json({
-      status: 'error',
-      service: 'candidate-routes',
+      status: "error",
+      service: "candidate-routes",
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });

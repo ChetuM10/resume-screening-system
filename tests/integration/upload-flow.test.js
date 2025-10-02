@@ -4,7 +4,7 @@
 const request = require('supertest');
 const app = require('../../server');
 const Resume = require('../../models/Resume');
-const { createMockPDF, createMockDOCX, SAMPLE_FILES } = require('../fixtures/sampleFiles');
+const { createMockPDF, createMockDOCX, SAMPLE_FILES } = require('../fixtures/sample-files');
 const { cleanupTestData } = require('../helpers/apiHelpers');
 
 describe('Upload Flow Integration Tests', () => {

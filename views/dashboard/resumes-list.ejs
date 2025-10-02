@@ -1,482 +1,425 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/modern-dashboard.css" rel="stylesheet">
-    <style>
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #dc3545;
-            border: none;
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            opacity: 0;
-            z-index: 10;
-        }
-        
-        .resume-card {
-            position: relative;
-        }
-        
-        .resume-card:hover .delete-btn {
-            opacity: 1;
-        }
-        
-        .delete-btn:hover {
-            background: #c82333;
-            transform: scale(1.1);
-        }
-        
-        .bulk-actions {
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .danger-btn {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .danger-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
-            color: white;
-        }
+<!-- Candidates Grid - 3 Column Layout -->
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="fas fa-users"></i>
+      All Candidates
+    </h1>
+    <p class="page-description">Browse all processed candidate resumes</p>
+  </div>
 
-        .delete-animation {
-            animation: fadeOut 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.8); }
-        }
-
-        /* Enhanced info item styling */
-        .resume-info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.3rem;
-            font-size: 0.9rem;
-        }
-
-        .resume-info-item i {
-            width: 16px;
-            text-align: center;
-        }
-
-        .skill-badge.bg-secondary {
-            background: #6c757d !important;
-        }
-
-        .text-muted.small {
-            font-style: italic;
-            margin-top: 0.5rem;
-        }
-
-        /* Loading state styles */
-        .loading-resume {
-            opacity: 0.6;
-            pointer-events: none;
-            position: relative;
-        }
-
-        .loading-resume::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Back Button -->
-        <a href="/" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            Back to Dashboard
-        </a>
-
-        <!-- Header -->
-        <div class="detail-header">
-            <h1 class="detail-title"><%= pageTitle %></h1>
-            <p class="detail-subtitle"><%= pageSubtitle %></p>
+  <% if (resumes && resumes.length > 0) { %>
+  <!-- Candidates Grid -->
+  <div class="candidates-grid">
+    <% resumes.forEach(function(resume) { %>
+    <div class="candidate-card">
+      <!-- Card Header -->
+      <div class="candidate-card-header">
+        <div class="candidate-avatar">
+          <i class="fas fa-user"></i>
         </div>
-
-        <% if (resumes && resumes.length > 0) { %>
-            <!-- Bulk Actions -->
-            <div class="bulk-actions">
-                <button id="bulkDeleteBtn" class="danger-btn">
-                    <i class="fas fa-trash-alt"></i>
-                    Delete All Resumes
-                </button>
-                <button onclick="location.reload()" class="btn btn-outline-secondary">
-                    <i class="fas fa-sync-alt"></i>
-                    Refresh
-                </button>
-            </div>
+        <div class="candidate-basic-info">
+          <h3 class="candidate-name">
+            <%= resume.candidateName || 'Unknown' %>
+          </h3>
+          <% if (resume.bestJobMatch) { %>
+          <span class="job-match-badge"> <%= resume.bestJobMatch %> </span>
+          <% } %>
+        </div>
+        <% if (resume.bestMatchScore) { %>
+        <div class="match-score-badge">
+          <%= Math.round(resume.bestMatchScore) %>%
+        </div>
         <% } %>
+      </div>
 
-        <!-- Resumes List -->
-        <div class="row" id="resumesList">
-            <% if (resumes && resumes.length > 0) { %>
-                <% resumes.forEach(resume => { %>
-                    <div class="col-md-6 col-lg-4 mb-4" data-resume-id="<%= resume._id %>">
-                        <div class="resume-card">
-                            <!-- Delete Button -->
-                            <button class="delete-btn" 
-                                    data-resume-id="<%= resume._id %>" 
-                                    data-candidate-name="<%= resume.candidateName || 'Unknown Candidate' %>" 
-                                    title="Delete Resume">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            
-                            <h5 class="resume-name">
-                                <%= resume.candidateName && resume.candidateName !== 'Unknown Candidate' ? resume.candidateName : 'Name not extracted' %>
-                                <% if (type === 'processed') { %>
-                                    <i class="fas fa-check-circle text-success ms-2" title="Processed"></i>
-                                <% } %>
-                            </h5>
-                            
-                            <div class="resume-info">
-                                <% if (resume.email && resume.email.length > 0) { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-envelope text-primary"></i>
-                                        <span><%= resume.email %></span>
-                                    </div>
-                                <% } else { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-envelope-open text-muted"></i>
-                                        <span class="text-muted">Email not found</span>
-                                    </div>
-                                <% } %>
-                                
-                                <% if (resume.phone && resume.phone.length > 0) { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-phone text-success"></i>
-                                        <span><%= resume.phone %></span>
-                                    </div>
-                                <% } else { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-phone-slash text-muted"></i>
-                                        <span class="text-muted">Phone not found</span>
-                                    </div>
-                                <% } %>
-                                
-                                <div class="resume-info-item">
-                                    <i class="fas fa-calendar text-info"></i>
-                                    <span><%= resume.createdAt ? resume.createdAt.toLocaleDateString() : 'Unknown date' %></span>
-                                </div>
-                                
-                                <% if (resume.experience && resume.experience.years > 0) { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-briefcase text-info"></i>
-                                        <span><%= resume.experience.years %> years experience</span>
-                                    </div>
-                                <% } else { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-user-graduate text-muted"></i>
-                                        <span class="text-muted">Experience not specified</span>
-                                    </div>
-                                <% } %>
-
-                                <% if (resume.education && resume.education.degree && resume.education.degree !== 'Not specified') { %>
-                                    <div class="resume-info-item">
-                                        <i class="fas fa-graduation-cap text-warning"></i>
-                                        <span><%= resume.education.degree %></span>
-                                    </div>
-                                <% } %>
-                            </div>
-
-                            <% if (resume.skills && resume.skills.length > 0) { %>
-                                <div class="resume-skills">
-                                    <% resume.skills.slice(0, 6).forEach(skill => { %>
-                                        <span class="skill-badge"><%= skill %></span>
-                                    <% }) %>
-                                    <% if (resume.skills.length > 6) { %>
-                                        <span class="skill-badge bg-secondary">+<%= resume.skills.length - 6 %> more</span>
-                                    <% } %>
-                                </div>
-                            <% } else { %>
-                                <div class="text-muted small">
-                                    <i class="fas fa-exclamation-triangle"></i> No skills extracted
-                                </div>
-                            <% } %>
-
-                            <!-- Quality Indicator -->
-                            <% if (resume.extractionQuality) { %>
-                                <div class="mt-2">
-                                    <span class="badge <%= resume.extractionQuality === 'high' ? 'bg-success' : resume.extractionQuality === 'medium' ? 'bg-warning' : 'bg-danger' %>">
-                                        <%= resume.extractionQuality.charAt(0).toUpperCase() + resume.extractionQuality.slice(1) %> Quality
-                                    </span>
-                                </div>
-                            <% } %>
-                        </div>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Resumes Found</h3>
-                    <p>There are no <%= type %> resumes to display at the moment.</p>
-                    <a href="/upload" class="action-btn btn-upload">
-                        <i class="fas fa-upload"></i>
-                        Upload Resumes
-                    </a>
-                </div>
-            <% } %>
+      <!-- Contact Info -->
+      <div class="candidate-contact">
+        <% if (resume.email) { %>
+        <div class="contact-item">
+          <i class="fas fa-envelope"></i>
+          <span><%= resume.email %></span>
         </div>
+        <% } %> <% if (resume.phone) { %>
+        <div class="contact-item">
+          <i class="fas fa-phone"></i>
+          <span><%= resume.phone %></span>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Top Skills -->
+      <div class="candidate-skills">
+        <label class="skills-label">
+          <i class="fas fa-code"></i>
+          Top Skills:
+        </label>
+        <div class="skills-tags">
+          <% if (resume.skills && resume.skills.length > 0) { %> <%
+          resume.skills.slice(0, 3).forEach(function(skill) { %>
+          <span class="skill-tag"><%= skill %></span>
+          <% }); %> <% if (resume.skills.length > 3) { %>
+          <span class="skill-more">+<%= resume.skills.length - 3 %> more</span>
+          <% } %> <% } else { %>
+          <span class="text-muted">No skills listed</span>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Multi-Job Scores -->
+      <% if (resume.jobMatches && resume.jobMatches.length > 0) { %>
+      <div class="job-matches-section">
+        <label class="matches-label">
+          <i class="fas fa-briefcase"></i>
+          Multi-Job Scores:
+        </label>
+        <div class="job-matches-list">
+          <% resume.jobMatches.forEach(function(match) { %>
+          <div class="job-match-item">
+            <span class="job-title"><%= match.jobTitle %></span>
+            <div class="match-progress">
+              <% var barColor = '#fb923c'; if (match.score >= 80) { barColor =
+              '#10b981'; } else if (match.score >= 50) { barColor = '#06b6d4'; }
+              %>
+              <div
+                class="match-progress-bar"
+                style="
+                  width: '<%= match.score %>%';
+                  background-color: '<%= barColor %>';
+                "
+              ></div>
+            </div>
+            <span class="match-score-text"
+              ><%= Math.round(match.score) %>%</span
+            >
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Card Actions -->
+      <div class="candidate-card-actions">
+        <a href="/candidate/<%= resume._id %>" class="btn-view-details">
+          <i class="fas fa-eye"></i>
+          View Details
+        </a>
+        <button
+          class="btn-download"
+          onclick="downloadResume('<%= resume._id %>')"
+        >
+          <i class="fas fa-download"></i>
+        </button>
+      </div>
     </div>
+    <% }); %>
+  </div>
+  <% } else { %>
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-icon">
+      <i class="fas fa-inbox"></i>
+    </div>
+    <h3 class="empty-title">No Candidates Found</h3>
+    <p class="empty-description">Upload resumes to see candidates here</p>
+    <a href="/upload" class="btn-modern btn-gradient-purple">
+      <i class="fas fa-upload"></i>
+      Upload Resumes
+    </a>
+  </div>
+  <% } %>
+</div>
 
-    <!-- JavaScript for Delete Functionality -->
-    <script>
-        let isDeleting = false;
+<!-- Candidate Card Styles -->
+<style>
+  /* Candidates Grid - 3 Column Layout */
+  .candidates-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
 
-        // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, attaching event listeners...');
-            
-            // Attach event listeners to all existing delete buttons
-            attachDeleteListeners();
-            
-            // Attach event listener to bulk delete button
-            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-            if (bulkDeleteBtn) {
-                bulkDeleteBtn.addEventListener('click', deleteAllResumes);
-            }
-        });
+  /* Candidate Card */
+  .candidate-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-        function attachDeleteListeners() {
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            console.log(`Found ${deleteButtons.length} delete buttons`);
-            
-            deleteButtons.forEach(button => {
-                // Remove any existing listeners to avoid duplicates
-                button.removeEventListener('click', handleDeleteClick);
-                // Add new listener
-                button.addEventListener('click', handleDeleteClick);
-            });
-        }
+  .candidate-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--accent-purple);
+  }
 
-        function handleDeleteClick(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const button = event.currentTarget;
-            const resumeId = button.dataset.resumeId;
-            const candidateName = button.dataset.candidateName;
-            
-            console.log('Delete clicked:', resumeId, candidateName);
-            deleteResume(resumeId, candidateName);
-        }
+  /* Card Header */
+  .candidate-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    position: relative;
+  }
 
-        async function deleteResume(resumeId, candidateName) {
-            if (isDeleting) {
-                console.log('Already deleting, please wait...');
-                return;
-            }
-            
-            if (!confirm(`Are you sure you want to delete the resume for "${candidateName}"?`)) {
-                return;
-            }
+  .candidate-avatar {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-purple);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
 
-            isDeleting = true;
-            const resumeElement = document.querySelector(`[data-resume-id="${resumeId}"]`);
-            
-            try {
-                console.log(`Deleting resume ${resumeId}...`);
-                
-                // Add loading state
-                if (resumeElement) {
-                    resumeElement.classList.add('loading-resume');
-                }
+  .candidate-basic-info {
+    flex: 1;
+    min-width: 0;
+  }
 
-                const response = await fetch(`/api/resumes/${resumeId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+  /* ✅ WHITE TEXT FOR CANDIDATE NAME */
+  .candidate-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff !important;
+    margin: 0 0 0.5rem 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-                const result = await response.json();
-                console.log('Delete result:', result);
+  .job-match-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(6, 182, 212, 0.1);
+    color: var(--accent-teal);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
 
-                if (result.success) {
-                    // Animate removal
-                    if (resumeElement) {
-                        resumeElement.classList.remove('loading-resume');
-                        resumeElement.classList.add('delete-animation');
-                        
-                        setTimeout(() => {
-                            resumeElement.remove();
-                            
-                            // Check if no resumes left
-                            const remainingResumes = document.querySelectorAll('[data-resume-id]');
-                            console.log(`${remainingResumes.length} resumes remaining`);
-                            
-                            if (remainingResumes.length === 0) {
-                                console.log('No resumes left, reloading page...');
-                                location.reload();
-                            }
-                        }, 500);
-                    }
-                    
-                    showMessage(`Successfully deleted resume for ${candidateName}`, 'success');
-                } else {
-                    console.error('Delete failed:', result.message);
-                    alert(`Error: ${result.message}`);
-                    
-                    // Reset loading state
-                    if (resumeElement) {
-                        resumeElement.classList.remove('loading-resume');
-                    }
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                alert('An error occurred while deleting the resume');
-                
-                // Reset loading state
-                if (resumeElement) {
-                    resumeElement.classList.remove('loading-resume');
-                }
-            } finally {
-                isDeleting = false;
-            }
-        }
+  .match-score-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--gradient-purple);
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+  }
 
-        async function deleteAllResumes() {
-            if (isDeleting) return;
+  /* Contact Info */
+  .candidate-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-            if (!confirm('Are you sure you want to delete ALL resumes? This action cannot be undone!')) {
-                return;
-            }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+  }
 
-            if (!confirm('This will permanently delete all resume data. Are you absolutely sure?')) {
-                return;
-            }
+  .contact-item i {
+    color: var(--accent-purple);
+    width: 16px;
+  }
 
-            isDeleting = true;
-            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-            const originalText = bulkDeleteBtn ? bulkDeleteBtn.innerHTML : '';
-            
-            try {
-                console.log('Deleting all resumes...');
-                
-                // Show loading state
-                if (bulkDeleteBtn) {
-                    bulkDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-                    bulkDeleteBtn.disabled = true;
-                }
+  .contact-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #e2e8f0;
+  }
 
-                const response = await fetch('/api/resumes', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+  /* Skills Section */
+  .candidate-skills {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-                const result = await response.json();
-                console.log('Bulk delete result:', result);
+  .skills-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
 
-                if (result.success) {
-                    showMessage(`Successfully deleted ${result.deletedCount} resumes`, 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    console.error('Bulk delete failed:', result.message);
-                    alert(`Error: ${result.message}`);
-                }
-            } catch (error) {
-                console.error('Bulk delete error:', error);
-                alert('An error occurred while deleting resumes');
-            } finally {
-                isDeleting = false;
-                if (bulkDeleteBtn) {
-                    bulkDeleteBtn.innerHTML = originalText;
-                    bulkDeleteBtn.disabled = false;
-                }
-            }
-        }
+  .skills-label i {
+    color: var(--accent-purple);
+  }
 
-        function showMessage(message, type) {
-            console.log(`Message: ${message}`);
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
-            messageDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            messageDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.remove();
-                }
-            }, 5000);
-        }
+  .skills-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
 
-        // Debug function - you can call this in browser console
-        function debugDeleteButtons() {
-            const buttons = document.querySelectorAll('.delete-btn');
-            console.log('Delete buttons found:', buttons.length);
-            buttons.forEach((btn, index) => {
-                console.log(`Button ${index}:`, {
-                    resumeId: btn.dataset.resumeId,
-                    candidateName: btn.dataset.candidateName,
-                    hasClickListener: btn.onclick !== null
-                });
-            });
-        }
+  .skill-tag {
+    padding: 0.35rem 0.75rem;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-purple);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
 
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'r') {
-                e.preventDefault();
-                location.reload();
-            }
-        });
+  .skill-more {
+    padding: 0.35rem 0.75rem;
+    background: rgba(251, 146, 60, 0.1);
+    color: var(--accent-orange);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
 
-        // Auto-refresh functionality (optional)
-        setInterval(function() {
-            // Uncomment below to enable auto-refresh every 30 seconds
-            // location.reload();
-        }, 30000);
-    </script>
-</body>
-</html>
+  /* Job Matches Section */
+  .job-matches-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .matches-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .matches-label i {
+    color: var(--accent-teal);
+  }
+
+  .job-matches-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .job-match-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .job-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #cbd5e0;
+  }
+
+  .match-progress {
+    height: 6px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .match-progress-bar {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-base);
+  }
+
+  .match-score-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  /* Card Actions */
+  .candidate-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(102, 126, 234, 0.1);
+  }
+
+  .btn-view-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--gradient-purple);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all var(--transition-base);
+  }
+
+  .btn-view-details:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-download {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-purple);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .btn-download:hover {
+    background: var(--accent-purple);
+    color: white;
+  }
+
+  /* ✅ MUTED TEXT COLOR FIX */
+  .text-muted {
+    color: #94a3b8 !important;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1200px) {
+    .candidates-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .candidates-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  function downloadResume(resumeId) {
+    window.location.href = "/resume/download/" + resumeId;
+  }
+</script>

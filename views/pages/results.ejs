@@ -4,14 +4,19 @@
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <h1 class="h3 mb-1">
+          <h1 class="h3 mb-1 text-white">
             <i class="fas fa-search-plus text-primary"></i>
             Screening Results
           </h1>
-          <p class="text-muted mb-0">Position: <strong><%= jobTitle || 'Unknown Position' %></strong></p>
+          <p class="text-light mb-0">
+            Position:
+            <strong class="text-white"
+              ><%= jobTitle || 'Unknown Position' %></strong
+            >
+          </p>
         </div>
         <div class="text-end">
-          <a href="/screening" class="btn btn-outline-primary">
+          <a href="/screening" class="btn btn-outline-light">
             <i class="fas fa-plus"></i> New Screening
           </a>
         </div>
@@ -22,204 +27,295 @@
   <!-- Statistics Cards -->
   <div class="row mb-4">
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-users fa-2x text-info mb-2"></i>
-          <h4 class="mb-1"><%= totalCandidates || 0 %></h4>
-          <p class="text-muted mb-0">Total Candidates</p>
+          <h4 class="mb-1 text-white"><%= totalCandidates || 0 %></h4>
+          <p class="text-light mb-0">Total Candidates</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-          <h4 class="mb-1"><%= qualifiedCandidates || 0 %></h4>
-          <p class="text-muted mb-0">Qualified</p>
+          <h4 class="mb-1 text-white"><%= qualifiedCandidates || 0 %></h4>
+          <p class="text-light mb-0">Qualified</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
-          <h4 class="mb-1"><%= averageScore || 0 %>%</h4>
-          <p class="text-muted mb-0">Average Score</p>
+          <h4 class="mb-1 text-white"><%= averageScore || 0 %>%</h4>
+          <p class="text-light mb-0">Average Score</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-calendar fa-2x text-secondary mb-2"></i>
-          <h4 class="mb-1"><%= new Date(createdAt).toLocaleDateString() %></h4>
-          <p class="text-muted mb-0">Screening Date</p>
+          <h4 class="mb-1 text-white">
+            <%= new Date(createdAt).toLocaleDateString() %>
+          </h4>
+          <p class="text-light mb-0">Screening Date</p>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ✅ Export to Excel Button -->
+  <% if (results && results.length > 0) { %>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-lg export-card-modern">
+        <div class="card-body text-center py-4">
+          <h5 class="mb-3 text-white">
+            <i class="fas fa-download text-success"></i>
+            Export Results
+          </h5>
+          <a
+            href="/results/<%= screeningId %>/export"
+            class="btn btn-success btn-lg px-5 py-3 btn-export-excel"
+            title="Download all results as Excel file"
+          >
+            <i class="fas fa-file-excel me-2"></i>
+            DOWNLOAD EXCEL REPORT
+            <small
+              class="d-block mt-1"
+              style="font-size: 0.85rem; opacity: 0.9"
+            >
+              Export all <%= results.length %> candidates to spreadsheet
+            </small>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
   <!-- Results Section -->
   <div class="row">
     <div class="col-12">
       <% if (results && results.length > 0) { %>
-        <!-- Filter Controls -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-body">
-            <div class="row align-items-center">
-              <div class="col-md-6">
-                <label for="minMatchScore" class="form-label">Filter by minimum match score:</label>
-                <input type="range" class="form-range" id="minMatchScore" min="0" max="100" value="0">
-                <small class="text-muted">Score: <span id="scoreDisplay">0</span>%</small>
-              </div>
-              <div class="col-md-6">
-                <label for="sortResults" class="form-label">Sort by:</label>
-                <select class="form-select" id="sortResults">
-                  <option value="score-desc">Match Score (High to Low)</option>
-                  <option value="score-asc">Match Score (Low to High)</option>
-                  <option value="name-asc">Name (A-Z)</option>
-                  <option value="name-desc">Name (Z-A)</option>
-                </select>
-              </div>
+      <!-- Filter Controls -->
+      <div class="card border-0 shadow-lg filter-card-modern mb-4">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <label for="minMatchScore" class="form-label text-white fw-bold"
+                ><i class="fas fa-filter me-2"></i>Filter by minimum match
+                score:</label
+              >
+              <input
+                type="range"
+                class="form-range"
+                id="minMatchScore"
+                min="0"
+                max="100"
+                value="0"
+              />
+              <small class="text-light"
+                >Score:
+                <span id="scoreDisplay" class="fw-bold text-warning">0</span
+                >%</small
+              >
+            </div>
+            <div class="col-md-6">
+              <label for="sortResults" class="form-label text-white fw-bold"
+                ><i class="fas fa-sort me-2"></i>Sort by:</label
+              >
+              <select
+                class="form-select bg-dark text-white border-secondary"
+                id="sortResults"
+              >
+                <option value="score-desc">Match Score (High to Low)</option>
+                <option value="score-asc">Match Score (Low to High)</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+              </select>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Candidates Grid -->
-        <div class="row" id="candidatesContainer">
-          <% results.forEach((result, index) => { %>
-            <div class="col-lg-4 col-md-6 mb-4 candidate-result-card" data-score="<%= result.matchScore || 0 %>">
-              <div class="card border-0 shadow-sm h-100 candidate-card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                  <h5 class="mb-0">
-                    <i class="fas fa-user"></i>
-                    <%= result.resumeId?.candidateName || result.candidateName || 'Unknown Candidate' %>
-                  </h5>
-                  <span class="badge bg-light text-primary fs-6">
-                    Rank #<%= index + 1 %>
+      <!-- Candidates Grid -->
+      <div class="row" id="candidatesContainer">
+        <% results.forEach((result, index) => { %>
+        <div
+          class="col-lg-4 col-md-6 mb-4 candidate-result-card"
+          data-score="<%= result.matchScore || 0 %>"
+        >
+          <div class="card border-0 shadow-lg h-100 candidate-card-modern">
+            <div
+              class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center"
+            >
+              <h5 class="mb-0 fw-bold">
+                <i class="fas fa-user-circle"></i>
+                <%= result.resumeId?.candidateName || result.candidateName ||
+                'Unknown Candidate' %>
+              </h5>
+              <span class="badge bg-light text-primary fs-6 fw-bold">
+                #<%= index + 1 %>
+              </span>
+            </div>
+
+            <div class="card-body card-body-modern">
+              <!-- Match Score -->
+              <div
+                class="d-flex justify-content-between align-items-center mb-3 p-2 rounded score-section"
+              >
+                <span class="text-white fw-bold"
+                  ><i class="fas fa-chart-bar me-2"></i>Match Score:</span
+                >
+                <span
+                  class="badge bg-<%= (result.matchScore || 0) >= 75 ? 'success' : (result.matchScore || 0) >= 50 ? 'warning' : 'danger' %> fs-5 match-score-display"
+                >
+                  <%= Math.round(result.matchScore || 0) %>%
+                </span>
+              </div>
+
+              <!-- Contact Info -->
+              <div class="mb-3 contact-section">
+                <% if (result.resumeId?.email || result.email) { %>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-envelope text-info me-2"></i>
+                  <small class="text-light text-truncate"
+                    ><%= result.resumeId?.email || result.email %></small
+                  >
+                </div>
+                <% } %> <% if (result.resumeId?.phone || result.phone) { %>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-phone text-success me-2"></i>
+                  <small class="text-light"
+                    ><%= result.resumeId?.phone || result.phone %></small
+                  >
+                </div>
+                <% } %>
+              </div>
+
+              <!-- Match Reasons -->
+              <div class="mb-3 reasons-section">
+                <h6 class="text-primary fw-bold">
+                  <i class="fas fa-check-circle"></i> Match Reasons:
+                </h6>
+                <% if (result.matchReasons && result.matchReasons.length > 0) {
+                %> <% result.matchReasons.forEach(reason => { %>
+                <div class="d-flex align-items-center mb-1">
+                  <i
+                    class="fas fa-dot-circle text-success me-2"
+                    style="font-size: 0.5rem"
+                  ></i>
+                  <small class="text-light"><%= reason %></small>
+                </div>
+                <% }); %> <% } else { %>
+                <small class="text-muted fst-italic"
+                  >No specific match reasons available</small
+                >
+                <% } %>
+              </div>
+
+              <!-- Experience -->
+              <% if (result.resumeId?.experience?.years !== undefined) { %>
+              <div class="mb-3">
+                <div
+                  class="d-flex justify-content-between align-items-center p-2 rounded experience-section"
+                >
+                  <span class="text-white fw-bold"
+                    ><i class="fas fa-briefcase me-2"></i>Experience:</span
+                  >
+                  <span class="badge bg-info fs-6">
+                    <%= result.resumeId.experience.years %> years
                   </span>
                 </div>
-                
-                <div class="card-body">
-                  <!-- Match Score -->
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">Match Score:</span>
-                    <span class="badge bg-<%= (result.matchScore || 0) >= 75 ? 'success' : (result.matchScore || 0) >= 50 ? 'warning' : 'danger' %> fs-6 match-score-display">
-                      <%= Math.round(result.matchScore || 0) %>%
-                    </span>
-                  </div>
+              </div>
+              <% } %>
 
-                  <!-- Contact Info -->
-                  <div class="mb-3">
-                    <% if (result.resumeId?.email || result.email) { %>
-                      <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-envelope text-muted me-2"></i>
-                        <small class="text-truncate"><%= result.resumeId?.email || result.email %></small>
-                      </div>
-                    <% } %>
-                    <% if (result.resumeId?.phone || result.phone) { %>
-                      <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-phone text-muted me-2"></i>
-                        <small><%= result.resumeId?.phone || result.phone %></small>
-                      </div>
-                    <% } %>
-                  </div>
-
-                  <!-- Match Reasons -->
-                  <div class="mb-3">
-                    <h6 class="text-primary">
-                      <i class="fas fa-check-circle"></i> Match Reasons:
-                    </h6>
-                    <% if (result.matchReasons && result.matchReasons.length > 0) { %>
-                      <% result.matchReasons.forEach(reason => { %>
-                        <div class="d-flex align-items-center mb-1">
-                          <i class="fas fa-dot-circle text-success me-2" style="font-size: 0.5rem;"></i>
-                          <small class="text-muted"><%= reason %></small>
-                        </div>
-                      <% }); %>
-                    <% } else { %>
-                      <small class="text-muted">No specific match reasons available</small>
-                    <% } %>
-                  </div>
-
-                  <!-- Experience -->
-                  <% if (result.resumeId?.experience?.years !== undefined) { %>
-                    <div class="mb-3">
-                      <div class="d-flex justify-content-between">
-                        <span class="text-muted">Experience:</span>
-                        <span class="badge bg-info">
-                          <%= result.resumeId.experience.years %> years
-                        </span>
-                      </div>
-                    </div>
+              <!-- Skills Preview -->
+              <% if (result.resumeId?.skills && result.resumeId.skills.length >
+              0) { %>
+              <div class="mb-3 skills-section">
+                <h6 class="text-secondary fw-bold mb-2">
+                  <i class="fas fa-code me-2"></i>Top Skills:
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <% result.resumeId.skills.slice(0, 3).forEach(skill => { %>
+                  <span class="badge bg-gradient-secondary fs-6"
+                    ><%= skill %></span
+                  >
+                  <% }); %> <% if (result.resumeId.skills.length > 3) { %>
+                  <span class="badge bg-dark text-warning fs-6"
+                    >+<%= result.resumeId.skills.length - 3 %> more</span
+                  >
                   <% } %>
-
-                  <!-- Skills Preview -->
-                  <% if (result.resumeId?.skills && result.resumeId.skills.length > 0) { %>
-                    <div class="mb-3">
-                      <h6 class="text-secondary mb-2">Top Skills:</h6>
-                      <div class="d-flex flex-wrap gap-1">
-                        <% result.resumeId.skills.slice(0, 3).forEach(skill => { %>
-                          <span class="badge bg-secondary"><%= skill %></span>
-                        <% }); %>
-                        <% if (result.resumeId.skills.length > 3) { %>
-                          <span class="badge bg-light text-dark">+<%= result.resumeId.skills.length - 3 %> more</span>
-                        <% } %>
-                      </div>
-                    </div>
-                  <% } %>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="card-footer bg-transparent">
-                  <div class="d-flex gap-2">
-                    <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>" 
-                       class="btn btn-primary flex-fill">
-                      <i class="fas fa-eye"></i> VIEW DETAILS
-                    </a>
-                    <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>/download" 
-                       class="btn btn-outline-secondary" 
-                       target="_blank">
-                      <i class="fas fa-download"></i>
-                    </a>
-                  </div>
                 </div>
               </div>
+              <% } %>
             </div>
-          <% }); %>
-        </div>
 
-        <!-- Results Summary -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle"></i>
-              Showing <strong><span id="visibleCount"><%= results.length %></span></strong> of <strong><%= results.length %></strong> candidates
+            <!-- Action Buttons -->
+            <div class="card-footer bg-transparent border-0 pt-0">
+              <div class="d-flex gap-2">
+                <a
+                  href="/candidate/<%= result.resumeId?._id || result.resumeId %>"
+                  class="btn btn-primary flex-fill btn-modern"
+                >
+                  <i class="fas fa-eye"></i> VIEW DETAILS
+                </a>
+                <a
+                  href="/candidate/<%= result.resumeId?._id || result.resumeId %>/download"
+                  class="btn btn-outline-light btn-modern"
+                  target="_blank"
+                >
+                  <i class="fas fa-download"></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
+        <% }); %>
+      </div>
+
+      <!-- Results Summary -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="alert alert-info shadow-lg border-0">
+            <i class="fas fa-info-circle"></i>
+            Showing
+            <strong
+              ><span id="visibleCount"><%= results.length %></span></strong
+            >
+            of <strong><%= results.length %></strong> candidates
+          </div>
+        </div>
+      </div>
 
       <% } else { %>
-        <!-- No Results -->
-        <div class="text-center py-5">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body py-5">
-              <i class="fas fa-search fa-4x text-muted mb-4"></i>
-              <h3 class="text-muted mb-3">No candidates match your screening criteria</h3>
-              <p class="text-muted mb-4">
-                Found <%= totalCandidates || 0 %> candidates in database, but none meet the specified requirements.
-              </p>
-              <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <a href="/screening" class="btn btn-primary">
-                  <i class="fas fa-cog"></i> Adjust Screening Criteria
-                </a>
-                <a href="/upload" class="btn btn-outline-secondary">
-                  <i class="fas fa-upload"></i> Upload More Resumes
-                </a>
-              </div>
+      <!-- No Results -->
+      <div class="text-center py-5">
+        <div class="card border-0 shadow-lg no-results-card">
+          <div class="card-body py-5">
+            <i class="fas fa-search fa-4x text-muted mb-4"></i>
+            <h3 class="text-white mb-3">
+              No candidates match your screening criteria
+            </h3>
+            <p class="text-light mb-4">
+              Found <%= totalCandidates || 0 %> candidates in database, but none
+              meet the specified requirements.
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+              <a href="/screening" class="btn btn-primary btn-lg">
+                <i class="fas fa-cog"></i> Adjust Screening Criteria
+              </a>
+              <a href="/upload" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-upload"></i> Upload More Resumes
+              </a>
             </div>
           </div>
         </div>
+      </div>
       <% } %>
     </div>
   </div>
@@ -227,89 +323,279 @@
 
 <!-- Include Results JavaScript -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Score filter functionality
-  const scoreSlider = document.getElementById('minMatchScore');
-  const scoreDisplay = document.getElementById('scoreDisplay');
-  const candidateCards = document.querySelectorAll('.candidate-result-card');
-  const visibleCountSpan = document.getElementById('visibleCount');
+  document.addEventListener("DOMContentLoaded", function () {
+    // Score filter functionality
+    const scoreSlider = document.getElementById("minMatchScore");
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const candidateCards = document.querySelectorAll(".candidate-result-card");
+    const visibleCountSpan = document.getElementById("visibleCount");
 
-  if (scoreSlider) {
-    scoreSlider.addEventListener('input', function() {
-      const minScore = parseInt(this.value);
-      scoreDisplay.textContent = minScore;
-      
-      let visibleCount = 0;
-      candidateCards.forEach(card => {
-        const cardScore = parseInt(card.dataset.score || 0);
-        if (cardScore >= minScore) {
-          card.style.display = '';
-          visibleCount++;
-        } else {
-          card.style.display = 'none';
+    if (scoreSlider) {
+      scoreSlider.addEventListener("input", function () {
+        const minScore = parseInt(this.value);
+        scoreDisplay.textContent = minScore;
+
+        let visibleCount = 0;
+        candidateCards.forEach((card) => {
+          const cardScore = parseInt(card.dataset.score || 0);
+          if (cardScore >= minScore) {
+            card.style.display = "";
+            visibleCount++;
+          } else {
+            card.style.display = "none";
+          }
+        });
+
+        if (visibleCountSpan) {
+          visibleCountSpan.textContent = visibleCount;
         }
       });
-      
-      if (visibleCountSpan) {
-        visibleCountSpan.textContent = visibleCount;
-      }
-    });
-  }
+    }
 
-  // Sort functionality
-  const sortSelect = document.getElementById('sortResults');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', function() {
-      const container = document.getElementById('candidatesContainer');
-      const cards = Array.from(container.children);
-      
-      cards.sort((a, b) => {
-        switch (this.value) {
-          case 'score-desc':
-            return parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0);
-          case 'score-asc':
-            return parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0);
-          case 'name-asc':
-            const nameA = a.querySelector('.card-header h5').textContent.trim().toLowerCase();
-            const nameB = b.querySelector('.card-header h5').textContent.trim().toLowerCase();
-            return nameA.localeCompare(nameB);
-          case 'name-desc':
-            const nameA2 = a.querySelector('.card-header h5').textContent.trim().toLowerCase();
-            const nameB2 = b.querySelector('.card-header h5').textContent.trim().toLowerCase();
-            return nameB2.localeCompare(nameA2);
-          default:
-            return 0;
-        }
+    // Sort functionality
+    const sortSelect = document.getElementById("sortResults");
+    if (sortSelect) {
+      sortSelect.addEventListener("change", function () {
+        const container = document.getElementById("candidatesContainer");
+        const cards = Array.from(container.children);
+
+        cards.sort((a, b) => {
+          switch (this.value) {
+            case "score-desc":
+              return (
+                parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0)
+              );
+            case "score-asc":
+              return (
+                parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0)
+              );
+            case "name-asc":
+              const nameA = a
+                .querySelector(".card-header h5")
+                .textContent.trim()
+                .toLowerCase();
+              const nameB = b
+                .querySelector(".card-header h5")
+                .textContent.trim()
+                .toLowerCase();
+              return nameA.localeCompare(nameB);
+            case "name-desc":
+              const nameA2 = a
+                .querySelector(".card-header h5")
+                .textContent.trim()
+                .toLowerCase();
+              const nameB2 = b
+                .querySelector(".card-header h5")
+                .textContent.trim()
+                .toLowerCase();
+              return nameB2.localeCompare(nameA2);
+            default:
+              return 0;
+          }
+        });
+
+        // Re-append sorted cards
+        cards.forEach((card) => container.appendChild(card));
       });
-      
-      // Re-append sorted cards
-      cards.forEach(card => container.appendChild(card));
-    });
-  }
-});
+    }
+
+    // ✅ Excel download feedback
+    const excelBtn = document.querySelector(".btn-export-excel");
+    if (excelBtn) {
+      excelBtn.addEventListener("click", function (e) {
+        const originalHTML = this.innerHTML;
+        this.innerHTML =
+          '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...';
+        this.style.pointerEvents = "none";
+
+        setTimeout(() => {
+          this.innerHTML = originalHTML;
+          this.style.pointerEvents = "auto";
+        }, 2000);
+      });
+    }
+  });
 </script>
 
 <style>
-.candidate-card {
-  transition: all 0.3s ease;
-}
+  /* ✅ FIXED: Modern Card Designs with Visible Text */
 
-.candidate-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
+  .stat-card-modern {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    transition: all 0.3s ease;
+  }
 
-.match-score-display {
-  font-size: 1rem;
-  font-weight: 600;
-}
+  .stat-card-modern:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  }
 
-.card-header {
-  border-bottom: 2px solid rgba(255,255,255,0.1);
-}
+  .export-card-modern {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  }
 
-#scoreDisplay {
-  font-weight: 600;
-  color: #0d6efd;
-}
+  .filter-card-modern {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  }
+
+  .candidate-card-modern {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+  }
+
+  .candidate-card-modern:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3) !important;
+    border-color: rgba(99, 102, 241, 0.5);
+  }
+
+  /* ✅ FIXED: Card Body with Visible Text */
+  .card-body-modern {
+    background: rgba(30, 41, 59, 0.8);
+    color: #e2e8f0 !important;
+  }
+
+  .score-section {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid #3b82f6;
+  }
+
+  .experience-section {
+    background: rgba(14, 165, 233, 0.1);
+    border-left: 3px solid #0ea5e9;
+  }
+
+  .no-results-card {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  }
+
+  /* ✅ FIXED: Header Gradient */
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  }
+
+  /* ✅ FIXED: Match Score Badge */
+  .match-score-display {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ✅ FIXED: Card Header */
+  .candidate-card-modern .card-header {
+    border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+    padding: 1rem 1.25rem;
+  }
+
+  /* ✅ FIXED: Skills Badge */
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+    color: white !important;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+
+  /* ✅ FIXED: Modern Buttons */
+  .btn-modern {
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-modern:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ✅ Export Button Enhanced */
+  .btn-export-excel {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    border: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn-export-excel:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  }
+
+  .btn-export-excel:active {
+    transform: translateY(-2px);
+  }
+
+  .btn-export-excel i.fa-file-excel {
+    font-size: 1.5rem;
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* ✅ Range Slider Modern */
+  .form-range::-webkit-slider-thumb {
+    background: #6366f1;
+  }
+
+  .form-range::-moz-range-thumb {
+    background: #6366f1;
+  }
+
+  /* ✅ Responsive adjustments */
+  @media (max-width: 768px) {
+    .btn-export-excel {
+      width: 100%;
+      padding: 1rem 2rem !important;
+    }
+
+    .btn-export-excel small {
+      font-size: 0.8rem !important;
+    }
+  }
+
+  /* ✅ Loading state */
+  .btn-export-excel .fa-spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ✅ Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1a202c;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4f46e5;
+  }
 </style>

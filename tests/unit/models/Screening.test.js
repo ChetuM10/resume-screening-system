@@ -45,7 +45,7 @@ describe("Screening Model", () => {
 
       const savedScreening = await minimalScreening.save();
       expect(savedScreening.results).toEqual([]);
-      expect(savedScreening.processingStatus).toBe("completed"); // ✅ EXPECT: 'completed' (your actual default)
+      expect(savedScreening.processingStatus).toBe("pending");
       expect(savedScreening.createdBy).toBe("System");
     });
   });

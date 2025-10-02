@@ -2,13 +2,14 @@
  * @fileoverview Main Dashboard Routes - Home page and dashboard endpoints
  * Handles dashboard statistics, ML dashboard, health checks, and quick actions
  * @author Resume Screening System
- * @version 1.0.0
+ * @version 1.1.0 - Added Excel Export Feature
  */
 
 const express = require("express");
 const mongoose = require("mongoose"); // ✅ ADDED: Import mongoose for ObjectId validation
 const Resume = require("../models/Resume");
 const Screening = require("../models/Screening");
+const resultsController = require("../controllers/resultsController"); // ✅ NEW! Import results controller
 
 const router = express.Router();
 
@@ -318,47 +319,72 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+// ==================== ✅ RESULTS ROUTES - NEW SECTION ====================
+
+/**
+ * View screening results page
+ * @route GET /results/:id
+ */
+router.get("/results/:id", resultsController.getScreeningResults);
+
+/**
+ * Get results as JSON API
+ * @route GET /api/results/:id
+ */
+router.get("/api/results/:id", resultsController.getResultsJson);
+
+/**
+ * Download candidate resume text
+ * @route GET /results/:id/download
+ */
+router.get("/results/:id/download", resultsController.downloadResume);
+
+/**
+ * ✅ NEW! Export screening results to Excel
+ * @route GET /results/:id/export
+ */
+router.get("/results/:id/export", resultsController.exportScreeningToExcel);
+
 // ==================== ✅ DELETE CANDIDATE API - ADDED ====================
 
 /**
  * DELETE /api/candidates/:id - Delete candidate by ID
  * @route DELETE /api/candidates/:id
  */
-router.delete('/api/candidates/:id', async (req, res) => {
+router.delete("/api/candidates/:id", async (req, res) => {
   try {
     const candidateId = req.params.id;
-    
+
     // ✅ Validate MongoDB ObjectId format
     if (!mongoose.Types.ObjectId.isValid(candidateId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid candidate ID format'
+        error: "Invalid candidate ID format",
       });
     }
-    
+
     // ✅ Delete candidate from database
     const deletedCandidate = await Resume.findByIdAndDelete(candidateId);
-    
+
     if (!deletedCandidate) {
       return res.status(404).json({
         success: false,
-        error: 'Candidate not found'
+        error: "Candidate not found",
       });
     }
-    
+
     console.log(`✅ Deleted candidate: ${deletedCandidate.candidateName}`);
-    
+
     res.json({
       success: true,
       message: `Successfully deleted candidate: ${deletedCandidate.candidateName}`,
-      deletedId: candidateId
+      deletedId: candidateId,
     });
-    
   } catch (error) {
-    console.error('Delete candidate error:', error);
+    console.error("Delete candidate error:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete candidate'
+      error: "Failed to delete candidate",
     });
   }
 });

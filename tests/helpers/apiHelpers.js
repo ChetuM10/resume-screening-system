@@ -4,10 +4,15 @@
 const Resume = require('../../models/Resume');
 const Screening = require('../../models/Screening');
 
+/**
+ * Create and save a test resume in the database
+ * @param {Object} overrides - Fields to override in the default resume
+ * @returns {Promise<Resume>} - Saved Resume document
+ */
 async function createTestResumeInDB(overrides = {}) {
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 1000);
-  
+
   const defaultResume = {
     candidateName: 'Test Candidate',
     email: `test${timestamp}${random}@example.com`, // Unique email
@@ -27,10 +32,15 @@ async function createTestResumeInDB(overrides = {}) {
   return await resume.save();
 }
 
+/**
+ * Create and save multiple test resumes
+ * @param {number} count - Number of resumes to create
+ * @returns {Promise<Array<Resume>>} - Array of saved Resume documents
+ */
 async function createMultipleTestResumes(count = 5) {
   const resumes = [];
   const timestamp = Date.now();
-  
+
   for (let i = 0; i < count; i++) {
     const resume = await createTestResumeInDB({
       candidateName: `Test Candidate ${i + 1}`,
@@ -42,10 +52,15 @@ async function createMultipleTestResumes(count = 5) {
     });
     resumes.push(resume);
   }
-  
+
   return resumes;
 }
 
+/**
+ * Create and save a test screening in the database
+ * @param {Object} overrides - Fields to override in the default screening
+ * @returns {Promise<Screening>} - Saved Screening document
+ */
 async function createTestScreeningInDB(overrides = {}) {
   const defaultScreening = {
     jobTitle: 'Test Developer',
@@ -67,6 +82,9 @@ async function createTestScreeningInDB(overrides = {}) {
   return await screening.save();
 }
 
+/**
+ * Clean up test data from database collections
+ */
 async function cleanupTestData() {
   await Resume.deleteMany({});
   await Screening.deleteMany({});
