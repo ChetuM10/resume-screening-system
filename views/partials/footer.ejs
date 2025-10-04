@@ -1,7 +1,33 @@
-<footer class="bg-light text-center py-3 mt-5">
+<footer class="text-center py-3 mt-5 bg-primary">
   <div class="container">
     <small>
       &copy; <%= new Date().getFullYear() %> Resume Screening System &mdash; Developed by Eduphoenix Solutions
     </small>
   </div>
 </footer>
+
+<style>
+/* Footer styling - exactly matching navbar */
+footer {
+  color: white !important;
+  border-top: none;
+}
+
+footer small {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+/* Light mode footer - exactly matching navbar gradient */
+.light-mode footer {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode footer small {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark mode uses Bootstrap's bg-primary (inherited from class) */
+</style>

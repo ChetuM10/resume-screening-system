@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <!-- ✅ Export Results Section - Simple & Clean -->
+  <!-- Export Results Section -->
   <% if (results && results.length > 0) { %>
   <div class="row mb-4">
     <div class="col-12">
@@ -177,7 +177,8 @@
             <span id="visibleCount"><%= results.length %></span>
           </strong>
           of
-          <strong class="text-white"><%= results.length %></strong> candidates
+          <strong class="text-white"><%= results.length %></strong>
+          candidates
         </div>
       </div>
 
@@ -338,11 +339,15 @@
                         <%= Math.round(job.score) %>%
                       </span>
                     </div>
+                    <!-- ✅ CLEANEST: Calculate width separately -->
+                    <% var progressWidth = (job.score || 0); %> <% var
+                    progressColor = progressWidth >= 75 ? 'success' :
+                    progressWidth >= 50 ? 'warning' : 'danger'; %>
                     <div class="progress" style="height: 8px">
                       <div
-                        class="progress-bar bg-<%= job.score >= 75 ? 'success' : job.score >= 50 ? 'warning' : 'danger' %>"
-                        style="width: '<%= job.score || 0 %>%'"
-                        title="Score: <%= Math.round(job.score) %>%"
+                        class="progress-bar bg-<%= progressColor %>"
+                        style="width: <%= progressWidth %>%"
+                        title="Score: <%= Math.round(progressWidth) %>%"
                       ></div>
                     </div>
                   </div>
@@ -500,7 +505,7 @@
       });
     }
 
-    // ✅ Excel download with loading feedback
+    // Excel download with loading feedback
     var excelBtn = document.getElementById("exportButton");
     if (excelBtn) {
       excelBtn.addEventListener("click", function (e) {
@@ -542,7 +547,6 @@
     border-radius: inherit;
   }
 
-  /* ✅ Simple Export Section - Like Your Image */
   .export-section-simple {
     background: #2d3748;
     border-radius: 12px;
@@ -764,7 +768,6 @@
     background: #7c3aed;
   }
 
-  /* ✅ Responsive */
   @media (max-width: 768px) {
     .btn-export-simple {
       padding: 0.875rem 2rem;
