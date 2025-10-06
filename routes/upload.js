@@ -66,7 +66,7 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB per file
-    files: 20 // Maximum 20 files
+    files: 100, // Allows 100 files
   },
   fileFilter: fileFilter
 });
@@ -210,7 +210,7 @@ router.get('/', async (req, res) => {
     
     res.render('pages/upload', {
       title: 'Upload Resumes',
-      maxFiles: 20,
+      maxFiles: 100,
       maxFileSize: 10,
       supportedFormats: ['PDF', 'DOCX'],
       statistics: {
@@ -237,7 +237,7 @@ router.get('/', async (req, res) => {
  * POST route to handle multiple file uploads with FULL PROCESSING
  */
 router.post('/',
-  upload.array('resumes', 20),
+  upload.array('resumes', 100),
   async (req, res, next) => {
     try {
       console.log(`🔄 PROCESSING ${req.files?.length || 0} uploaded files`);
@@ -305,7 +305,7 @@ router.use((error, req, res, next) => {
     if (error.code === 'LIMIT_FILE_COUNT') {
       return res.status(413).json({
         success: false,
-        error: 'Too many files. Maximum is 20 files',
+        error: 'Too many files. Maximum is 100 files',
         code: 'TOO_MANY_FILES'
       });
     }

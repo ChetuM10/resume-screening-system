@@ -90,8 +90,13 @@
       }
 
       @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
       }
 
       .upload-icon i {
@@ -110,7 +115,6 @@
         margin-bottom: 1rem;
       }
 
-      /* ✅ FALLBACK for browsers that don't support background-clip */
       @supports not (-webkit-background-clip: text) {
         .upload-title {
           background: none !important;
@@ -124,7 +128,6 @@
         font-weight: 400;
       }
 
-      /* ✅ FIXED: Statistics Grid with Proper Visibility */
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -133,13 +136,13 @@
       }
 
       .stat-card {
-        background: var(--primary-gradient) !important; /* ✅ FIX: Gradient background */
+        background: var(--primary-gradient) !important;
         border-radius: 15px;
         padding: 1.5rem;
         text-align: center;
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
-        color: white !important; /* ✅ FIX: Force white text */
+        color: white !important;
         box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
       }
 
@@ -148,23 +151,21 @@
         box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
       }
 
-      /* ✅ FIXED: Stat Numbers - Always White */
       .stat-number {
         font-size: 2.5rem !important;
         font-weight: 700 !important;
-        color: white !important; /* ✅ FIX: Force white color */
+        color: white !important;
         margin-bottom: 0.5rem !important;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      /* ✅ FIXED: Stat Labels - Always White and Visible */
       .stat-label {
-        color: white !important; /* ✅ FIX: Force white color */
+        color: white !important;
         font-size: 1rem !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
         letter-spacing: 1px !important;
-        opacity: 1 !important; /* ✅ FIX: Full opacity */
+        opacity: 1 !important;
       }
 
       .drop-zone {
@@ -186,7 +187,12 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(102, 126, 234, 0.1),
+          transparent
+        );
         transition: left 0.5s ease;
       }
 
@@ -278,6 +284,31 @@
 
       .selected-files {
         margin: 2rem 0;
+      }
+
+      #filesList {
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 0.5rem;
+      }
+
+      #filesList::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      #filesList::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+      }
+
+      #filesList::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+      }
+
+      #filesList::-webkit-scrollbar-thumb:hover {
+        background: #764ba2;
       }
 
       .files-header {
@@ -389,7 +420,12 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
         transition: left 0.5s ease;
       }
 
@@ -465,7 +501,6 @@
         border: 1px solid #f59e0b;
       }
 
-      /* ✅ MOBILE RESPONSIVE FIXES */
       @media (max-width: 768px) {
         .upload-card {
           margin: 1rem;
@@ -512,7 +547,6 @@
       </a>
 
       <div class="upload-card">
-        <!-- Header -->
         <div class="upload-header">
           <div class="upload-icon">
             <i class="fas fa-cloud-upload-alt"></i>
@@ -523,7 +557,6 @@
           </p>
         </div>
 
-        <!-- ✅ FIXED: Statistics with Proper Visibility -->
         <% if (typeof statistics !== 'undefined' && statistics) { %>
         <div class="stats-grid">
           <div class="stat-card">
@@ -531,19 +564,21 @@
             <div class="stat-label">Total Uploaded</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number"><%= statistics.processedResumes || 0 %></div>
+            <div class="stat-number">
+              <%= statistics.processedResumes || 0 %>
+            </div>
             <div class="stat-label">Processed</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number"><%= statistics.processingRate || 0 %>%</div>
+            <div class="stat-number">
+              <%= statistics.processingRate || 0 %>%
+            </div>
             <div class="stat-label">Success Rate</div>
           </div>
         </div>
         <% } %>
 
-        <!-- Upload Form -->
         <form id="uploadForm" enctype="multipart/form-data">
-          <!-- Drop Zone -->
           <div class="drop-zone" id="dropZone">
             <div class="drop-zone-content">
               <div class="drop-zone-icon">
@@ -562,18 +597,17 @@
             </div>
           </div>
 
-          <!-- File Info -->
           <div class="file-info">
             <div class="file-info-icon">
               <i class="fas fa-info-circle"></i>
             </div>
             <div>
               <strong>Supported formats:</strong> PDF, DOC, DOCX<br />
-              <strong>Limits:</strong> 10MB per file • Up to 20 files per upload
+              <strong>Limits:</strong> 10MB per file • Up to 100 files per
+              upload
             </div>
           </div>
 
-          <!-- Selected Files -->
           <div id="selectedFiles" class="selected-files" style="display: none">
             <div class="files-header">
               <i class="fas fa-list-ul"></i>
@@ -582,7 +616,6 @@
             <div id="filesList"></div>
           </div>
 
-          <!-- Progress -->
           <div class="progress-container" id="progressContainer">
             <div class="progress">
               <div
@@ -597,31 +630,32 @@
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="upload-actions">
-            <button type="submit" class="btn btn-upload" id="uploadBtn" disabled>
+            <button
+              type="submit"
+              class="btn btn-upload"
+              id="uploadBtn"
+              disabled
+            >
               <i class="fas fa-cloud-upload-alt me-2"></i>
               Upload Resumes
             </button>
           </div>
         </form>
 
-        <!-- Results -->
         <div id="resultsContainer">
           <% if (typeof message !== 'undefined' && message) { %>
           <div class="alert alert-success">
             <i class="fas fa-check-circle me-2"></i>
-            <%= message %>
-            <% if (typeof processed !== 'undefined' && processed) { %>
-            <br /><strong>Processed:</strong> <%= processed %> file(s)
-            <% } %>
-            <% if (typeof failed !== 'undefined' && failed) { %>
-            <br /><strong>Failed:</strong> <%= failed %> file(s)
-            <% } %>
+            <%= message %> <% if (typeof processed !== 'undefined' && processed)
+            { %>
+            <br /><strong>Processed:</strong> <%= processed %> file(s) <% } %>
+            <% if (typeof failed !== 'undefined' && failed) { %> <br /><strong
+              >Failed:</strong
+            >
+            <%= failed %> file(s) <% } %>
           </div>
-          <% } %>
-          
-          <% if (typeof error !== 'undefined' && error) { %>
+          <% } %> <% if (typeof error !== 'undefined' && error) { %>
           <div class="alert alert-danger">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <%= error %>
@@ -633,7 +667,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Enhanced upload functionality
+      console.log("🔄 Script loaded - Version 3.0 - Delete Fix");
+
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
       const selectedFiles = document.getElementById("selectedFiles");
@@ -646,15 +681,27 @@
       const resultsContainer = document.getElementById("resultsContainer");
 
       let files = [];
-      const maxFiles = 20;
-      const maxFileSize = 10 * 1024 * 1024; // 10MB
+      const maxFiles = 100;
+      const maxFileSize = 10 * 1024 * 1024;
       const allowedTypes = [
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ];
 
-      // Drag and drop handlers
+      // ✅ FIX: Event delegation for delete buttons
+      filesList.addEventListener("click", function (e) {
+        // Find the button or its icon
+        const button = e.target.closest(".remove-file");
+        if (button) {
+          const index = parseInt(button.getAttribute("data-index"), 10);
+          console.log("🗑️ Removing file at index:", index);
+          files.splice(index, 1);
+          updateFilesDisplay();
+          updateUploadButton();
+        }
+      });
+
       ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
         dropZone.addEventListener(eventName, preventDefaults, false);
       });
@@ -694,10 +741,9 @@
       }
 
       function handleFiles(newFiles) {
-        // Validate and filter files
         const validFiles = newFiles.filter((file) => {
           if (files.length >= maxFiles) {
-            showAlert("Maximum 20 files allowed", "warning");
+            showAlert(`Maximum ${maxFiles} files allowed`, "warning");
             return false;
           }
 
@@ -714,7 +760,6 @@
             return false;
           }
 
-          // Check for duplicates
           if (files.some((f) => f.name === file.name && f.size === file.size)) {
             return false;
           }
@@ -742,6 +787,7 @@
 
           const fileIcon = getFileIcon(file.type);
 
+          // ✅ FIX: Use data-index instead of onclick
           fileItem.innerHTML = `
             <div class="file-details">
               <div class="file-icon">
@@ -752,7 +798,7 @@
                 <div class="file-size">${formatFileSize(file.size)}</div>
               </div>
             </div>
-            <button type="button" class="remove-file" onclick="removeFile(${index})" title="Remove file">
+            <button type="button" class="remove-file" data-index="${index}" title="Remove file">
               <i class="fas fa-times"></i>
             </button>
           `;
@@ -773,12 +819,6 @@
         }
       }
 
-      function removeFile(index) {
-        files.splice(index, 1);
-        updateFilesDisplay();
-        updateUploadButton();
-      }
-
       function updateUploadButton() {
         const hasFiles = files.length > 0;
         uploadBtn.disabled = !hasFiles;
@@ -796,7 +836,6 @@
         }
       }
 
-      // ✅ FIXED: Form submission with proper error handling
       uploadForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -805,10 +844,10 @@
         const formData = new FormData();
         files.forEach((file) => formData.append("resumes", file));
 
-        // Show progress
         progressContainer.style.display = "block";
         uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+        uploadBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
 
         try {
           console.log(`📁 Starting upload of ${files.length} files`);
@@ -817,28 +856,28 @@
             method: "POST",
             body: formData,
             headers: {
-              'X-Requested-With': 'XMLHttpRequest'
-            }
+              "X-Requested-With": "XMLHttpRequest",
+            },
           });
 
           console.log(`📡 Response status: ${response.status}`);
           progressContainer.style.display = "none";
 
           if (!response.ok) {
-            let errorMessage = 'Upload failed';
+            let errorMessage = "Upload failed";
             try {
               const errorData = await response.json();
               errorMessage = errorData.error || errorMessage;
-              console.error('❌ Upload error:', errorData);
+              console.error("❌ Upload error:", errorData);
             } catch (parseError) {
-              console.error('❌ Could not parse error response');
+              console.error("❌ Could not parse error response");
               errorMessage = `Upload failed with status ${response.status}`;
             }
             throw new Error(errorMessage);
           }
 
           const result = await response.json();
-          console.log('✅ Upload successful:', result);
+          console.log("✅ Upload successful:", result);
 
           if (result.success) {
             showSuccessResult(result);
@@ -846,9 +885,8 @@
           } else {
             showErrorResult(result);
           }
-
         } catch (error) {
-          console.error('💥 Upload error:', error);
+          console.error("💥 Upload error:", error);
           progressContainer.style.display = "none";
           showAlert("Upload failed: " + error.message, "danger");
         } finally {
@@ -857,27 +895,40 @@
       });
 
       function showSuccessResult(result) {
-        const processedCount = result.summary?.successful || result.processed || 0;
+        const processedCount =
+          result.summary?.successful || result.processed || 0;
         const failedCount = result.summary?.failed || result.failed || 0;
 
         let successHTML = `
           <div class="alert alert-success">
             <i class="fas fa-check-circle me-2"></i>
             <strong>Upload Successful!</strong><br>
-            ${result.message || `Processed ${processedCount} files successfully`}
+            ${
+              result.message || `Processed ${processedCount} files successfully`
+            }
             ${failedCount > 0 ? `<br>Failed: ${failedCount} files` : ""}
         `;
 
         if (result.results && result.results.length > 0) {
-          const candidatesList = result.results.slice(0, 5).map(r => 
-            `• ${r.candidateName || 'Unknown'} (${(r.skills || []).length} skills)`
-          ).join('<br>');
-          
+          const candidatesList = result.results
+            .slice(0, 5)
+            .map(
+              (r) =>
+                `• ${r.candidateName || "Unknown"} (${
+                  (r.skills || []).length
+                } skills)`
+            )
+            .join("<br>");
+
           successHTML += `
             <br><br>
             <strong>Processed Candidates:</strong><br>
             ${candidatesList}
-            ${result.results.length > 5 ? `<br><em>...and ${result.results.length - 5} more</em>` : ''}
+            ${
+              result.results.length > 5
+                ? `<br><em>...and ${result.results.length - 5} more</em>`
+                : ""
+            }
           `;
         }
 
@@ -895,9 +946,8 @@
 
         resultsContainer.innerHTML = successHTML;
 
-        // Auto-redirect after 5 seconds
         setTimeout(() => {
-          window.location.href = '/dashboard/resumes/processed';
+          window.location.href = "/dashboard/resumes/processed";
         }, 5000);
       }
 
@@ -907,7 +957,9 @@
             <i class="fas fa-exclamation-triangle me-2"></i>
             <strong>Upload Failed</strong><br>
             ${result.error || "Duplicate Resume detected!"}
-            ${result.code ? `<br><small>Error code: ${result.code}</small>` : ""}
+            ${
+              result.code ? `<br><small>Error code: ${result.code}</small>` : ""
+            }
             <div class="mt-3">
               <button onclick="resetResults()" class="btn btn-outline-danger">
                 <i class="fas fa-redo me-1"></i>Try Again
@@ -918,10 +970,18 @@
       }
 
       function showAlert(message, type) {
-        const alertClass = type === "success" ? "alert-success" : 
-                          type === "danger" ? "alert-danger" : "alert-warning";
-        const icon = type === "success" ? "fa-check-circle" : 
-                     type === "danger" ? "fa-exclamation-triangle" : "fa-exclamation-circle";
+        const alertClass =
+          type === "success"
+            ? "alert-success"
+            : type === "danger"
+            ? "alert-danger"
+            : "alert-warning";
+        const icon =
+          type === "success"
+            ? "fa-check-circle"
+            : type === "danger"
+            ? "fa-exclamation-triangle"
+            : "fa-exclamation-circle";
 
         resultsContainer.innerHTML = `
           <div class="alert ${alertClass} alert-dismissible fade show">
@@ -951,7 +1011,6 @@
         resultsContainer.innerHTML = "";
       }
 
-      // Initialize
       updateUploadButton();
     </script>
   </body>

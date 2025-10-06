@@ -1,9 +1,23 @@
 /**
- * @fileoverview FIXED NLP Service - Enhanced Resume Text Processing
- * @version 4.0.0 - BULLETPROOF extraction algorithms + TEST COMPATIBLE
+ * @fileoverview AI-ENHANCED NLP Service - Resume Text Processing with Gemini
+ * @version 5.0.0 - HYBRID: Rule-based + AI Enhancement
  */
 
 const natural = require("natural");
+
+// ==================== GEMINI AI INTEGRATION ====================
+let geminiService = null;
+const USE_AI = process.env.USE_AI_ENHANCEMENT === "true";
+
+// Try to load Gemini service (graceful fallback if not available)
+if (USE_AI) {
+  try {
+    geminiService = require("./geminiService");
+    console.log("✅ Gemini AI service loaded successfully");
+  } catch (error) {
+    console.log("⚠️ Gemini AI not available, using rule-based only");
+  }
+}
 
 // Enhanced skills database
 const COMMON_SKILLS = [
@@ -243,9 +257,9 @@ function extractPhone(text) {
   return null;
 }
 
-// ✅ FIXED: Enhanced skills extraction (returns lowercase)
-function extractSkills(text) {
-  console.log("🔍 FIXED: Starting skills extraction...");
+// ✅ AI-ENHANCED: Skills extraction with Gemini fallback
+async function extractSkills(text) {
+  console.log("🔍 AI-ENHANCED: Starting skills extraction...");
 
   if (!text || typeof text !== "string") {
     console.log("❌ No valid text for skills extraction");
@@ -258,7 +272,6 @@ function extractSkills(text) {
   // Method 1: Direct skill matching against common skills
   console.log("📋 Method 1: Checking common skills...");
   for (const skill of COMMON_SKILLS) {
-    // More flexible matching
     const skillPattern = new RegExp(
       `\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
       "i"
@@ -276,15 +289,12 @@ function extractSkills(text) {
 
   if (skillsMatch && skillsMatch[1]) {
     const skillsText = skillsMatch[1];
-    console.log(`📝 Found skills section: ${skillsText.substring(0, 200)}...`);
-
-    // Parse skills from this section
     const skillsList = skillsText
       .replace(/[,;|\n]/g, " ")
       .split(" ")
       .map((skill) => skill.trim().toLowerCase())
       .filter((skill) => skill.length > 2 && skill.length < 20)
-      .filter((skill) => !/^\d+$/.test(skill)); // Remove numbers
+      .filter((skill) => !/^\d+$/.test(skill));
 
     skillsList.forEach((skill) => {
       if (
@@ -298,6 +308,20 @@ function extractSkills(text) {
         extractedSkills.add(skill);
       }
     });
+  }
+
+  // Method 3: AI Enhancement (if available)
+  if (geminiService && extractedSkills.size < 5) {
+    try {
+      console.log("🤖 Method 3: Using AI to find more skills...");
+      const aiSkills = await geminiService.extractSkills(text);
+      if (aiSkills && aiSkills.length > 0) {
+        aiSkills.forEach((skill) => extractedSkills.add(skill.toLowerCase()));
+        console.log(`✅ AI found ${aiSkills.length} additional skills`);
+      }
+    } catch (error) {
+      console.log("⚠️ AI skills extraction failed, using rule-based only");
+    }
   }
 
   const finalSkills = Array.from(extractedSkills).slice(0, 25);
@@ -322,12 +346,12 @@ function extractExperience(text) {
   const expPatterns = [
     /(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp)/gi,
     /(?:experience|exp)[\s:]*(\d+)\+?\s*(?:years?|yrs?)/gi,
-    /(\d+)\s*(?:years?|yrs?)\s+(?:in|as|of)/gi, // ✅ NEW: "3 years of experience"
-    /(?:at|with)\s+\w+\s*\((\d+)\s*(?:years?|yrs?)\)/gi, // ✅ NEW: "at Company (3 years)"
+    /(\d+)\s*(?:years?|yrs?)\s+(?:in|as|of)/gi,
+    /(?:at|with)\s+\w+\s*\((\d+)\s*(?:years?|yrs?)\)/gi,
   ];
 
   for (const pattern of expPatterns) {
-    pattern.lastIndex = 0; // Reset regex state
+    pattern.lastIndex = 0;
     const matches = [...text.matchAll(pattern)];
     for (const match of matches) {
       const extractedYears = parseInt(match[1]) || 0;
@@ -342,7 +366,6 @@ function extractExperience(text) {
   const textLower = text.toLowerCase();
   if (textLower.includes("fresher") || textLower.includes("fresh graduate")) {
     if (years === 0) {
-      // Only if no experience found
       positions.push("Fresher");
     }
   }
@@ -390,35 +413,66 @@ function extractEducation(text) {
   return "Not Specified";
 }
 
-// ✅ FIXED: Main processing function with correct error message
+// ✅ AI-ENHANCED: Main processing function with AI boost
 async function processResumeText(text) {
-  // ✅ FIXED: Exact error message that tests expect
   if (!text || !text.trim()) {
     throw new Error("Empty or invalid text provided");
   }
 
-  console.log("🔄 FIXED: Starting resume processing...");
+  console.log("🔄 AI-ENHANCED: Starting resume processing...");
   console.log(`📊 Text length: ${text.length} characters`);
+  console.log(`🤖 AI Mode: ${geminiService ? "ENABLED" : "DISABLED"}`);
 
   const startTime = Date.now();
 
   try {
+    // Extract with rule-based methods first
     const parsed = {
       name: extractName(text),
       email: extractEmail(text),
       phone: extractPhone(text),
-      skills: extractSkills(text),
+      skills: await extractSkills(text), // Now async with AI
       experience: extractExperience(text),
       education: extractEducation(text),
       processingTime: 0,
       confidence: 0,
+      aiEnhanced: false, // Track if AI was used
     };
+
+    // AI Enhancement Layer (if available and data is incomplete)
+    if (geminiService) {
+      try {
+        const needsAI =
+          !parsed.email || !parsed.phone || parsed.skills.length < 3;
+
+        if (needsAI) {
+          console.log("🤖 Applying AI enhancement...");
+          const aiEnhancements = await geminiService.enhanceResumeParsing(
+            text,
+            parsed
+          );
+
+          if (aiEnhancements) {
+            // Merge AI results with rule-based results
+            parsed.email = parsed.email || aiEnhancements.email;
+            parsed.phone = parsed.phone || aiEnhancements.phone;
+            parsed.skills = [
+              ...new Set([...parsed.skills, ...(aiEnhancements.skills || [])]),
+            ].slice(0, 25);
+            parsed.aiEnhanced = true;
+            console.log("✅ AI enhancement applied successfully");
+          }
+        }
+      } catch (aiError) {
+        console.log("⚠️ AI enhancement failed, using rule-based results only");
+      }
+    }
 
     const processingTime = Date.now() - startTime;
     parsed.processingTime = processingTime;
 
     // Calculate confidence based on extracted data
-    let confidence = 20; // Base confidence
+    let confidence = 20;
     if (parsed.name && parsed.name !== "Unknown Candidate") confidence += 30;
     if (parsed.email) confidence += 25;
     if (parsed.phone) confidence += 15;
@@ -427,16 +481,17 @@ async function processResumeText(text) {
 
     parsed.confidence = Math.min(100, confidence);
 
-    console.log(`✅ FIXED: Processing completed in ${processingTime}ms`);
+    console.log(`✅ Processing completed in ${processingTime}ms`);
     console.log(`📊 FINAL RESULT:`, {
       name: parsed.name,
       email: parsed.email,
       phone: parsed.phone,
       skillsCount: parsed.skills?.length || 0,
-      skills: parsed.skills?.slice(0, 5) || [], // Show first 5 skills
+      skills: parsed.skills?.slice(0, 5) || [],
       experience: parsed.experience?.years || 0,
       education: parsed.education,
       confidence: parsed.confidence,
+      aiEnhanced: parsed.aiEnhanced,
     });
 
     return parsed;

@@ -2,14 +2,14 @@
  * @fileoverview Main Dashboard Routes - Home page and dashboard endpoints
  * Handles dashboard statistics, ML dashboard, health checks, and quick actions
  * @author Resume Screening System
- * @version 1.1.0 - Added Excel Export Feature
+ * @version 1.2.0 - Added Analytics Dashboard
  */
 
 const express = require("express");
-const mongoose = require("mongoose"); // ✅ ADDED: Import mongoose for ObjectId validation
+const mongoose = require("mongoose");
 const Resume = require("../models/Resume");
 const Screening = require("../models/Screening");
-const resultsController = require("../controllers/resultsController"); // ✅ NEW! Import results controller
+const resultsController = require("../controllers/resultsController");
 
 const router = express.Router();
 
@@ -63,6 +63,15 @@ try {
 } catch (error) {
   console.log("homeController not found, using inline implementation");
   homeController = null;
+}
+
+// ✅ NEW: Analytics controller import
+let analyticsController;
+try {
+  analyticsController = require("../controllers/analyticsController");
+} catch (error) {
+  console.log("analyticsController not found, will use inline implementation");
+  analyticsController = null;
 }
 
 /**
@@ -158,7 +167,6 @@ router.get("/", async (req, res) => {
       uploadedCount
     );
 
-    // ✅ FIXED: Create stats object with correct variable names
     const stats = {
       uploaded: uploadedCount,
       processed: processedCount,
@@ -168,14 +176,12 @@ router.get("/", async (req, res) => {
       processingRate,
     };
 
-    // ✅ DEBUG: Add logging to verify counts
     console.log("📊 Dashboard Statistics:");
     console.log("- Uploaded:", uploadedCount);
     console.log("- Processed:", processedCount);
     console.log("- Screenings:", screeningsCount);
     console.log("- Top Score:", topScore);
 
-    // ✅ ADDITIONAL DEBUG: Test raw database query
     const testResumes = await Resume.find({});
     console.log(
       "🧪 Raw database test - Total resumes found:",
@@ -192,10 +198,9 @@ router.get("/", async (req, res) => {
     // Process success/error messages from query parameters
     const { successMessage, errorMessage } = processQueryMessages(req.query);
 
-    // ✅ FIXED: Pass 'stats' instead of 'resumeStats'
     res.render("pages/index", {
       title: "Resume Screening Dashboard",
-      stats, // ← Changed from 'resumeStats' to 'stats'
+      stats,
       recentResumes,
       recentScreenings,
       successMessage,
@@ -208,7 +213,7 @@ router.get("/", async (req, res) => {
     // Render dashboard with fallback data and error message
     res.render("pages/index", {
       title: "Resume Screening Dashboard",
-      stats: DEFAULT_STATS, // ← Also changed here
+      stats: DEFAULT_STATS,
       recentResumes: [],
       recentScreenings: [],
       errorMessage: "Unable to load statistics. Please refresh the page.",
@@ -272,17 +277,69 @@ router.get("/ml-dashboard", async (req, res) => {
   }
 });
 
-// ==================== ✅ CANDIDATE PROFILE ROUTE - FIXED ====================
+// ==================== ✅ NEW! ANALYTICS DASHBOARD ROUTE ====================
 
 /**
- * GET route for individual candidate profile - FIXED
+ * Analytics Dashboard route - displays visual charts and data insights
+ * @route GET /analytics
+ */
+router.get("/analytics", async (req, res) => {
+  if (analyticsController && analyticsController.getAnalyticsDashboard) {
+    // Use controller if available
+    return analyticsController.getAnalyticsDashboard(req, res);
+  }
+
+  // Inline fallback implementation
+  try {
+    console.log("📊 Loading Analytics Dashboard...");
+
+    res.render("pages/analytics", {
+      title: "Analytics Dashboard",
+      currentYear: new Date().getFullYear(),
+    });
+  } catch (error) {
+    console.error("❌ Error loading Analytics Dashboard:", error);
+    res.status(500).render("pages/error", {
+      title: "Error",
+      message: "Unable to load analytics dashboard",
+      currentYear: new Date().getFullYear(),
+    });
+  }
+});
+
+/**
+ * ✅ NEW! Analytics data API endpoint
+ * @route GET /api/analytics/data
+ */
+router.get("/api/analytics/data", async (req, res) => {
+  if (analyticsController && analyticsController.getAnalyticsData) {
+    return analyticsController.getAnalyticsData(req, res);
+  }
+
+  // Inline fallback - return empty data structure
+  res.json({
+    success: true,
+    data: {
+      skillsDistribution: [],
+      scoreDistribution: [],
+      monthlyUploads: [],
+      experienceBreakdown: [],
+      educationStats: [],
+    },
+  });
+});
+
+// ==================== CANDIDATE PROFILE ROUTE ====================
+
+/**
+ * GET route for individual candidate profile
  * @route GET /profile/:id
  */
 router.get("/profile/:id", async (req, res) => {
   try {
     const candidateId = req.params.id;
 
-    // ✅ Validate MongoDB ObjectId
+    // Validate MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(candidateId)) {
       return res.status(404).render("pages/error", {
         title: "Invalid ID",
@@ -303,10 +360,9 @@ router.get("/profile/:id", async (req, res) => {
 
     console.log(`📋 Viewing profile: ${candidate.candidateName}`);
 
-    // ✅ FIXED: Pass as 'resume' to match your candidateDetail.ejs template
     res.render("pages/candidateDetail", {
       title: `${candidate.candidateName} - Profile`,
-      resume: candidate, // ✅ Changed from 'candidate' to 'resume'
+      resume: candidate,
       currentYear: new Date().getFullYear(),
     });
   } catch (error) {
@@ -319,7 +375,7 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
-// ==================== ✅ RESULTS ROUTES - NEW SECTION ====================
+// ==================== RESULTS ROUTES ====================
 
 /**
  * View screening results page
@@ -340,12 +396,12 @@ router.get("/api/results/:id", resultsController.getResultsJson);
 router.get("/results/:id/download", resultsController.downloadResume);
 
 /**
- * ✅ NEW! Export screening results to Excel
+ * Export screening results to Excel
  * @route GET /results/:id/export
  */
 router.get("/results/:id/export", resultsController.exportScreeningToExcel);
 
-// ==================== ✅ DELETE CANDIDATE API - ADDED ====================
+// ==================== DELETE CANDIDATE API ====================
 
 /**
  * DELETE /api/candidates/:id - Delete candidate by ID
@@ -355,7 +411,7 @@ router.delete("/api/candidates/:id", async (req, res) => {
   try {
     const candidateId = req.params.id;
 
-    // ✅ Validate MongoDB ObjectId format
+    // Validate MongoDB ObjectId format
     if (!mongoose.Types.ObjectId.isValid(candidateId)) {
       return res.status(400).json({
         success: false,
@@ -363,7 +419,7 @@ router.delete("/api/candidates/:id", async (req, res) => {
       });
     }
 
-    // ✅ Delete candidate from database
+    // Delete candidate from database
     const deletedCandidate = await Resume.findByIdAndDelete(candidateId);
 
     if (!deletedCandidate) {
@@ -397,7 +453,6 @@ router.delete("/api/candidates/:id", async (req, res) => {
  */
 router.get("/api/stats", async (req, res) => {
   try {
-    // ✅ DEBUG: Log API stats request
     console.log("📡 API Stats request received");
 
     // Fetch current statistics for API response

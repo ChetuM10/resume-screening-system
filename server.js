@@ -1,6 +1,6 @@
 /**
  * @fileoverview Main Express Server for Resume Screening System
- * @version 2.3.0 - Updated for Render deployment - server starts in production
+ * @version 2.4.0 - Optimized for 100 file uploads with extended timeouts
  */
 
 require("dotenv").config();
@@ -26,13 +26,14 @@ app.set("etag", false);
 ejs.clearCache();
 console.log("✅ All caching disabled");
 
-// Server config
+// ✅ UPDATED: Server config optimized for 100 file uploads
 const SERVER_CONFIG = {
   PORT: process.env.PORT || 3000,
   NODE_ENV: process.env.NODE_ENV || "development",
-  REQUEST_TIMEOUT: 30000,
-  BODY_LIMIT: "10mb",
+  REQUEST_TIMEOUT: 600000, // ✅ 10 minutes for large uploads
+  BODY_LIMIT: "1000mb", // ✅ 1GB for 100 files (10MB each)
   STATIC_CACHE_AGE: "0",
+  MAX_FILES: 100, // ✅ Maximum files allowed per upload
 };
 
 // CORS config
@@ -91,7 +92,9 @@ async function initializeDatabase() {
   }
 }
 
-// Middleware
+// ==================== MIDDLEWARE ====================
+
+// Disable caching
 app.use((req, res, next) => {
   res.set({
     "Cache-Control": "no-store, no-cache, must-revalidate, private",
@@ -116,10 +119,14 @@ const logFormat = SERVER_CONFIG.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(logFormat));
 
 app.use(compression());
+
+// ✅ UPDATED: Body parser with 1GB limit
 app.use(express.json({ limit: SERVER_CONFIG.BODY_LIMIT }));
 app.use(
   express.urlencoded({ extended: true, limit: SERVER_CONFIG.BODY_LIMIT })
 );
+
+// ==================== RATE LIMITERS ====================
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -145,9 +152,23 @@ const candidateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// ✅ NEW: Upload rate limiter for large file uploads
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: SERVER_CONFIG.NODE_ENV === "production" ? 10 : 100,
+  message: {
+    error: "Too many upload requests. Please try again later.",
+    retryAfter: "1 hour",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+});
+
 app.use("/api/", apiLimiter);
 app.use("/screening", screeningLimiter);
 app.use("/candidate", candidateLimiter);
+app.use("/upload", uploadLimiter); // ✅ NEW: Rate limit for uploads
 
 // Static files
 app.use(
@@ -170,21 +191,27 @@ app.set("layout", "layouts/main");
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-// Request timeout
+// ✅ UPDATED: Extended request and response timeout for large uploads
 app.use((req, res, next) => {
-  req.setTimeout(SERVER_CONFIG.REQUEST_TIMEOUT, () => {
+  req.setTimeout(SERVER_CONFIG.REQUEST_TIMEOUT);
+  res.setTimeout(SERVER_CONFIG.REQUEST_TIMEOUT);
+
+  req.on("timeout", () => {
     if (!res.headersSent) {
       console.log(`⏰ Request timeout: ${req.method} ${req.originalUrl}`);
       res.status(408).json({
         success: false,
-        error: "Request timeout",
+        error: "Request timeout - upload may be too large or taking too long",
+        timeout: `${SERVER_CONFIG.REQUEST_TIMEOUT / 1000} seconds`,
       });
     }
   });
+
   next();
 });
 
-// Routes
+// ==================== ROUTES ====================
+
 try {
   const indexRouter = require("./routes/index");
   const uploadRouter = require("./routes/upload");
@@ -206,19 +233,27 @@ try {
   process.exit(1);
 }
 
-// Utility routes
+// ==================== UTILITY ROUTES ====================
+
+// ✅ UPDATED: Health check with more details
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "healthy",
     timestamp: new Date().toISOString(),
     uptime: Math.floor(process.uptime()),
     environment: SERVER_CONFIG.NODE_ENV,
-    caching: "disabled",
+    config: {
+      maxFiles: SERVER_CONFIG.MAX_FILES,
+      maxBodySize: SERVER_CONFIG.BODY_LIMIT,
+      requestTimeout: `${SERVER_CONFIG.REQUEST_TIMEOUT / 1000}s`,
+      caching: "disabled",
+    },
     routes: {
       screening: "✅ Registered",
       candidate: "✅ Registered",
       upload: "✅ Registered",
       dashboard: "✅ Registered",
+      analytics: "✅ Registered",
     },
   });
 });
@@ -232,6 +267,8 @@ app.delete("/test-delete", (req, res) => {
   });
 });
 
+// ==================== ERROR HANDLERS ====================
+
 // 404 handler
 app.use("*", (req, res) => {
   console.log(`🔍 404 Not Found: ${req.method} ${req.originalUrl}`);
@@ -242,9 +279,11 @@ app.use("*", (req, res) => {
       path: req.originalUrl,
       method: req.method,
       availableRoutes: [
+        "/",
+        "/upload",
         "/screening",
         "/candidate",
-        "/upload",
+        "/analytics",
         "/dashboard",
         "/api",
       ],
@@ -260,7 +299,27 @@ app.use("*", (req, res) => {
 // Global error handler
 app.use((error, req, res, next) => {
   console.error("🚨 Global error handler:", error);
+
   const isDevelopment = SERVER_CONFIG.NODE_ENV === "development";
+
+  // Handle specific error types
+  if (error.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({
+      success: false,
+      error: "File too large",
+      message: "One or more files exceed the maximum size limit",
+      maxSize: "10MB per file",
+    });
+  }
+
+  if (error.code === "LIMIT_FILE_COUNT") {
+    return res.status(413).json({
+      success: false,
+      error: "Too many files",
+      message: `Maximum ${SERVER_CONFIG.MAX_FILES} files allowed per upload`,
+    });
+  }
+
   if (req.xhr || req.headers.accept?.includes("application/json")) {
     return res.status(error.status || 500).json({
       success: false,
@@ -269,6 +328,7 @@ app.use((error, req, res, next) => {
       timestamp: new Date().toISOString(),
     });
   }
+
   res.status(error.status || 500).render("pages/error", {
     title: "Server Error",
     message: isDevelopment
@@ -278,7 +338,8 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Graceful shutdown
+// ==================== GRACEFUL SHUTDOWN ====================
+
 function gracefulShutdown(signal, server) {
   console.log(`${signal} received, shutting down gracefully`);
   if (server && server.close) {
@@ -304,13 +365,19 @@ function gracefulShutdown(signal, server) {
   }
 }
 
-// ✅ RENDER FIX: Startup function that works in both development and production
+// ==================== APPLICATION STARTUP ====================
+
 async function startApplication() {
   try {
     console.log("🚀 Initializing Resume Screening System...");
+    console.log(`📦 Max files per upload: ${SERVER_CONFIG.MAX_FILES}`);
+    console.log(
+      `⏱️  Request timeout: ${SERVER_CONFIG.REQUEST_TIMEOUT / 1000}s`
+    );
+    console.log(`💾 Max body size: ${SERVER_CONFIG.BODY_LIMIT}`);
+
     await initializeDatabase();
 
-    // ✅ KEY CHANGE: Server starts in BOTH development AND production
     const server = app.listen(SERVER_CONFIG.PORT, "0.0.0.0", () => {
       console.log("🎉 Server startup complete!");
       console.log(`🚀 Server running on port ${SERVER_CONFIG.PORT}`);
@@ -318,14 +385,23 @@ async function startApplication() {
       console.log("🔄 Caching: DISABLED");
 
       if (SERVER_CONFIG.NODE_ENV === "production") {
-        console.log("🚀 Production server ready for Render!");
+        console.log("🚀 Production server ready!");
+        console.log(
+          "⚠️  Note: 100 file uploads require adequate server resources"
+        );
       } else {
         console.log("📡 Local routes available:");
         console.log(` - http://localhost:${SERVER_CONFIG.PORT}`);
-        console.log(` - http://localhost:${SERVER_CONFIG.PORT}/screening`);
         console.log(` - http://localhost:${SERVER_CONFIG.PORT}/upload`);
+        console.log(` - http://localhost:${SERVER_CONFIG.PORT}/screening`);
+        console.log(` - http://localhost:${SERVER_CONFIG.PORT}/analytics`);
       }
     });
+
+    // ✅ Set server timeout to match request timeout
+    server.setTimeout(SERVER_CONFIG.REQUEST_TIMEOUT);
+    server.keepAliveTimeout = SERVER_CONFIG.REQUEST_TIMEOUT;
+    server.headersTimeout = SERVER_CONFIG.REQUEST_TIMEOUT + 5000;
 
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM", server));
     process.on("SIGINT", () => gracefulShutdown("SIGINT", server));

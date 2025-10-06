@@ -1,8 +1,8 @@
 /**
- * @fileoverview FIXED Multi-JD Resume-Job Matching Engine
+ * @fileoverview AI-ENHANCED Multi-JD Resume-Job Matching Engine
  * Provides intelligent candidate scoring across multiple job categories
  * @author Resume Screening System
- * @version 3.3.0 - Fixed test compatibility with real implementations
+ * @version 4.0.0 - Added Gemini AI Enhancement Layer
  */
 
 const Fuse = require("fuse.js");
@@ -14,6 +14,25 @@ try {
 } catch (e) {
   console.log("MLClassifier not found - using fallback scoring");
   MLClassifier = null;
+}
+
+// ==================== GEMINI AI INTEGRATION ====================
+let geminiService = null;
+const USE_AI = process.env.USE_AI_ENHANCEMENT === "true";
+
+if (USE_AI) {
+  try {
+    geminiService = require("./geminiService");
+    if (geminiService && geminiService.isAvailable()) {
+      console.log("✅ Gemini AI service loaded for intelligent matching");
+    } else {
+      console.log("⚠️ Gemini AI configured but not available");
+      geminiService = null;
+    }
+  } catch (error) {
+    console.log("⚠️ Gemini AI not available, using rule-based scoring only");
+    geminiService = null;
+  }
 }
 
 // ==================== ENHANCED JOB CATEGORIES AND SKILLS ====================
@@ -885,7 +904,7 @@ function calculateSoftwareDeveloperScore(resume, job, jobTitle) {
 // ==================== ENHANCED MAIN SCORING FUNCTIONS ====================
 
 /**
- * ✅ FIX: Enhanced single job scoring with validation
+ * ✅ AI-ENHANCED: Single job scoring with optional AI boost
  */
 async function scoreCandidate(
   resume,
@@ -957,6 +976,27 @@ async function scoreCandidate(
           jobData,
           jobTitle
         );
+    }
+
+    // ✅ AI ENHANCEMENT LAYER (if available and score is borderline)
+    if (geminiService && result.score >= 40 && result.score <= 70) {
+      try {
+        console.log(
+          `🤖 Applying AI enhancement for ${resume.candidateName}...`
+        );
+        const aiReasons = await geminiService.generateMatchReasons(
+          resume,
+          jobDescription,
+          result.score
+        );
+
+        if (aiReasons && aiReasons.length > 0) {
+          result.reasons = [...result.reasons.slice(0, 3), ...aiReasons];
+          console.log(`✅ AI provided ${aiReasons.length} additional insights`);
+        }
+      } catch (aiError) {
+        console.log("⚠️ AI enhancement failed, using rule-based results only");
+      }
     }
 
     console.log(`✅ ${resume.candidateName} final score: ${result.score}%`);

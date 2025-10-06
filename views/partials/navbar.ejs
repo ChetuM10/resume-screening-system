@@ -7,14 +7,15 @@
     </a>
 
     <!-- Toggler button for mobile view -->
-    <button 
-      class="navbar-toggler" 
-      type="button" 
-      data-bs-toggle="collapse" 
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
       data-bs-target="#navbarContent"
-      aria-controls="navbarContent" 
-      aria-expanded="false" 
-      aria-label="Toggle navigation">
+      aria-controls="navbarContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -39,6 +40,13 @@
             Screen Candidates
           </a>
         </li>
+        <!-- ✅ NEW! Analytics Dashboard Link -->
+        <li class="nav-item">
+          <a class="nav-link" href="/analytics">
+            <i class="fas fa-chart-bar me-1"></i>
+            Analytics
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="/ml-dashboard">
             <i class="fas fa-robot me-1"></i>
@@ -51,12 +59,13 @@
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <!-- Dark Mode Toggle Button -->
         <li class="nav-item">
-          <button 
-            class="nav-link btn btn-link theme-toggle-btn" 
+          <button
+            class="nav-link btn btn-link theme-toggle-btn"
             data-theme-toggle
             title="Toggle Dark/Light Mode"
             aria-label="Toggle Dark/Light Mode"
-            type="button">
+            type="button"
+          >
             <i class="fas fa-sun"></i>
             <span class="ms-2 d-lg-none">Toggle Theme</span>
           </button>
@@ -67,149 +76,149 @@
 </nav>
 
 <style>
-/* ==================== NAVBAR DARK MODE TOGGLE STYLES ==================== */
+  /* ==================== NAVBAR DARK MODE TOGGLE STYLES ==================== */
 
-/* Base navbar styling */
-.navbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1rem;
-}
+  /* Base navbar styling */
+  .navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+  }
 
-.navbar-brand {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
+  .navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
 
-.navbar-brand i {
-  font-size: 1.1rem;
-}
+  .navbar-brand i {
+    font-size: 1.1rem;
+  }
 
-/* Nav links with icons */
-.nav-link {
-  font-weight: 500;
-  transition: all 0.3s ease;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  margin: 0 0.25rem;
-}
-
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.nav-link i {
-  font-size: 0.95rem;
-}
-
-/* Theme toggle button */
-.theme-toggle-btn {
-  background: none;
-  border: none;
-  color: white !important;
-  font-size: 1.1rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fbbf24 !important;
-}
-
-.theme-toggle-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-}
-
-.theme-toggle-btn i {
-  transition: transform 0.5s ease;
-  font-size: 1.15rem;
-}
-
-.theme-toggle-btn:hover i {
-  transform: rotate(180deg) scale(1.1);
-}
-
-.theme-toggle-btn:active i {
-  transform: rotate(180deg) scale(0.95);
-}
-
-/* Mobile view adjustments */
-@media (max-width: 991px) {
+  /* Nav links with icons */
   .nav-link {
-    margin: 0.25rem 0;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin: 0 0.25rem;
   }
 
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .nav-link i {
+    font-size: 0.95rem;
+  }
+
+  /* Theme toggle button */
   .theme-toggle-btn {
-    justify-content: flex-start;
-    width: 100%;
+    background: none;
+    border: none;
+    color: white !important;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
   }
 
-  .theme-toggle-btn span {
-    display: inline-block;
-  }
-}
-
-/* Desktop view */
-@media (min-width: 992px) {
-  .theme-toggle-btn span {
-    display: none;
-  }
-}
-
-/* Active nav item */
-.nav-item .nav-link.active {
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: 600;
-}
-
-/* Smooth transitions */
-.navbar-collapse {
-  transition: all 0.3s ease-in-out;
-}
-
-/* Light mode navbar adjustments */
-.light-mode .navbar {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.light-mode .navbar-brand,
-.light-mode .nav-link {
-  color: white !important;
-}
-
-.light-mode .theme-toggle-btn {
-  color: white !important;
-}
-
-.light-mode .theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fbbf24 !important;
-}
-
-/* Animation for navbar collapse on mobile */
-@media (max-width: 991px) {
-  .navbar-collapse.collapsing {
-    transition: height 0.3s ease;
+  .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fbbf24 !important;
   }
 
-  .navbar-collapse.show {
-    padding-top: 1rem;
+  .theme-toggle-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
   }
-}
 
-/* Accessibility: Focus visible */
-.nav-link:focus-visible,
-.theme-toggle-btn:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
+  .theme-toggle-btn i {
+    transition: transform 0.5s ease;
+    font-size: 1.15rem;
+  }
+
+  .theme-toggle-btn:hover i {
+    transform: rotate(180deg) scale(1.1);
+  }
+
+  .theme-toggle-btn:active i {
+    transform: rotate(180deg) scale(0.95);
+  }
+
+  /* Mobile view adjustments */
+  @media (max-width: 991px) {
+    .nav-link {
+      margin: 0.25rem 0;
+    }
+
+    .theme-toggle-btn {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .theme-toggle-btn span {
+      display: inline-block;
+    }
+  }
+
+  /* Desktop view */
+  @media (min-width: 992px) {
+    .theme-toggle-btn span {
+      display: none;
+    }
+  }
+
+  /* Active nav item */
+  .nav-item .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+  }
+
+  /* Smooth transitions */
+  .navbar-collapse {
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Light mode navbar adjustments */
+  .light-mode .navbar {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .light-mode .navbar-brand,
+  .light-mode .nav-link {
+    color: white !important;
+  }
+
+  .light-mode .theme-toggle-btn {
+    color: white !important;
+  }
+
+  .light-mode .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fbbf24 !important;
+  }
+
+  /* Animation for navbar collapse on mobile */
+  @media (max-width: 991px) {
+    .navbar-collapse.collapsing {
+      transition: height 0.3s ease;
+    }
+
+    .navbar-collapse.show {
+      padding-top: 1rem;
+    }
+  }
+
+  /* Accessibility: Focus visible */
+  .nav-link:focus-visible,
+  .theme-toggle-btn:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
 </style>

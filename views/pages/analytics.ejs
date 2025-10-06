@@ -1,0 +1,379 @@
+<!-- 
+  @fileoverview Analytics Dashboard Page - Visual data insights with Chart.js
+  @author Resume Screening System
+  @version 1.0.0
+  @description Beautiful, responsive analytics dashboard with interactive charts
+-->
+
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h2 fw-bold mb-1">
+            <i class="fas fa-chart-bar text-primary me-2"></i>
+            Analytics Dashboard
+          </h1>
+          <p class="text-muted mb-0">Visual insights and data trends</p>
+        </div>
+        <button class="btn btn-outline-primary" id="refreshAnalytics">
+          <i class="fas fa-sync-alt me-2"></i>
+          Refresh Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Statistics Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Total Resumes</p>
+              <h3 class="fw-bold mb-0" id="stat-total-resumes">
+                <%= typeof summaryStats !== 'undefined' ?
+                summaryStats.totalResumes : 0 %>
+              </h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 rounded p-2">
+              <i class="fas fa-file-alt text-primary fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Total Screenings</p>
+              <h3 class="fw-bold mb-0" id="stat-total-screenings">
+                <%= typeof summaryStats !== 'undefined' ?
+                summaryStats.totalScreenings : 0 %>
+              </h3>
+            </div>
+            <div class="bg-success bg-opacity-10 rounded p-2">
+              <i class="fas fa-search text-success fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Processed Resumes</p>
+              <h3 class="fw-bold mb-0" id="stat-processed-resumes">
+                <%= typeof summaryStats !== 'undefined' ?
+                summaryStats.processedResumes : 0 %>
+              </h3>
+            </div>
+            <div class="bg-info bg-opacity-10 rounded p-2">
+              <i class="fas fa-check-circle text-info fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Average Score</p>
+              <h3 class="fw-bold mb-0" id="stat-average-score">
+                <%= typeof summaryStats !== 'undefined' ?
+                summaryStats.averageScore : 0 %>%
+              </h3>
+            </div>
+            <div class="bg-warning bg-opacity-10 rounded p-2">
+              <i class="fas fa-star text-warning fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="row" id="loading-spinner">
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading analytics...</span>
+      </div>
+      <p class="text-muted mt-3">Loading analytics data...</p>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="row g-3" id="charts-container" style="display: none">
+    <!-- Skills Distribution Chart -->
+    <div class="col-12 col-xl-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3">
+          <h5 class="fw-bold mb-1">
+            <i class="fas fa-code text-primary me-2"></i>
+            Top Skills Distribution
+          </h5>
+          <p class="text-muted small mb-0">
+            Most common skills across all resumes
+          </p>
+        </div>
+        <div class="card-body">
+          <canvas id="skillsChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score Distribution Chart -->
+    <div class="col-12 col-xl-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3">
+          <h5 class="fw-bold mb-1">
+            <i class="fas fa-chart-pie text-success me-2"></i>
+            Score Distribution
+          </h5>
+          <p class="text-muted small mb-0">Screening scores categorization</p>
+        </div>
+        <div class="card-body">
+          <canvas id="scoreChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Upload Trends Chart -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-3">
+          <h5 class="fw-bold mb-1">
+            <i class="fas fa-chart-line text-info me-2"></i>
+            Monthly Upload Trends
+          </h5>
+          <p class="text-muted small mb-0">
+            Resume uploads over the last 6 months
+          </p>
+        </div>
+        <div class="card-body">
+          <canvas id="trendsChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Experience Breakdown Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3">
+          <h5 class="fw-bold mb-1">
+            <i class="fas fa-briefcase text-warning me-2"></i>
+            Experience Level Breakdown
+          </h5>
+          <p class="text-muted small mb-0">Candidates grouped by experience</p>
+        </div>
+        <div class="card-body">
+          <canvas id="experienceChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Education Statistics Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-3">
+          <h5 class="fw-bold mb-1">
+            <i class="fas fa-graduation-cap text-danger me-2"></i>
+            Education Level Statistics
+          </h5>
+          <p class="text-muted small mb-0">Distribution of education levels</p>
+        </div>
+        <div class="card-body">
+          <canvas id="educationChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message (hidden by default) -->
+  <div class="row" id="error-message" style="display: none">
+    <div class="col-12">
+      <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Error loading analytics data.</strong>
+        <span id="error-text">Please try refreshing the page.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- Analytics JavaScript -->
+<script src="/js/analytics.js"></script>
+
+<style>
+  /* ==================== ANALYTICS DASHBOARD STYLES ==================== */
+
+  /* Card hover effects */
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Stat cards */
+  .card-body h3 {
+    font-size: 2rem;
+    color: #1e293b;
+  }
+
+  .dark-mode .card-body h3 {
+    color: #f1f5f9;
+  }
+
+  /* Chart containers */
+  canvas {
+    max-height: 400px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .card-body h3 {
+      font-size: 1.5rem;
+    }
+
+    canvas {
+      max-height: 300px;
+    }
+  }
+
+  /* Loading spinner */
+  #loading-spinner {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ✅ FIXED: Card headers with proper dark mode support */
+  .card-header {
+    padding: 1rem 1.25rem;
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .card-header h5 {
+    color: #1e293b !important;
+    margin: 0;
+  }
+
+  .card-header p {
+    color: #64748b !important;
+    margin: 0;
+  }
+
+  /* ✅ FIXED: Dark mode card headers */
+  .dark-mode .card-header {
+    background: #0f172a !important;
+    border-bottom-color: #334155;
+  }
+
+  .dark-mode .card-header h5 {
+    color: #f1f5f9 !important;
+  }
+
+  .dark-mode .card-header p {
+    color: #94a3b8 !important;
+  }
+
+  /* Icon backgrounds */
+  .bg-primary.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+  }
+
+  .bg-success.bg-opacity-10 {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+  }
+
+  .bg-info.bg-opacity-10 {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+  }
+
+  .bg-warning.bg-opacity-10 {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+  }
+
+  .bg-danger.bg-opacity-10 {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+  }
+
+  /* Dark mode adjustments */
+  .dark-mode .card {
+    background-color: #1e293b !important;
+    color: #f1f5f9;
+  }
+
+  .dark-mode .card-body {
+    background-color: #1e293b !important;
+  }
+
+  .dark-mode .text-muted {
+    color: #94a3b8 !important;
+  }
+
+  .dark-mode .alert-danger {
+    background-color: #991b1b;
+    border-color: #7f1d1d;
+    color: #fecaca;
+  }
+
+  /* Refresh button animation */
+  #refreshAnalytics:hover .fa-sync-alt {
+    animation: spin 1s linear infinite;
+  }
+
+  #refreshAnalytics.loading .fa-sync-alt {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Smooth transitions */
+  #charts-container,
+  #error-message {
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* Chart responsiveness */
+  .card-body canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* ✅ FIXED: Light mode card background */
+  .card {
+    background-color: #ffffff;
+  }
+
+  .card-body {
+    background-color: #ffffff;
+  }
+</style>
