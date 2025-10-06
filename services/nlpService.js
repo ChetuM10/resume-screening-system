@@ -1,6 +1,6 @@
 /**
  * @fileoverview AI-ENHANCED NLP Service - Resume Text Processing with Gemini
- * @version 5.0.0 - HYBRID: Rule-based + AI Enhancement
+ * @version 5.1.0 - HYBRID: Rule-based + AI Enhancement + SMART NAME DETECTION
  */
 
 const natural = require("natural");
@@ -122,23 +122,132 @@ const COMMON_SKILLS = [
   "grunt",
 ];
 
-// ✅ FIXED: Simple and effective name extraction
+// ✅ EXPANDED: Helper function to detect job titles, skills, and technical terms
+function looksLikeJobTitleOrSkill(text) {
+  const jobTitleKeywords = [
+    // Job titles
+    "developer",
+    "engineer",
+    "manager",
+    "analyst",
+    "designer",
+    "consultant",
+    "specialist",
+    "coordinator",
+    "assistant",
+    "director",
+    "officer",
+    "executive",
+    "administrator",
+    "supervisor",
+    "lead",
+    "head",
+    "chief",
+    "president",
+
+    // Job modifiers
+    "senior",
+    "junior",
+    "associate",
+    "intern",
+    "trainee",
+    "full",
+    "stack",
+    "front",
+    "backend",
+    "mobile",
+
+    // Skills/Technologies (common ones that appear in resumes)
+    "digital",
+    "marketing",
+    "sales",
+    "business",
+    "data",
+    "web",
+    "software",
+    "cloud",
+    "devops",
+    "android",
+    "ios",
+    "java",
+    "python",
+    "javascript",
+    "react",
+
+    // Departments/Areas
+    "human",
+    "resources",
+    "finance",
+    "accounting",
+    "operations",
+    "customer",
+    "service",
+    "support",
+    "quality",
+    "assurance",
+    "product",
+    "project",
+    "program",
+    "technical",
+    "content",
+
+    // ✅ NEW: ML/AI/Tech terms that appear in project descriptions
+    "classifier",
+    "model",
+    "algorithm",
+    "learning",
+    "prediction",
+    "detection",
+    "recognition",
+    "analysis",
+    "system",
+    "platform",
+    "application",
+    "framework",
+    "architecture",
+    "deployment",
+    "optimization",
+    "processing",
+    "mining",
+    "clustering",
+    "regression",
+    "neural",
+    "network",
+    "deep",
+    "supervised",
+    "unsupervised",
+    "reinforcement",
+    "training",
+    "testing",
+  ];
+
+  const textLower = text.toLowerCase();
+  return jobTitleKeywords.some((keyword) => textLower.includes(keyword));
+}
+
+// ✅ ULTIMATE: Name extraction with 4 strategies + DEBUG mode + FALLBACK
 function extractName(text) {
-  console.log("🔍 FIXED: Starting name extraction...");
+  console.log("🔍 ULTIMATE: Starting name extraction...");
 
   if (!text || typeof text !== "string") {
     console.log("❌ No valid text for name extraction");
     return "Unknown Candidate";
   }
 
-  // Clean and split text into lines
   const lines = text
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+
   console.log(`📝 Processing ${lines.length} lines for name extraction`);
 
-  // Skip keywords that are not names
+  // ✅ EXPANDED DEBUG: Show lines 0-20 to find the name
+  console.log("🐛 EXPANDED DEBUG: Lines 0-20:");
+  for (let i = 0; i < Math.min(lines.length, 21); i++) {
+    console.log(`  Line ${i}: "${lines[i]}"`);
+  }
+
+  // EXPANDED skip keywords
   const skipKeywords = [
     "resume",
     "cv",
@@ -155,39 +264,288 @@ function extractName(text) {
     "email",
     "name:",
     "vitae",
+    "professional",
+    "personal",
+    "technical",
+    "career",
+    "work",
+    "employment",
+    "qualification",
+    "cgpa",
+    "gpa",
+    "percentage",
+    "marks",
+    "score",
+    "seeking",
+    "position",
+    "reputed",
+    "organisation",
+    "organization",
+    "company",
+    "challenging",
+    "ms",
+    "office",
+    "tally",
+    "erp",
+    "power",
+    "bi",
+    "tableau",
+    "soft",
+    "hard",
+    "dancing",
+    "swimming",
+    "cooking",
+    "english",
+    "kannada",
+    "hindi",
+    "communication",
+    "team",
+    "problem",
+    "solving",
+    "ability",
+    "leadership",
+    "tools",
+    "technologies",
+    "programming",
+    "interests",
+    "hobbies",
+    "languages",
+    "language",
+    "reading",
+    "books",
+    "photography",
+    "application",
+    "software",
+    "version",
+    "control",
+    "database",
+    "management",
+    "front-end",
+    "back-end",
+    "frontend",
+    "backend",
   ];
 
-  // Check first 10 lines for a name
+  // ========== STRATEGY 1: Check first 10 lines ==========
+  console.log("🔍 Strategy 1: Looking for name in first 10 lines...");
+
   for (let i = 0; i < Math.min(lines.length, 10); i++) {
     const line = lines[i].trim();
 
-    // Skip lines that are clearly not names
-    if (
-      line.includes("@") ||
-      /\d{3,}/.test(line) ||
-      line.length > 50 ||
-      line.length < 2 ||
-      skipKeywords.some(
-        (keyword) =>
-          line.toLowerCase() === keyword ||
-          line.toLowerCase().startsWith(keyword)
-      )
-    ) {
+    // Skip if contains @ or 6+ digits
+    if (line.includes("@") || /\d{6,}/.test(line)) {
+      console.log(`⏭️ Skipping line ${i}: "${line}" (email/phone)`);
       continue;
     }
 
-    // Check if line looks like a name
+    // Skip if too long or too short
+    if (line.length > 50 || line.length < 2) {
+      console.log(`⏭️ Skipping line ${i}: too long/short`);
+      continue;
+    }
+
+    // Skip if contains keywords
+    const lowercaseLine = line.toLowerCase();
+    if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
+      console.log(`⏭️ Skipping line ${i}: "${line}" (keyword)`);
+      continue;
+    }
+
+    // ✅ Skip if it looks like a job title or skill
+    if (looksLikeJobTitleOrSkill(line)) {
+      console.log(`⏭️ Skipping line ${i}: "${line}" (job title/skill)`);
+      continue;
+    }
+
+    // Check if it's a valid name (1-4 words, alphabetic)
     const words = line.split(/\s+/).filter((w) => w.length > 0);
+
     if (words.length >= 1 && words.length <= 4) {
-      // Check if all words are alphabetic (allowing dots for initials)
-      if (words.every((word) => /^[A-Za-z][A-Za-z.]*$/.test(word))) {
-        console.log(`✅ FOUND NAME: "${line}"`);
+      // ✅ Allow single letter words (like "N") if part of a multi-word name
+      const allAlphabetic = words.every((word) => {
+        // If it's a single-word line, require at least 2 chars
+        if (words.length === 1) {
+          return (
+            /^[A-Za-z]+$/.test(word) && word.length >= 2 && word.length <= 20
+          );
+        }
+        // If it's a multi-word line, allow single letters (initials)
+        return (
+          /^[A-Za-z]+$/.test(word) && word.length >= 1 && word.length <= 20
+        );
+      });
+
+      if (allAlphabetic) {
+        console.log(`✅ FOUND NAME (First 10 lines): "${line}" at line ${i}`);
         return line;
       }
     }
   }
 
-  console.log("❌ No name found, using default");
+  // ========== STRATEGY 2: Look for ALL CAPS names in lines 10-40 ==========
+  console.log("🔍 Strategy 2: Looking for ALL CAPS names...");
+
+  for (let i = 10; i < Math.min(lines.length, 40); i++) {
+    const line = lines[i].trim();
+
+    // Skip if contains @ or 6+ digits
+    if (line.includes("@") || /\d{6,}/.test(line)) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
+      continue;
+    }
+
+    // Skip if too long or too short
+    if (line.length > 50 || line.length < 2) {
+      console.log(`  ⏭️ Line ${i}: too long/short`);
+      continue;
+    }
+
+    // Skip if contains keywords
+    const lowercaseLine = line.toLowerCase();
+    if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (keyword)`);
+      continue;
+    }
+
+    // ✅ Skip if it looks like a job title or skill
+    if (looksLikeJobTitleOrSkill(line)) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
+      continue;
+    }
+
+    const words = line.split(/\s+/).filter((w) => w.length > 0);
+
+    if (words.length >= 1 && words.length <= 4) {
+      // ✅ Allow single letter words in ALL CAPS names too
+      const allCaps = words.every((word) => {
+        if (words.length === 1) {
+          return /^[A-Z]+$/.test(word) && word.length >= 2 && word.length <= 20;
+        }
+        return /^[A-Z]+$/.test(word) && word.length >= 1 && word.length <= 20;
+      });
+
+      if (allCaps) {
+        console.log(`✅ FOUND NAME (ALL CAPS): "${line}" at line ${i}`);
+        return line;
+      } else {
+        console.log(`  ⏭️ Line ${i}: "${line}" (not all caps)`);
+      }
+    }
+  }
+
+  // ========== STRATEGY 3: Look for Title Case names in lines 10-30 ==========
+  console.log("🔍 Strategy 3: Looking for Title Case names...");
+
+  for (let i = 10; i < Math.min(lines.length, 30); i++) {
+    const line = lines[i].trim();
+
+    // Skip if contains @ or 6+ digits
+    if (line.includes("@") || /\d{6,}/.test(line)) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
+      continue;
+    }
+
+    // Skip if too long or too short
+    if (line.length > 50 || line.length < 2) {
+      console.log(`  ⏭️ Line ${i}: too long/short`);
+      continue;
+    }
+
+    // Skip if contains keywords
+    const lowercaseLine = line.toLowerCase();
+    if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (keyword)`);
+      continue;
+    }
+
+    // ✅ Skip if it looks like a job title or skill
+    if (looksLikeJobTitleOrSkill(line)) {
+      console.log(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
+      continue;
+    }
+
+    const words = line.split(/\s+/).filter((w) => w.length > 0);
+
+    if (words.length >= 1 && words.length <= 4) {
+      // ✅ Check for Title Case OR Mixed Case (First letter caps)
+      const isTitleCase = words.every((word) => {
+        // Allow single letter words (initials) - must be uppercase
+        if (word.length === 1) {
+          return /^[A-Z]$/.test(word);
+        }
+        // Check if it's Title Case: First letter uppercase, rest can be lowercase OR all uppercase
+        return (
+          /^[A-Z]/.test(word) &&
+          /^[A-Za-z]+$/.test(word) &&
+          word.length >= 2 &&
+          word.length <= 20
+        );
+      });
+
+      if (isTitleCase) {
+        console.log(`✅ FOUND NAME (Title Case): "${line}" at line ${i}`);
+        return line;
+      } else {
+        console.log(`  ⏭️ Line ${i}: "${line}" (not title case)`);
+      }
+    } else {
+      console.log(`  ⏭️ Line ${i}: "${line}" (word count: ${words.length})`);
+    }
+  }
+
+  // ========== STRATEGY 4: FALLBACK - Search entire text for name patterns ==========
+  console.log(
+    "🔍 Strategy 4: FALLBACK - Searching entire text for name pattern..."
+  );
+
+  // Look for name patterns in the full text (not line-by-line)
+  const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]*){0,3})\b/g;
+  let match;
+  const potentialNames = [];
+
+  while ((match = namePattern.exec(text)) !== null) {
+    const candidate = match[1].trim();
+    const words = candidate.split(/\s+/);
+
+    // Skip if it contains skip keywords
+    const lowercaseCandidate = candidate.toLowerCase();
+    if (skipKeywords.some((keyword) => lowercaseCandidate.includes(keyword))) {
+      continue;
+    }
+
+    // Skip if it looks like a job title or skill
+    if (looksLikeJobTitleOrSkill(candidate)) {
+      continue;
+    }
+
+    // Skip if it's too short or too long
+    if (candidate.length < 4 || candidate.length > 50) {
+      continue;
+    }
+
+    // Must be 1-4 words, all alphabetic
+    if (words.length >= 1 && words.length <= 4) {
+      const allAlpha = words.every(
+        (w) => /^[A-Za-z]+$/.test(w) && w.length >= 1 && w.length <= 20
+      );
+      if (allAlpha && !potentialNames.includes(candidate)) {
+        potentialNames.push(candidate);
+      }
+    }
+  }
+
+  if (potentialNames.length > 0) {
+    // Return the first potential name found
+    console.log(`✅ FOUND NAME (Fallback): "${potentialNames[0]}"`);
+    if (potentialNames.length > 1) {
+      console.log(
+        `   Other candidates: ${potentialNames.slice(1, 5).join(", ")}`
+      );
+    }
+    return potentialNames[0];
+  }
+
+  console.log("❌ No name found in any strategy, using default");
   return "Unknown Candidate";
 }
 
@@ -214,7 +572,7 @@ function extractEmail(text) {
   return null;
 }
 
-// ✅ FIXED: Enhanced phone extraction (handles spaces and dashes)
+// ✅ BULLETPROOF: Phone extraction that handles ALL formats
 function extractPhone(text) {
   console.log("🔍 FIXED: Starting phone extraction...");
 
@@ -223,37 +581,78 @@ function extractPhone(text) {
     return null;
   }
 
-  // First, remove common formatting to normalize
-  const normalizedText = text.replace(/[\s\-()]/g, ""); // Remove spaces, dashes, parentheses
+  // ========== METHOD 1: Direct 10-digit pattern (most common) ==========
+  // Matches: 9876543210, (987) 654-3210, 987-654-3210, 987 654 3210
+  const directPattern =
+    /(?:\+91[\s\-]?)?(?:\()?([6-9]\d{2})(?:\))?[\s\-]?(\d{3})[\s\-]?(\d{4})/g;
 
-  // Indian phone number patterns (now matching normalized text)
-  const phonePatterns = [
-    /\+91[6-9]\d{9}/g, // +919876543210
-    /91[6-9]\d{9}/g, // 919876543210
-    /\b[6-9]\d{9}\b/g, // 9876543210
+  let match;
+  while ((match = directPattern.exec(text)) !== null) {
+    const phone = match[1] + match[2] + match[3];
+    if (phone.length === 10) {
+      console.log(`✅ FOUND PHONE (Method 1): ${phone}`);
+      return phone;
+    }
+  }
+
+  // ========== METHOD 2: Look for standalone 10-digit numbers ==========
+  // Matches: 9876543210 (plain number)
+  const standalonePattern = /\b([6-9]\d{9})\b/g;
+
+  while ((match = standalonePattern.exec(text)) !== null) {
+    const phone = match[1];
+    console.log(`✅ FOUND PHONE (Method 2): ${phone}`);
+    return phone;
+  }
+
+  // ========== METHOD 3: Normalize and search ==========
+  console.log("🔄 Method 3: Trying normalized search...");
+  const normalizedText = text.replace(/[\s\-()]/g, "");
+
+  const normalizedPatterns = [
+    /\+91([6-9]\d{9})/g, // +919876543210
+    /\b91([6-9]\d{9})/g, // 919876543210
+    /([6-9]\d{9})/g, // 9876543210
   ];
 
-  for (const pattern of phonePatterns) {
-    const matches = normalizedText.match(pattern);
-    if (matches && matches.length > 0) {
-      let phone = matches[0].replace(/\D/g, ""); // Remove non-digits
-
-      // Remove country code if present
-      if (phone.length === 12 && phone.startsWith("91")) {
-        phone = phone.substring(2);
-      } else if (phone.length === 11 && phone.startsWith("91")) {
-        phone = phone.substring(2);
-      }
-
-      // Validate 10-digit Indian phone number
-      if (phone.length === 10 && phone.match(/^[6-9]/)) {
-        console.log(`✅ FOUND PHONE: ${phone}`);
+  for (const pattern of normalizedPatterns) {
+    pattern.lastIndex = 0; // Reset regex
+    while ((match = pattern.exec(normalizedText)) !== null) {
+      const phone = match[1];
+      if (phone.length === 10 && /^[6-9]/.test(phone)) {
+        console.log(`✅ FOUND PHONE (Method 3): ${phone}`);
         return phone;
       }
     }
   }
 
-  console.log("❌ No phone found");
+  // ========== METHOD 4: Line-by-line search ==========
+  console.log("🔄 Method 4: Trying line-by-line search...");
+  const lines = text.split("\n");
+
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    const line = lines[i].trim();
+
+    // Check if line contains mostly digits (with optional formatting)
+    const digitsOnly = line.replace(/\D/g, "");
+
+    if (digitsOnly.length === 10 && /^[6-9]/.test(digitsOnly)) {
+      console.log(
+        `✅ FOUND PHONE (Method 4): ${digitsOnly} from line ${i}: "${line}"`
+      );
+      return digitsOnly;
+    }
+
+    if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) {
+      const phone = digitsOnly.substring(2);
+      console.log(
+        `✅ FOUND PHONE (Method 4): ${phone} from line ${i}: "${line}"`
+      );
+      return phone;
+    }
+  }
+
+  console.log("❌ No phone found after all methods");
   return null;
 }
 
@@ -510,5 +909,6 @@ module.exports = {
     extractExperience,
     extractEducation,
     extractName,
+    looksLikeJobTitleOrSkill, // ✅ Export for testing
   },
 };
