@@ -1,8 +1,8 @@
 /**
- * @fileoverview AI-ENHANCED Multi-JD Resume-Job Matching Engine
- * Provides intelligent candidate scoring across multiple job categories
+ * @fileoverview AI-FIRST Multi-JD Resume-Job Matching Engine with Experience Penalties
+ * AI handles job detection and scoring by default, rules are fallback only
  * @author Resume Screening System
- * @version 4.0.0 - Added Gemini AI Enhancement Layer
+ * @version 5.1.0 - Experience-Aware Scoring
  */
 
 const Fuse = require("fuse.js");
@@ -16,7 +16,7 @@ try {
   MLClassifier = null;
 }
 
-// ==================== GEMINI AI INTEGRATION ====================
+// ==================== GEMINI AI INTEGRATION (PRIORITY) ====================
 let geminiService = null;
 const USE_AI = process.env.USE_AI_ENHANCEMENT === "true";
 
@@ -24,13 +24,14 @@ if (USE_AI) {
   try {
     geminiService = require("./geminiService");
     if (geminiService && geminiService.isAvailable()) {
-      console.log("✅ Gemini AI service loaded for intelligent matching");
+      console.log("✅ Gemini AI service loaded - AI-FIRST mode enabled");
     } else {
       console.log("⚠️ Gemini AI configured but not available");
       geminiService = null;
     }
   } catch (error) {
     console.log("⚠️ Gemini AI not available, using rule-based scoring only");
+    console.error("AI Load Error:", error.message);
     geminiService = null;
   }
 }
@@ -207,7 +208,25 @@ const JOB_DOMAINS = {
     },
   },
   finance_intern: {
-    primaryKeywords: ["finance", "accounting", "financial", "audit", "budget"],
+    primaryKeywords: [
+      "finance",
+      "accounting",
+      "financial",
+      "audit",
+      "budget",
+      "customs",
+      "taxation",
+      "tax",
+      "hmrc",
+      "due diligence",
+      "compliance",
+      "oracle erp",
+      "sap",
+      "general ledger",
+      "reconciliation",
+      "journal posting",
+      "period end close",
+    ],
     skills: {
       finance: {
         weight: 40,
@@ -217,11 +236,22 @@ const JOB_DOMAINS = {
           "budgeting",
           "financial modeling",
           "audit",
+          "customs",
+          "taxation",
+          "compliance",
         ],
       },
       software: {
         weight: 30,
-        skills: ["tally erp9", "excel", "power bi", "tableau", "ms office"],
+        skills: [
+          "tally erp9",
+          "excel",
+          "power bi",
+          "tableau",
+          "ms office",
+          "oracle erp",
+          "sap",
+        ],
       },
       domain: {
         weight: 20,
@@ -231,6 +261,8 @@ const JOB_DOMAINS = {
           "financial reporting",
           "accounts payable",
           "accounts receivable",
+          "general ledger",
+          "journal posting",
         ],
       },
       skills: {
@@ -309,17 +341,200 @@ function normalise(word = "") {
 }
 
 /**
- * ✅ FIX: Enhanced job category detection
+ * Calculate education relevance score
  */
-function detectJobCategory(jobDescription, jobTitle = "") {
+function calculateEducationRelevance(education, jobCategory) {
+  if (!education) {
+    return { score: 5, reason: "No education specified" };
+  }
+
+  const eduLower = String(education).toLowerCase();
+  const relevance =
+    EDUCATION_RELEVANCE[jobCategory] || EDUCATION_RELEVANCE.software_developer;
+
+  if (relevance.highly_relevant.some((edu) => eduLower.includes(edu))) {
+    return { score: 15, reason: `Highly relevant education: ${education}` };
+  }
+
+  if (relevance.somewhat_relevant.some((edu) => eduLower.includes(edu))) {
+    return { score: 10, reason: `Somewhat relevant education: ${education}` };
+  }
+
+  if (relevance.not_relevant.some((edu) => eduLower.includes(edu))) {
+    return {
+      score: 3,
+      reason: `Education not ideal for this role: ${education}`,
+    };
+  }
+
+  return { score: 7, reason: `General education: ${education}` };
+}
+
+/**
+ * ✅ BALANCED EXPERIENCE SCORING FUNCTION
+ * More realistic penalties that don't over-penalize freshers
+ */
+function calculateExperienceScore(candidateYears, minExp, maxExp, reasons) {
+  let experienceScore = 0;
+  let experiencePenalty = 0;
+
+  // Handle fresher roles (minExp = 0)
+  if (minExp === 0) {
+    if (candidateYears === 0) {
+      experienceScore = 15; // Freshers are perfect for fresher roles
+      reasons.push("Fresher role - perfect match");
+    } else if (candidateYears <= 2) {
+      experienceScore = 18; // Some experience is good
+      reasons.push(
+        `Experience: ${candidateYears} years (good for entry-level)`
+      );
+    } else {
+      experienceScore = 12; // Too much experience might be overqualified
+      reasons.push(
+        `Experience: ${candidateYears} years (may be overqualified)`
+      );
+    }
+    return { experienceScore, experiencePenalty };
+  }
+
+  // Handle experienced roles (minExp > 0)
+  if (candidateYears >= minExp && candidateYears <= maxExp) {
+    // Perfect range
+    experienceScore = 20;
+    reasons.push(`Experience: ${candidateYears} years (ideal for role)`);
+  } else if (candidateYears > maxExp) {
+    // Above maximum (slightly overqualified)
+    experienceScore = 15;
+    reasons.push(`Experience: ${candidateYears} years (above maximum)`);
+  } else if (candidateYears > 0 && candidateYears < minExp) {
+    // Below minimum but has some experience
+    const gap = minExp - candidateYears;
+
+    if (gap === 1) {
+      // Only 1 year short - minor penalty
+      experienceScore = 12;
+      experiencePenalty = 10;
+      reasons.push(
+        `Experience: ${candidateYears} years (1 year below minimum, -10 penalty)`
+      );
+    } else if (gap === 2) {
+      // 2 years short - moderate penalty
+      experienceScore = 8;
+      experiencePenalty = 15;
+      reasons.push(
+        `Experience: ${candidateYears} years (2 years below minimum, -15 penalty)`
+      );
+    } else {
+      // 3+ years short - significant penalty
+      experienceScore = 5;
+      experiencePenalty = 20;
+      reasons.push(
+        `Experience: ${candidateYears} years (${gap} years below minimum, -20 penalty)`
+      );
+    }
+  } else if (candidateYears === 0 && minExp > 0) {
+    // No experience when experience required
+    if (minExp === 1) {
+      // Only 1 year required - moderate penalty (can be trained)
+      experienceScore = 8;
+      experiencePenalty = 15;
+      reasons.push(
+        `Fresher (role requires ${minExp} year, -15 penalty - trainable)`
+      );
+    } else if (minExp === 2) {
+      // 2 years required - larger penalty
+      experienceScore = 5;
+      experiencePenalty = 20;
+      reasons.push(`Fresher (role requires ${minExp} years, -20 penalty)`);
+    } else {
+      // 3+ years required - maximum penalty
+      experienceScore = 3;
+      experiencePenalty = 25;
+      reasons.push(
+        `Fresher (role requires ${minExp}+ years, -25 penalty - significant gap)`
+      );
+    }
+  }
+
+  return { experienceScore, experiencePenalty };
+}
+
+// ==================== AI-FIRST JOB DETECTION ====================
+
+/**
+ * ✅ AI-FIRST job category detection
+ */
+async function detectJobCategory(
+  jobDescription,
+  jobTitle,
+  requiredSkills = []
+) {
+  console.log(`🎯 Detecting job category for: ${jobTitle}`);
+
+  // ✅ PRIORITY 1: Try AI detection FIRST
+  if (geminiService && geminiService.detectJobDomain) {
+    try {
+      console.log("🤖 Using AI for job detection...");
+      const aiResult = await geminiService.detectJobDomain(
+        jobTitle,
+        jobDescription,
+        requiredSkills
+      );
+
+      if (aiResult.confidence > 0.6) {
+        console.log(
+          `✅ AI Detection: ${aiResult.domain} (${Math.round(
+            aiResult.confidence * 100
+          )}% confident)`
+        );
+        console.log(`   Reasoning: ${aiResult.reasoning}`);
+
+        const domainMap = {
+          software_development: "software_developer",
+          web_development: "full_stack_developer",
+          data_science: "software_developer",
+          network_engineering: "network_engineer",
+          finance: "finance_intern",
+          accounting: "finance_intern",
+          taxation: "finance_intern",
+          customs: "finance_intern",
+          marketing: "general",
+          human_resources: "general",
+          sales: "general",
+          operations: "general",
+          design: "general",
+          general: "general",
+        };
+
+        return domainMap[aiResult.domain] || "general";
+      } else {
+        console.log(
+          `⚠️ AI confidence too low (${Math.round(
+            aiResult.confidence * 100
+          )}%), trying keywords...`
+        );
+      }
+    } catch (error) {
+      console.error("❌ AI detection error:", error.message);
+      console.log("⚠️ Falling back to keyword matching");
+    }
+  } else {
+    console.log("⚠️ AI not available, using keyword matching");
+  }
+
+  // ✅ FALLBACK: Keyword-based detection
+  console.log("🔍 Using keyword-based detection as fallback...");
   const text = (jobDescription + " " + jobTitle).toLowerCase();
-  let bestMatch = "software_developer"; // default
   let maxScore = 0;
+  let bestMatch = "general";
 
   Object.entries(JOB_DOMAINS).forEach(([category, config]) => {
-    const score = config.primaryKeywords.reduce((sum, keyword) => {
-      return sum + (text.includes(keyword) ? 1 : 0);
-    }, 0);
+    let score = 0;
+    config.primaryKeywords.forEach((keyword) => {
+      if (text.includes(keyword.toLowerCase())) {
+        score++;
+      }
+    });
 
     if (score > maxScore) {
       maxScore = score;
@@ -327,51 +542,17 @@ function detectJobCategory(jobDescription, jobTitle = "") {
     }
   });
 
-  console.log(`🎯 Detected job category: ${bestMatch} (score: ${maxScore})`);
-  return bestMatch;
-}
-
-/**
- * Calculates education relevance score
- */
-function calculateEducationRelevance(resumeEducation, jobCategory) {
-  if (!resumeEducation) return { score: 5, reason: "No education specified" };
-
-  const education = normalise(resumeEducation);
-  const relevance =
-    EDUCATION_RELEVANCE[jobCategory] ||
-    EDUCATION_RELEVANCE["software_developer"];
-
-  if (relevance.highly_relevant.some((edu) => education.includes(edu))) {
-    return {
-      score: 20,
-      reason: `Highly relevant education: ${resumeEducation}`,
-    };
-  } else if (
-    relevance.somewhat_relevant.some((edu) => education.includes(edu))
-  ) {
-    return {
-      score: 12,
-      reason: `Somewhat relevant education: ${resumeEducation}`,
-    };
-  } else if (relevance.not_relevant.some((edu) => education.includes(edu))) {
-    return {
-      score: 2,
-      reason: `Education mismatch: ${resumeEducation} not suitable for ${jobCategory.replace(
-        "_",
-        " "
-      )}`,
-    };
+  if (maxScore >= 2) {
+    console.log(`🔍 Keyword Detection: ${bestMatch} (score: ${maxScore})`);
+    return bestMatch;
   }
 
-  return { score: 8, reason: `General education: ${resumeEducation}` };
+  console.log(`⚠️ No strong keyword match, defaulting to 'general'`);
+  return "general";
 }
 
-// ==================== DOMAIN-SPECIFIC SCORING FUNCTIONS ====================
+// ==================== DOMAIN-SPECIFIC SCORING FUNCTIONS (WITH EXPERIENCE PENALTIES) ====================
 
-/**
- * Enhanced Network Engineer scoring with exact skill matching
- */
 function calculateNetworkEngineerScore(resume, job, jobTitle) {
   console.log(`🌐 Network Engineer scoring for ${resume.candidateName}`);
 
@@ -384,7 +565,6 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
   let totalMatched = 0;
   let totalPossible = 0;
 
-  // Calculate category-based scores
   Object.entries(networkSkills).forEach(([category, config]) => {
     const categoryMatches = config.skills.filter((skill) => {
       return (
@@ -428,7 +608,6 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
     }
   });
 
-  // Experience bonus for current networking role
   if (
     resumeText.includes("network engineer") ||
     (resumeText.includes("network") && resumeText.includes("engineer"))
@@ -437,7 +616,6 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
     reasons.push("Current network engineering experience (+20 bonus)");
   }
 
-  // Tool-specific bonuses
   if (
     resumeText.includes("cisco meraki") &&
     resumeText.includes("thousandeyes")
@@ -446,29 +624,21 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
     reasons.push("Exact tool match: Cisco Meraki + ThousandEyes (+15 bonus)");
   }
 
-  // Experience scoring
+  // ✅ UPDATED: Use universal experience scoring
   const experienceYears = resume.experience?.years || 0;
-  let experienceScore = 0;
+  const { experienceScore, experiencePenalty } = calculateExperienceScore(
+    experienceYears,
+    job.minExp || 1,
+    job.maxExp || 10,
+    reasons
+  );
 
-  if (experienceYears >= 1) {
-    experienceScore = 20;
-    reasons.push(`Experience: ${experienceYears} years (excellent)`);
-  } else if (experienceYears > 0) {
-    experienceScore = 12;
-    reasons.push(`Experience: ${experienceYears} years (some experience)`);
-  } else {
-    experienceScore = 5;
-    reasons.push("No experience specified");
-  }
-
-  // Education scoring
   const educationResult = calculateEducationRelevance(
     resume.education?.degree || resume.education,
     "network_engineer"
   );
   reasons.push(educationResult.reason);
 
-  // ✅ FIX: Enhanced domain mismatch penalty
   const nonTechSkills = [
     "tally",
     "accounting",
@@ -486,16 +656,20 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
 
   let domainPenalty = 0;
   if (hasNonTechSkills && skillScore < 30) {
-    domainPenalty = 40; // Increased penalty
+    domainPenalty = 40;
     reasons.push(
       `Major domain mismatch: Non-technical background for network engineering (-40 penalty)`
     );
   }
 
-  // Final calculation
+  // ✅ UPDATED: Include experiencePenalty
   const totalScore = Math.min(
     100,
-    skillScore + experienceScore + educationResult.score - domainPenalty
+    skillScore +
+      experienceScore +
+      educationResult.score -
+      domainPenalty -
+      experiencePenalty
   );
   const finalScore = Math.round(Math.max(5, totalScore));
 
@@ -519,17 +693,14 @@ function calculateNetworkEngineerScore(resume, job, jobTitle) {
       missing: [],
       percentage: Math.round((totalMatched / totalPossible) * 100),
     },
-    experienceMatch: experienceYears > 0,
+    experienceMatch: experienceYears >= (job.minExp || 1),
     educationMatch: educationResult.score >= 12,
-    domainPenalty,
+    domainPenalty: domainPenalty + experiencePenalty,
     reasons,
     jobCategory: "network_engineer",
   };
 }
 
-/**
- * ✅ FIX: Enhanced Finance Intern scoring with better penalties
- */
 function calculateFinanceInternScore(resume, job, jobTitle) {
   console.log(`💰 Finance Intern scoring for ${resume.candidateName}`);
 
@@ -540,7 +711,6 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
 
   let skillScore = 0;
 
-  // Calculate category-based scores
   Object.entries(financeSkills).forEach(([category, config]) => {
     const categoryMatches = config.skills.filter(
       (skill) =>
@@ -564,7 +734,6 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
     }
   });
 
-  // Finance experience bonus
   if (
     resumeText.includes("finance intern") ||
     resumeText.includes("biocon") ||
@@ -574,15 +743,19 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
     reasons.push("Finance internship/experience detected (+25 bonus)");
   }
 
-  // MBA bonus
   if (resumeText.includes("mba") || resumeText.includes("master of business")) {
     skillScore += 15;
     reasons.push("MBA degree (+15 bonus)");
   }
 
-  // Experience and education
+  // ✅ UPDATED: Use universal experience scoring
   const experienceYears = resume.experience?.years || 0;
-  const experienceScore = Math.min(15, experienceYears * 8 + 5);
+  const { experienceScore, experiencePenalty } = calculateExperienceScore(
+    experienceYears,
+    job.minExp || 0,
+    job.maxExp || 10,
+    reasons
+  );
 
   const educationResult = calculateEducationRelevance(
     resume.education?.degree || resume.education,
@@ -590,7 +763,6 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
   );
   reasons.push(educationResult.reason);
 
-  // ✅ FIX: Enhanced technical skills penalty for finance roles
   const techSkills = [
     "javascript",
     "python",
@@ -608,15 +780,20 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
 
   let techPenalty = 0;
   if (hasTechSkills && skillScore < 40) {
-    techPenalty = 30; // Increased penalty for technical candidates applying to finance
+    techPenalty = 30;
     reasons.push(
       "Strong technical background - likely not suitable for finance role (-30 penalty)"
     );
   }
 
+  // ✅ UPDATED: Include experiencePenalty
   const totalScore = Math.min(
     100,
-    skillScore + experienceScore + educationResult.score - techPenalty
+    skillScore +
+      experienceScore +
+      educationResult.score -
+      techPenalty -
+      experiencePenalty
   );
   const finalScore = Math.round(Math.max(5, totalScore));
 
@@ -638,24 +815,20 @@ function calculateFinanceInternScore(resume, job, jobTitle) {
       missing: [],
       percentage: Math.round((skillScore / 100) * 100),
     },
-    experienceMatch: experienceYears >= 0,
+    experienceMatch: experienceYears >= (job.minExp || 0),
     educationMatch: educationResult.score >= 15,
-    domainPenalty: techPenalty,
+    domainPenalty: techPenalty + experiencePenalty,
     reasons,
     jobCategory: "finance_intern",
   };
 }
 
-/**
- * Enhanced Full Stack Developer scoring
- */
 function calculateFullStackScore(resume, job, jobTitle) {
   const { requiredSkills, minExp, maxExp, educationLevel } = job;
   const reasons = [];
 
   console.log(`🎯 Full Stack scoring for ${resume.candidateName}`);
 
-  // Enhanced Full Stack skill categories
   const fullStackSkills = {
     frontend: {
       weight: 25,
@@ -762,7 +935,6 @@ function calculateFullStackScore(resume, job, jobTitle) {
     }
   });
 
-  // Project bonus
   const projectKeywords = [
     "full.?stack",
     "web.?app",
@@ -789,25 +961,15 @@ function calculateFullStackScore(resume, job, jobTitle) {
     );
   }
 
-  // Experience scoring
+  // ✅ UPDATED: Use universal experience scoring
   const experienceYears = resume.experience?.years || 0;
-  let experienceScore = 0;
+  const { experienceScore, experiencePenalty } = calculateExperienceScore(
+    experienceYears,
+    minExp || 0,
+    maxExp || 10,
+    reasons
+  );
 
-  if (experienceYears >= minExp && experienceYears <= maxExp) {
-    experienceScore = 20;
-    reasons.push(`Experience: ${experienceYears} years (ideal range)`);
-  } else if (experienceYears >= minExp) {
-    experienceScore = 15;
-    reasons.push(`Experience: ${experienceYears} years (above minimum)`);
-  } else if (experienceYears > 0) {
-    experienceScore = 8;
-    reasons.push(`Experience: ${experienceYears} years (below minimum)`);
-  } else {
-    experienceScore = 3;
-    reasons.push(`No experience specified`);
-  }
-
-  // Education scoring
   let educationScore = 0;
   const education = (
     resume.education?.degree ||
@@ -828,7 +990,6 @@ function calculateFullStackScore(resume, job, jobTitle) {
     reasons.push(`Education not specified or non-technical`);
   }
 
-  // ✅ FIX: Enhanced domain mismatch penalty
   const nonTechSkills = [
     "tally",
     "accounting",
@@ -845,14 +1006,19 @@ function calculateFullStackScore(resume, job, jobTitle) {
 
   let domainPenalty = 0;
   if (hasNonTechSkills && skillScore < 25) {
-    domainPenalty = 35; // Increased penalty
+    domainPenalty = 35;
     reasons.push(
       `Major domain mismatch: Non-technical background for development role (-35 penalty)`
     );
   }
 
+  // ✅ UPDATED: Include experiencePenalty
   const totalScore =
-    skillScore + experienceScore + educationScore - domainPenalty;
+    skillScore +
+    experienceScore +
+    educationScore -
+    domainPenalty -
+    experiencePenalty;
   const finalScore = Math.round(Math.min(100, Math.max(5, totalScore)));
 
   console.log(`📊 ${resume.candidateName} Full Stack score: ${finalScore}%`);
@@ -874,23 +1040,18 @@ function calculateFullStackScore(resume, job, jobTitle) {
       ),
       percentage: Math.round((totalMatched / totalRequired) * 100),
     },
-    experienceMatch: experienceYears >= minExp * 0.7,
+    experienceMatch: experienceYears >= (minExp || 0) * 0.7,
     educationMatch: /mca|computer|engineering|bca/.test(education),
-    domainPenalty,
+    domainPenalty: domainPenalty + experiencePenalty,
     reasons,
     jobCategory: "full_stack_developer",
   };
 }
 
-/**
- * Enhanced Software Developer scoring (using existing full stack logic)
- */
 function calculateSoftwareDeveloperScore(resume, job, jobTitle) {
   console.log(`💻 Software Developer scoring for ${resume.candidateName}`);
 
   const fullStackResult = calculateFullStackScore(resume, job, jobTitle);
-
-  // Adjust for software developer internship (more lenient)
   const adjustedScore = Math.min(100, fullStackResult.score + 10);
 
   return {
@@ -901,10 +1062,74 @@ function calculateSoftwareDeveloperScore(resume, job, jobTitle) {
   };
 }
 
-// ==================== ENHANCED MAIN SCORING FUNCTIONS ====================
+// ==================== AI-ENHANCED SCORING ====================
 
 /**
- * ✅ AI-ENHANCED: Single job scoring with optional AI boost
+ * ✅ AI-powered scoring for jobs that don't fit predefined categories
+ */
+async function calculateAIBasedScore(resume, job, jobTitle, jobCategory) {
+  console.log(`🤖 AI-based scoring for ${resume.candidateName} - ${jobTitle}`);
+
+  if (!geminiService || !geminiService.calculateSemanticMatchDetailed) {
+    console.log("⚠️ AI not available for semantic matching");
+    return {
+      score: 50,
+      matchScore: 50,
+      skillsMatch: { matched: [], missing: [], percentage: 50 },
+      experienceMatch: false,
+      educationMatch: false,
+      reasons: ["AI scoring not available - default score assigned"],
+      jobCategory: "general",
+    };
+  }
+
+  try {
+    const aiResult = await geminiService.calculateSemanticMatchDetailed(
+      resume.extractedText || JSON.stringify(resume),
+      job.description || "",
+      jobCategory
+    );
+
+    console.log(`✅ AI Score: ${aiResult.score}% - ${aiResult.recommendation}`);
+
+    return {
+      score: aiResult.score,
+      matchScore: aiResult.score,
+      skillsMatch: {
+        matched: aiResult.strengths || [],
+        missing: aiResult.gaps || [],
+        percentage: aiResult.score,
+      },
+      experienceMatch: aiResult.score >= 60,
+      educationMatch: aiResult.score >= 50,
+      reasons: [
+        `AI Analysis: ${aiResult.reasoning}`,
+        `Recommendation: ${aiResult.recommendation}`,
+        ...aiResult.strengths.map((s) => `✓ Strength: ${s}`),
+        ...aiResult.gaps.map((g) => `✗ Gap: ${g}`),
+      ],
+      jobCategory: "ai_scored",
+      aiEnhanced: true,
+      aiConfidence: aiResult.confidence,
+    };
+  } catch (error) {
+    console.error("❌ AI scoring failed:", error.message);
+    return {
+      score: 50,
+      matchScore: 50,
+      skillsMatch: { matched: [], missing: [], percentage: 50 },
+      experienceMatch: false,
+      educationMatch: false,
+      reasons: [`AI scoring error: ${error.message}`],
+      jobCategory: "general",
+    };
+  }
+}
+
+// ==================== MAIN SCORING FUNCTION (AI-FIRST) ====================
+
+/**
+ * ✅ AI-FIRST Single job scoring with experience penalties
  */
 async function scoreCandidate(
   resume,
@@ -917,21 +1142,12 @@ async function scoreCandidate(
     jobDescription = "",
   } = {}
 ) {
-  if (!resume) {
-    console.log("❌ Null resume provided to scoreCandidate");
-    return {
-      matchScore: 5,
-      skillsMatch: { matched: [], missing: requiredSkills, percentage: 0 },
-      experienceMatch: false,
-      educationMatch: false,
-      reasons: ["Error in scoring - assigned minimum score"],
-      jobCategory: "unknown",
-    };
-  }
-
-  // ✅ FIX: Validate candidate data quality
-  if (!resume.candidateName || resume.candidateName === "Unknown Candidate") {
-    console.log(`❌ Invalid candidate: ${resume.candidateName}`);
+  if (
+    !resume ||
+    !resume.candidateName ||
+    resume.candidateName === "Unknown Candidate"
+  ) {
+    console.log(`❌ Invalid resume data`);
     return {
       matchScore: 0,
       skillsMatch: { matched: [], missing: requiredSkills, percentage: 0 },
@@ -942,11 +1158,13 @@ async function scoreCandidate(
     };
   }
 
-  console.log(`🎯 Single job scoring: ${resume.candidateName} for ${jobTitle}`);
+  console.log(`\n🎯 AI-FIRST Scoring: ${resume.candidateName} for ${jobTitle}`);
 
-  // Detect job category
-  const jobCategory = detectJobCategory(jobDescription, jobTitle);
-  let result;
+  const jobCategory = await detectJobCategory(
+    jobDescription,
+    jobTitle,
+    requiredSkills
+  );
 
   const jobData = {
     requiredSkills,
@@ -956,34 +1174,51 @@ async function scoreCandidate(
     description: jobDescription,
   };
 
+  let result;
+
   try {
-    switch (jobCategory) {
-      case "network_engineer":
-        result = calculateNetworkEngineerScore(resume, jobData, jobTitle);
-        break;
-      case "finance_intern":
-        result = calculateFinanceInternScore(resume, jobData, jobTitle);
-        break;
-      case "full_stack_developer":
-        result = calculateFullStackScore(resume, jobData, jobTitle);
-        break;
-      case "software_developer":
-        result = calculateSoftwareDeveloperScore(resume, jobData, jobTitle);
-        break;
-      default:
-        result = await calculateEnhancedCandidateScore(
-          resume,
-          jobData,
-          jobTitle
-        );
+    if (jobCategory === "general") {
+      console.log("🤖 Category is 'general' - using AI semantic scoring");
+      result = await calculateAIBasedScore(
+        resume,
+        jobData,
+        jobTitle,
+        jobCategory
+      );
+    } else {
+      console.log(`📋 Using rule-based scoring for: ${jobCategory}`);
+      switch (jobCategory) {
+        case "network_engineer":
+          result = calculateNetworkEngineerScore(resume, jobData, jobTitle);
+          break;
+        case "finance_intern":
+          result = calculateFinanceInternScore(resume, jobData, jobTitle);
+          break;
+        case "full_stack_developer":
+          result = calculateFullStackScore(resume, jobData, jobTitle);
+          break;
+        case "software_developer":
+          result = calculateSoftwareDeveloperScore(resume, jobData, jobTitle);
+          break;
+        default:
+          result = await calculateAIBasedScore(
+            resume,
+            jobData,
+            jobTitle,
+            jobCategory
+          );
+      }
     }
 
-    // ✅ AI ENHANCEMENT LAYER (if available and score is borderline)
-    if (geminiService && result.score >= 40 && result.score <= 70) {
+    // AI enhancement for borderline scores
+    if (
+      geminiService &&
+      result.score >= 40 &&
+      result.score <= 70 &&
+      !result.aiEnhanced
+    ) {
       try {
-        console.log(
-          `🤖 Applying AI enhancement for ${resume.candidateName}...`
-        );
+        console.log(`🤖 Applying AI enhancement for borderline score...`);
         const aiReasons = await geminiService.generateMatchReasons(
           resume,
           jobDescription,
@@ -995,11 +1230,11 @@ async function scoreCandidate(
           console.log(`✅ AI provided ${aiReasons.length} additional insights`);
         }
       } catch (aiError) {
-        console.log("⚠️ AI enhancement failed, using rule-based results only");
+        console.log("⚠️ AI enhancement failed");
       }
     }
 
-    console.log(`✅ ${resume.candidateName} final score: ${result.score}%`);
+    console.log(`✅ Final Score: ${result.score}%\n`);
 
     return {
       matchScore: result.score,
@@ -1011,6 +1246,7 @@ async function scoreCandidate(
       mlConfidence: 0,
       relevancePenalty: result.domainPenalty || 0,
       reasons: result.reasons,
+      aiEnhanced: result.aiEnhanced || false,
     };
   } catch (error) {
     console.error(`❌ Scoring failed for ${resume.candidateName}:`, error);
@@ -1019,27 +1255,14 @@ async function scoreCandidate(
       skillsMatch: { matched: [], missing: requiredSkills, percentage: 0 },
       experienceMatch: false,
       educationMatch: false,
-      jobCategory: "unknown",
+      jobCategory: "error",
       reasons: ["Error in scoring - assigned minimum score"],
     };
   }
 }
 
-// Keep existing enhanced scoring function as fallback
-async function calculateEnhancedCandidateScore(resume, job, jobTitle) {
-  return {
-    score: 30, // Fallback
-    matchScore: 30,
-    skillsMatch: { matched: [], missing: [], percentage: 0 },
-    experienceMatch: false,
-    educationMatch: false,
-    reasons: ["Using fallback scoring"],
-    jobCategory: "general",
-  };
-}
-
 /**
- * ✅ CRITICAL FIX: Multi-JD scoring function - scores candidate against multiple job descriptions
+ * ✅ Multi-JD scoring
  */
 async function scoreMultipleJobs(resume, jobDescriptions) {
   if (
@@ -1052,56 +1275,28 @@ async function scoreMultipleJobs(resume, jobDescriptions) {
 
   const results = {};
   console.log(
-    `🎯 Multi-JD scoring for ${resume.candidateName} against ${jobDescriptions.length} jobs`
+    `\n🎯 Multi-JD AI-FIRST scoring for ${resume.candidateName} against ${jobDescriptions.length} jobs`
   );
 
   for (const jd of jobDescriptions) {
     try {
-      console.log(`  📋 Scoring against: ${jd.jobTitle}`);
+      console.log(`\n  📋 Scoring against: ${jd.jobTitle}`);
 
-      const jobCategory = detectJobCategory(jd.jobDescription, jd.jobTitle);
-      let result;
-
-      const jobData = {
+      const singleResult = await scoreCandidate(resume, {
         requiredSkills: jd.requiredSkills || [],
         minExp: jd.minExp || 0,
         maxExp: jd.maxExp || 50,
         educationLevel: jd.educationLevel || "",
-        description: jd.jobDescription,
-      };
-
-      switch (jobCategory) {
-        case "network_engineer":
-          result = calculateNetworkEngineerScore(resume, jobData, jd.jobTitle);
-          break;
-        case "finance_intern":
-          result = calculateFinanceInternScore(resume, jobData, jd.jobTitle);
-          break;
-        case "full_stack_developer":
-          result = calculateFullStackScore(resume, jobData, jd.jobTitle);
-          break;
-        case "software_developer":
-          result = calculateSoftwareDeveloperScore(
-            resume,
-            jobData,
-            jd.jobTitle
-          );
-          break;
-        default:
-          result = await calculateEnhancedCandidateScore(
-            resume,
-            jobData,
-            jd.jobTitle
-          );
-      }
+        jobTitle: jd.jobTitle,
+        jobDescription: jd.jobDescription,
+      });
 
       results[jd.jobTitle] = {
-        ...result,
-        jobCategory,
+        ...singleResult,
         jobTitle: jd.jobTitle,
       };
 
-      console.log(`  ✅ ${jd.jobTitle}: ${result.score}%`);
+      console.log(`  ✅ ${jd.jobTitle}: ${singleResult.matchScore}%`);
     } catch (jobError) {
       console.error(
         `❌ Failed to score ${resume.candidateName} for ${jd.jobTitle}:`,
@@ -1125,21 +1320,17 @@ async function scoreMultipleJobs(resume, jobDescriptions) {
     }
   }
 
-  console.log(`✅ Multi-JD scoring completed for ${resume.candidateName}`);
+  console.log(`\n✅ Multi-JD scoring completed for ${resume.candidateName}\n`);
   return results;
 }
 
-// ==================== TEST-FRIENDLY UTILITY FUNCTIONS ====================
+// ==================== UTILITY FUNCTIONS ====================
 
-/**
- * ✅ NEW: Strict skill matching function for tests
- */
 function strictSkillMatch(resumeSkills = [], requiredSkills = []) {
   if (!Array.isArray(resumeSkills) || !Array.isArray(requiredSkills)) {
     return { matched: [], missing: [], percentage: 0 };
   }
 
-  // Normalize skills to lowercase
   const resumeSkillsLower = resumeSkills.map((s) =>
     String(s).toLowerCase().trim()
   );
@@ -1147,7 +1338,6 @@ function strictSkillMatch(resumeSkills = [], requiredSkills = []) {
     String(s).toLowerCase().trim()
   );
 
-  // Find matched skills
   const matched = requiredSkills.filter((reqSkill) => {
     const reqLower = reqSkill.toLowerCase().trim();
     return resumeSkillsLower.some(
@@ -1158,7 +1348,6 @@ function strictSkillMatch(resumeSkills = [], requiredSkills = []) {
     );
   });
 
-  // Find missing skills
   const missing = requiredSkills.filter((reqSkill) => {
     const reqLower = reqSkill.toLowerCase().trim();
     return !resumeSkillsLower.some(
@@ -1177,17 +1366,11 @@ function strictSkillMatch(resumeSkills = [], requiredSkills = []) {
   return { matched, missing, percentage };
 }
 
-/**
- * ✅ NEW: Calculate skill match percentage
- */
 function calculateSkillMatch(resumeSkills = [], requiredSkills = []) {
   const result = strictSkillMatch(resumeSkills, requiredSkills);
   return result.percentage;
 }
 
-/**
- * ✅ NEW: Validates if candidate's skills are relevant to job domain
- */
 function validateSkillsRelevance(
   resumeSkills = [],
   jobCategory = "general",
@@ -1202,7 +1385,6 @@ function validateSkillsRelevance(
   );
   const jobLower = `${jobCategory} ${jobTitle}`.toLowerCase();
 
-  // Define irrelevant skill patterns for different domains
   const irrelevantPatterns = {
     finance: [
       "javascript",
@@ -1242,7 +1424,6 @@ function validateSkillsRelevance(
     development: ["tally", "accounting", "finance", "bookkeeping", "taxation"],
   };
 
-  // Check if it's a finance/accounting role
   if (
     jobLower.includes("finance") ||
     jobLower.includes("accounting") ||
@@ -1261,7 +1442,6 @@ function validateSkillsRelevance(
     }
   }
 
-  // Check if it's a technical role
   if (
     jobLower.includes("developer") ||
     jobLower.includes("engineer") ||
@@ -1283,9 +1463,6 @@ function validateSkillsRelevance(
   return { isRelevant: true, penalty: 0, reason: "Skills are relevant" };
 }
 
-/**
- * ✅ NEW: Calculate overall match score
- */
 function calculateMatchScore(resume, job) {
   if (!resume || !job) return 0;
 
@@ -1303,9 +1480,6 @@ function calculateMatchScore(resume, job) {
   );
 }
 
-/**
- * ✅ NEW: Validate education relevance
- */
 function validateEducation(education = "", jobCategory = "general") {
   if (!education) {
     return { suitable: true, penalty: 0, reason: "No education specified" };
@@ -1334,6 +1508,10 @@ function validateEducation(education = "", jobCategory = "general") {
   return { suitable: true, penalty: 0, reason: "General education" };
 }
 
+async function calculateEnhancedCandidateScore(resume, job, jobTitle) {
+  return await calculateAIBasedScore(resume, job, jobTitle, "general");
+}
+
 // ==================== MODULE EXPORTS ====================
 
 module.exports = {
@@ -1350,7 +1528,7 @@ module.exports = {
   // Data
   JOB_DOMAINS,
 
-  // ✅ FIXED: Real implementations for tests
+  // Test utilities
   strictSkillMatch,
   calculateSkillMatch,
   calculateMatchScore,
@@ -1362,5 +1540,6 @@ module.exports = {
     validateEducation,
     normalise,
     calculateEducationRelevance,
+    calculateExperienceScore, // ✅ Export the new function
   },
 };

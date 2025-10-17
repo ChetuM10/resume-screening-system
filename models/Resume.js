@@ -1,7 +1,7 @@
 /**
- * @fileoverview Resume Model - Test-Friendly & Production-Ready
- * @version 3.0.0 - All Tests Passing
- * @description Flexible validation model for resume screening system
+ * @fileoverview Resume Model - Test-Friendly & Production-Ready with Search
+ * @version 3.1.0 - All Tests Passing + Search Feature
+ * @description Flexible validation model for resume screening system with name search capability
  */
 
 const mongoose = require("mongoose");
@@ -35,6 +35,14 @@ const resumeSchema = new mongoose.Schema(
       default: "Unknown Candidate",
       trim: true,
       maxlength: [200, "Candidate name cannot exceed 200 characters"],
+    },
+
+    // 🆕 NEW: Normalized name for fast case-insensitive search
+    normalizedName: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true, // Index for fast search performance
     },
 
     email: {
@@ -227,11 +235,27 @@ const resumeSchema = new mongoose.Schema(
 // ========================================
 resumeSchema.index({ email: 1 }, { sparse: true });
 resumeSchema.index({ candidateName: 1 });
+resumeSchema.index({ normalizedName: 1 }); // 🆕 NEW: Index for search
 resumeSchema.index({ isProcessed: 1, processingStatus: 1 });
 resumeSchema.index({ uploadDate: -1 });
 resumeSchema.index({ skills: 1 });
 resumeSchema.index({ "experience.years": 1 });
 resumeSchema.index({ createdAt: -1 });
+
+// 🆕 NEW: Compound text index for advanced search (optional but recommended)
+resumeSchema.index(
+  {
+    normalizedName: "text",
+    email: "text",
+  },
+  {
+    weights: {
+      normalizedName: 10,
+      email: 5,
+    },
+    name: "search_index",
+  }
+);
 
 // ========================================
 // VIRTUAL PROPERTIES
@@ -294,10 +318,19 @@ resumeSchema.pre("save", function (next) {
       }
     }
 
+    // 🆕 NEW: Auto-populate normalizedName from candidateName
+    if (this.candidateName) {
+      this.normalizedName = this.candidateName
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, " "); // Replace multiple spaces with single space
+    }
+
     // ✅ Clean and deduplicate skills
     if (this.skills && Array.isArray(this.skills)) {
       this.skills = [
-        ...new Set( // Remove duplicates using Set
+        ...new Set(
+          // Remove duplicates using Set
           this.skills
             .filter(
               (skill) =>
@@ -343,6 +376,45 @@ resumeSchema.pre("save", function (next) {
  */
 resumeSchema.statics.findByEmail = function (email) {
   return this.findOne({ email: email.toLowerCase().trim() });
+};
+
+/**
+ * 🆕 NEW: Search resumes by name (case-insensitive, partial match)
+ * @param {string} searchQuery - Name search query
+ * @param {object} options - Optional pagination and sorting
+ * @returns {Promise<Resume[]>}
+ */
+resumeSchema.statics.searchByName = function (searchQuery, options = {}) {
+  const { page = 1, limit = 20, sort = { candidateName: 1 } } = options;
+
+  const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return this.find({
+    normalizedName: {
+      $regex: escapedQuery.toLowerCase(),
+      $options: "i",
+    },
+  })
+    .sort(sort)
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+};
+
+/**
+ * 🆕 NEW: Count search results
+ * @param {string} searchQuery - Name search query
+ * @returns {Promise<number>}
+ */
+resumeSchema.statics.countSearchResults = function (searchQuery) {
+  const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return this.countDocuments({
+    normalizedName: {
+      $regex: escapedQuery.toLowerCase(),
+      $options: "i",
+    },
+  });
 };
 
 /**

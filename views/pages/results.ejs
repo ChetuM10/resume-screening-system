@@ -1,3 +1,16 @@
+<%
+// ✅ INITIALIZE ALL VARIABLES WITH SAFE DEFAULTS
+searchQuery = searchQuery || '';
+pagination = pagination || { page: 1, limit: 20, totalCount: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false, nextPage: null, prevPage: null, startIndex: 0, endIndex: 0 };
+results = results || [];
+screeningId = screeningId || '';
+totalCandidates = totalCandidates || 0;
+qualifiedCandidates = qualifiedCandidates || 0;
+averageScore = averageScore || 0;
+jobTitle = jobTitle || 'Unknown Position';
+createdAt = createdAt || new Date();
+%>
+
 <div class="container-fluid py-4">
   <!-- Header Section -->
   <div class="row mb-4">
@@ -9,10 +22,7 @@
             Screening Results
           </h1>
           <p class="text-light mb-0">
-            Position:
-            <strong class="text-white"
-              ><%= jobTitle || 'Unknown Position' %></strong
-            >
+            Position: <strong class="text-white"><%= jobTitle %></strong>
           </p>
         </div>
         <div class="text-end">
@@ -30,7 +40,7 @@
       <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-users fa-2x text-info mb-2"></i>
-          <h4 class="mb-1 text-white"><%= totalCandidates || 0 %></h4>
+          <h4 class="mb-1 text-white"><%= totalCandidates %></h4>
           <p class="text-light mb-0">Total Candidates</p>
         </div>
       </div>
@@ -39,7 +49,7 @@
       <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-          <h4 class="mb-1 text-white"><%= qualifiedCandidates || 0 %></h4>
+          <h4 class="mb-1 text-white"><%= qualifiedCandidates %></h4>
           <p class="text-light mb-0">Qualified</p>
         </div>
       </div>
@@ -48,7 +58,7 @@
       <div class="card border-0 shadow-lg stat-card-modern">
         <div class="card-body text-center">
           <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
-          <h4 class="mb-1 text-white"><%= averageScore || 0 %>%</h4>
+          <h4 class="mb-1 text-white"><%= averageScore %>%</h4>
           <p class="text-light mb-0">Average Score</p>
         </div>
       </div>
@@ -66,8 +76,73 @@
     </div>
   </div>
 
-  <!-- ✅ Export to Excel Button -->
-  <% if (results && results.length > 0) { %>
+  <!-- Search Bar Section -->
+  <% if (results.length > 0) { %>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-lg search-card-modern">
+        <div class="card-body">
+          <form method="GET" action="" class="row g-3 align-items-center" id="searchForm">
+            <div class="col-md-7">
+              <label for="searchInput" class="form-label text-white fw-bold">
+                <i class="fas fa-search me-2"></i>Search Candidates by Name
+              </label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-dark text-white border-secondary">
+                  <i class="fas fa-user-search"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control bg-dark text-white border-secondary"
+                  name="search"
+                  id="searchInput"
+                  value="<%= searchQuery %>"
+                  placeholder="Type candidate name to search..."
+                  autocomplete="off"
+                />
+                <% if (searchQuery) { %>
+                <a href="?screeningId=<%= screeningId %>" class="btn btn-outline-secondary" title="Clear search">
+                  <i class="fas fa-times"></i>
+                </a>
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label for="limitSelect" class="form-label text-white fw-bold">
+                <i class="fas fa-list me-2"></i>Results Per Page
+              </label>
+              <select name="limit" id="limitSelect" class="form-select form-select-lg bg-dark text-white border-secondary" onchange="this.form.submit()">
+                <option value="20" <%= pagination.limit === 20 ? 'selected' : '' %>>20 per page</option>
+                <option value="50" <%= pagination.limit === 50 ? 'selected' : '' %>>50 per page</option>
+                <option value="100" <%= pagination.limit === 100 ? 'selected' : '' %>>100 per page</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary btn-lg w-100 btn-modern">
+                <i class="fas fa-search me-1"></i> Search
+              </button>
+            </div>
+            <input type="hidden" name="screeningId" value="<%= screeningId %>">
+          </form>
+
+          <!-- Search Results Info -->
+          <% if (searchQuery) { %>
+          <div class="alert alert-info mt-3 mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Found <strong><%= pagination.totalCount %></strong> candidate<%= pagination.totalCount !== 1 ? 's' : '' %> matching "<strong><%= searchQuery %></strong>"
+            <a href="?screeningId=<%= screeningId %>" class="alert-link ms-2">
+              <i class="fas fa-times-circle"></i> Clear Search
+            </a>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Export to Excel Button -->
+  <% if (results.length > 0) { %>
   <div class="row mb-4">
     <div class="col-12">
       <div class="card border-0 shadow-lg export-card-modern">
@@ -83,11 +158,8 @@
           >
             <i class="fas fa-file-excel me-2"></i>
             DOWNLOAD EXCEL REPORT
-            <small
-              class="d-block mt-1"
-              style="font-size: 0.85rem; opacity: 0.9"
-            >
-              Export all <%= results.length %> candidates to spreadsheet
+            <small class="d-block mt-1" style="font-size: 0.85rem; opacity: 0.9">
+              Export all <%= totalCandidates %> candidates to spreadsheet
             </small>
           </a>
         </div>
@@ -99,38 +171,25 @@
   <!-- Results Section -->
   <div class="row">
     <div class="col-12">
-      <% if (results && results.length > 0) { %>
+      <% if (results.length > 0) { %>
       <!-- Filter Controls -->
       <div class="card border-0 shadow-lg filter-card-modern mb-4">
         <div class="card-body">
           <div class="row align-items-center">
             <div class="col-md-6">
-              <label for="minMatchScore" class="form-label text-white fw-bold"
-                ><i class="fas fa-filter me-2"></i>Filter by minimum match
-                score:</label
-              >
-              <input
-                type="range"
-                class="form-range"
-                id="minMatchScore"
-                min="0"
-                max="100"
-                value="0"
-              />
-              <small class="text-light"
-                >Score:
-                <span id="scoreDisplay" class="fw-bold text-warning">0</span
-                >%</small
-              >
+              <label for="minMatchScore" class="form-label text-white fw-bold">
+                <i class="fas fa-filter me-2"></i>Filter by minimum match score:
+              </label>
+              <input type="range" class="form-range" id="minMatchScore" min="0" max="100" value="0" />
+              <small class="text-light">
+                Score: <span id="scoreDisplay" class="fw-bold text-warning">0</span>%
+              </small>
             </div>
             <div class="col-md-6">
-              <label for="sortResults" class="form-label text-white fw-bold"
-                ><i class="fas fa-sort me-2"></i>Sort by:</label
-              >
-              <select
-                class="form-select bg-dark text-white border-secondary"
-                id="sortResults"
-              >
+              <label for="sortResults" class="form-label text-white fw-bold">
+                <i class="fas fa-sort me-2"></i>Sort by:
+              </label>
+              <select class="form-select bg-dark text-white border-secondary" id="sortResults">
                 <option value="score-desc">Match Score (High to Low)</option>
                 <option value="score-asc">Match Score (Low to High)</option>
                 <option value="name-asc">Name (A-Z)</option>
@@ -144,35 +203,25 @@
       <!-- Candidates Grid -->
       <div class="row" id="candidatesContainer">
         <% results.forEach((result, index) => { %>
-        <div
-          class="col-lg-4 col-md-6 mb-4 candidate-result-card"
-          data-score="<%= result.matchScore || 0 %>"
-        >
+        <div class="col-lg-4 col-md-6 mb-4 candidate-result-card" data-score="<%= result.matchScore || 0 %>">
           <div class="card border-0 shadow-lg h-100 candidate-card-modern">
-            <div
-              class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center"
-            >
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
               <h5 class="mb-0 fw-bold">
                 <i class="fas fa-user-circle"></i>
-                <%= result.resumeId?.candidateName || result.candidateName ||
-                'Unknown Candidate' %>
+                <%= result.resumeId?.candidateName || result.candidateName || 'Unknown Candidate' %>
               </h5>
               <span class="badge bg-light text-primary fs-6 fw-bold">
-                #<%= index + 1 %>
+                #<%= ((pagination.page - 1) * pagination.limit) + index + 1 %>
               </span>
             </div>
 
             <div class="card-body card-body-modern">
               <!-- Match Score -->
-              <div
-                class="d-flex justify-content-between align-items-center mb-3 p-2 rounded score-section"
-              >
-                <span class="text-white fw-bold"
-                  ><i class="fas fa-chart-bar me-2"></i>Match Score:</span
-                >
-                <span
-                  class="badge bg-<%= (result.matchScore || 0) >= 75 ? 'success' : (result.matchScore || 0) >= 50 ? 'warning' : 'danger' %> fs-5 match-score-display"
-                >
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded score-section">
+                <span class="text-white fw-bold">
+                  <i class="fas fa-chart-bar me-2"></i>Match Score:
+                </span>
+                <span class="badge bg-<%= (result.matchScore || 0) >= 75 ? 'success' : (result.matchScore || 0) >= 50 ? 'warning' : 'danger' %> fs-5 match-score-display">
                   <%= Math.round(result.matchScore || 0) %>%
                 </span>
               </div>
@@ -182,16 +231,17 @@
                 <% if (result.resumeId?.email || result.email) { %>
                 <div class="d-flex align-items-center mb-2">
                   <i class="fas fa-envelope text-info me-2"></i>
-                  <small class="text-light text-truncate"
-                    ><%= result.resumeId?.email || result.email %></small
-                  >
+                  <small class="text-light text-truncate">
+                    <%= result.resumeId?.email || result.email %>
+                  </small>
                 </div>
-                <% } %> <% if (result.resumeId?.phone || result.phone) { %>
+                <% } %>
+                <% if (result.resumeId?.phone || result.phone) { %>
                 <div class="d-flex align-items-center mb-2">
                   <i class="fas fa-phone text-success me-2"></i>
-                  <small class="text-light"
-                    ><%= result.resumeId?.phone || result.phone %></small
-                  >
+                  <small class="text-light">
+                    <%= result.resumeId?.phone || result.phone %>
+                  </small>
                 </div>
                 <% } %>
               </div>
@@ -201,31 +251,25 @@
                 <h6 class="text-primary fw-bold">
                   <i class="fas fa-check-circle"></i> Match Reasons:
                 </h6>
-                <% if (result.matchReasons && result.matchReasons.length > 0) {
-                %> <% result.matchReasons.forEach(reason => { %>
-                <div class="d-flex align-items-center mb-1">
-                  <i
-                    class="fas fa-dot-circle text-success me-2"
-                    style="font-size: 0.5rem"
-                  ></i>
-                  <small class="text-light"><%= reason %></small>
-                </div>
-                <% }); %> <% } else { %>
-                <small class="text-muted fst-italic"
-                  >No specific match reasons available</small
-                >
+                <% if (result.matchReasons && result.matchReasons.length > 0) { %>
+                  <% result.matchReasons.forEach(reason => { %>
+                  <div class="d-flex align-items-center mb-1">
+                    <i class="fas fa-dot-circle text-success me-2" style="font-size: 0.5rem"></i>
+                    <small class="text-light"><%= reason %></small>
+                  </div>
+                  <% }); %>
+                <% } else { %>
+                <small class="text-muted fst-italic">No specific match reasons available</small>
                 <% } %>
               </div>
 
               <!-- Experience -->
               <% if (result.resumeId?.experience?.years !== undefined) { %>
               <div class="mb-3">
-                <div
-                  class="d-flex justify-content-between align-items-center p-2 rounded experience-section"
-                >
-                  <span class="text-white fw-bold"
-                    ><i class="fas fa-briefcase me-2"></i>Experience:</span
-                  >
+                <div class="d-flex justify-content-between align-items-center p-2 rounded experience-section">
+                  <span class="text-white fw-bold">
+                    <i class="fas fa-briefcase me-2"></i>Experience:
+                  </span>
                   <span class="badge bg-info fs-6">
                     <%= result.resumeId.experience.years %> years
                   </span>
@@ -234,21 +278,19 @@
               <% } %>
 
               <!-- Skills Preview -->
-              <% if (result.resumeId?.skills && result.resumeId.skills.length >
-              0) { %>
+              <% if (result.resumeId?.skills && result.resumeId.skills.length > 0) { %>
               <div class="mb-3 skills-section">
                 <h6 class="text-secondary fw-bold mb-2">
                   <i class="fas fa-code me-2"></i>Top Skills:
                 </h6>
                 <div class="d-flex flex-wrap gap-2">
                   <% result.resumeId.skills.slice(0, 3).forEach(skill => { %>
-                  <span class="badge bg-gradient-secondary fs-6"
-                    ><%= skill %></span
-                  >
-                  <% }); %> <% if (result.resumeId.skills.length > 3) { %>
-                  <span class="badge bg-dark text-warning fs-6"
-                    >+<%= result.resumeId.skills.length - 3 %> more</span
-                  >
+                  <span class="badge bg-gradient-secondary fs-6"><%= skill %></span>
+                  <% }); %>
+                  <% if (result.resumeId.skills.length > 3) { %>
+                  <span class="badge bg-dark text-warning fs-6">
+                    +<%= result.resumeId.skills.length - 3 %> more
+                  </span>
                   <% } %>
                 </div>
               </div>
@@ -258,17 +300,10 @@
             <!-- Action Buttons -->
             <div class="card-footer bg-transparent border-0 pt-0">
               <div class="d-flex gap-2">
-                <a
-                  href="/candidate/<%= result.resumeId?._id || result.resumeId %>"
-                  class="btn btn-primary flex-fill btn-modern"
-                >
+                <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>" class="btn btn-primary flex-fill btn-modern">
                   <i class="fas fa-eye"></i> VIEW DETAILS
                 </a>
-                <a
-                  href="/candidate/<%= result.resumeId?._id || result.resumeId %>/download"
-                  class="btn btn-outline-light btn-modern"
-                  target="_blank"
-                >
+                <a href="/candidate/<%= result.resumeId?._id || result.resumeId %>/download" class="btn btn-outline-light btn-modern" target="_blank">
                   <i class="fas fa-download"></i>
                 </a>
               </div>
@@ -278,16 +313,83 @@
         <% }); %>
       </div>
 
+      <!-- Pagination Controls -->
+      <% if (pagination.totalPages > 1) { %>
+      <div class="row mb-4">
+        <div class="col-12">
+          <nav aria-label="Candidate results pagination">
+            <ul class="pagination pagination-lg justify-content-center">
+              <!-- Previous Button -->
+              <li class="page-item <%= !pagination.hasPrevPage ? 'disabled' : '' %>">
+                <a class="page-link bg-dark text-white border-secondary" href="?page=<%= pagination.prevPage %>&search=<%= encodeURIComponent(searchQuery) %>&limit=<%= pagination.limit %>&screeningId=<%= screeningId %>" <%= !pagination.hasPrevPage ? 'tabindex="-1" aria-disabled="true"' : '' %>>
+                  <i class="fas fa-chevron-left"></i> Previous
+                </a>
+              </li>
+
+              <!-- Page Numbers -->
+              <%
+                const maxButtons = 5;
+                let startPage = Math.max(1, pagination.page - Math.floor(maxButtons / 2));
+                let endPage = Math.min(pagination.totalPages, startPage + maxButtons - 1);
+                if (endPage - startPage + 1 < maxButtons) {
+                  startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+              %>
+
+              <% if (startPage > 1) { %>
+                <li class="page-item">
+                  <a class="page-link bg-dark text-white border-secondary" href="?page=1&search=<%= encodeURIComponent(searchQuery) %>&limit=<%= pagination.limit %>&screeningId=<%= screeningId %>">1</a>
+                </li>
+                <% if (startPage > 2) { %>
+                  <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">...</span></li>
+                <% } %>
+              <% } %>
+
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <li class="page-item <%= i === pagination.page ? 'active' : '' %>">
+                  <a class="page-link <%= i === pagination.page ? 'bg-primary' : 'bg-dark' %> text-white border-secondary" href="?page=<%= i %>&search=<%= encodeURIComponent(searchQuery) %>&limit=<%= pagination.limit %>&screeningId=<%= screeningId %>">
+                    <%= i %>
+                  </a>
+                </li>
+              <% } %>
+
+              <% if (endPage < pagination.totalPages) { %>
+                <% if (endPage < pagination.totalPages - 1) { %>
+                  <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">...</span></li>
+                <% } %>
+                <li class="page-item">
+                  <a class="page-link bg-dark text-white border-secondary" href="?page=<%= pagination.totalPages %>&search=<%= encodeURIComponent(searchQuery) %>&limit=<%= pagination.limit %>&screeningId=<%= screeningId %>"><%= pagination.totalPages %></a>
+                </li>
+              <% } %>
+
+              <!-- Next Button -->
+              <li class="page-item <%= !pagination.hasNextPage ? 'disabled' : '' %>">
+                <a class="page-link bg-dark text-white border-secondary" href="?page=<%= pagination.nextPage %>&search=<%= encodeURIComponent(searchQuery) %>&limit=<%= pagination.limit %>&screeningId=<%= screeningId %>" <%= !pagination.hasNextPage ? 'tabindex="-1" aria-disabled="true"' : '' %>>
+                  Next <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+          <!-- Page Info -->
+          <p class="text-center text-light">
+            Page <strong><%= pagination.page %></strong> of <strong><%= pagination.totalPages %></strong>
+            (Showing <%= pagination.startIndex %>-<%= pagination.endIndex %> of <%= pagination.totalCount %> results)
+          </p>
+        </div>
+      </div>
+      <% } %>
+
       <!-- Results Summary -->
       <div class="row mt-4">
         <div class="col-12">
           <div class="alert alert-info shadow-lg border-0">
             <i class="fas fa-info-circle"></i>
-            Showing
-            <strong
-              ><span id="visibleCount"><%= results.length %></span></strong
-            >
-            of <strong><%= results.length %></strong> candidates
+            Showing <strong><span id="visibleCount"><%= results.length %></span></strong>
+            of <strong><%= pagination.totalCount %></strong> candidates
+            <% if (searchQuery) { %>
+              matching "<strong><%= searchQuery %></strong>"
+            <% } %>
           </div>
         </div>
       </div>
@@ -299,19 +401,32 @@
           <div class="card-body py-5">
             <i class="fas fa-search fa-4x text-muted mb-4"></i>
             <h3 class="text-white mb-3">
-              No candidates match your screening criteria
+              <% if (searchQuery) { %>
+                No candidates match your search "<%= searchQuery %>"
+              <% } else { %>
+                No candidates match your screening criteria
+              <% } %>
             </h3>
             <p class="text-light mb-4">
-              Found <%= totalCandidates || 0 %> candidates in database, but none
-              meet the specified requirements.
+              <% if (searchQuery) { %>
+                Try a different search term or clear the search filter.
+              <% } else { %>
+                Found <%= totalCandidates %> candidates in database, but none meet the specified requirements.
+              <% } %>
             </p>
             <div class="d-flex gap-3 justify-content-center flex-wrap">
-              <a href="/screening" class="btn btn-primary btn-lg">
-                <i class="fas fa-cog"></i> Adjust Screening Criteria
-              </a>
-              <a href="/upload" class="btn btn-outline-light btn-lg">
-                <i class="fas fa-upload"></i> Upload More Resumes
-              </a>
+              <% if (searchQuery) { %>
+                <a href="?screeningId=<%= screeningId %>" class="btn btn-primary btn-lg">
+                  <i class="fas fa-times-circle"></i> Clear Search
+                </a>
+              <% } else { %>
+                <a href="/screening" class="btn btn-primary btn-lg">
+                  <i class="fas fa-cog"></i> Adjust Screening Criteria
+                </a>
+                <a href="/upload" class="btn btn-outline-light btn-lg">
+                  <i class="fas fa-upload"></i> Upload More Resumes
+                </a>
+              <% } %>
             </div>
           </div>
         </div>
@@ -321,281 +436,273 @@
   </div>
 </div>
 
-<!-- Include Results JavaScript -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Score filter functionality
-    const scoreSlider = document.getElementById("minMatchScore");
-    const scoreDisplay = document.getElementById("scoreDisplay");
-    const candidateCards = document.querySelectorAll(".candidate-result-card");
-    const visibleCountSpan = document.getElementById("visibleCount");
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById('searchInput');
+  const searchForm = document.getElementById('searchForm');
+  let debounceTimer;
 
-    if (scoreSlider) {
-      scoreSlider.addEventListener("input", function () {
-        const minScore = parseInt(this.value);
-        scoreDisplay.textContent = minScore;
+  if (searchInput && searchForm) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        searchForm.submit();
+      }, 500);
+    });
 
-        let visibleCount = 0;
-        candidateCards.forEach((card) => {
-          const cardScore = parseInt(card.dataset.score || 0);
-          if (cardScore >= minScore) {
-            card.style.display = "";
-            visibleCount++;
-          } else {
-            card.style.display = "none";
-          }
-        });
+    if (searchInput.value) {
+      searchInput.focus();
+      searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+    }
+  }
 
-        if (visibleCountSpan) {
-          visibleCountSpan.textContent = visibleCount;
+  const scoreSlider = document.getElementById("minMatchScore");
+  const scoreDisplay = document.getElementById("scoreDisplay");
+  const candidateCards = document.querySelectorAll(".candidate-result-card");
+  const visibleCountSpan = document.getElementById("visibleCount");
+
+  if (scoreSlider) {
+    scoreSlider.addEventListener("input", function () {
+      const minScore = parseInt(this.value);
+      scoreDisplay.textContent = minScore;
+
+      let visibleCount = 0;
+      candidateCards.forEach((card) => {
+        const cardScore = parseInt(card.dataset.score || 0);
+        if (cardScore >= minScore) {
+          card.style.display = "";
+          visibleCount++;
+        } else {
+          card.style.display = "none";
         }
       });
-    }
 
-    // Sort functionality
-    const sortSelect = document.getElementById("sortResults");
-    if (sortSelect) {
-      sortSelect.addEventListener("change", function () {
-        const container = document.getElementById("candidatesContainer");
-        const cards = Array.from(container.children);
+      if (visibleCountSpan) {
+        visibleCountSpan.textContent = visibleCount;
+      }
+    });
+  }
 
-        cards.sort((a, b) => {
-          switch (this.value) {
-            case "score-desc":
-              return (
-                parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0)
-              );
-            case "score-asc":
-              return (
-                parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0)
-              );
-            case "name-asc":
-              const nameA = a
-                .querySelector(".card-header h5")
-                .textContent.trim()
-                .toLowerCase();
-              const nameB = b
-                .querySelector(".card-header h5")
-                .textContent.trim()
-                .toLowerCase();
-              return nameA.localeCompare(nameB);
-            case "name-desc":
-              const nameA2 = a
-                .querySelector(".card-header h5")
-                .textContent.trim()
-                .toLowerCase();
-              const nameB2 = b
-                .querySelector(".card-header h5")
-                .textContent.trim()
-                .toLowerCase();
-              return nameB2.localeCompare(nameA2);
-            default:
-              return 0;
-          }
-        });
+  const sortSelect = document.getElementById("sortResults");
+  if (sortSelect) {
+    sortSelect.addEventListener("change", function () {
+      const container = document.getElementById("candidatesContainer");
+      const cards = Array.from(container.children);
 
-        // Re-append sorted cards
-        cards.forEach((card) => container.appendChild(card));
+      cards.sort((a, b) => {
+        switch (this.value) {
+          case "score-desc":
+            return parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0);
+          case "score-asc":
+            return parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0);
+          case "name-asc":
+            const nameA = a.querySelector(".card-header h5").textContent.trim().toLowerCase();
+            const nameB = b.querySelector(".card-header h5").textContent.trim().toLowerCase();
+            return nameA.localeCompare(nameB);
+          case "name-desc":
+            const nameA2 = a.querySelector(".card-header h5").textContent.trim().toLowerCase();
+            const nameB2 = b.querySelector(".card-header h5").textContent.trim().toLowerCase();
+            return nameB2.localeCompare(nameA2);
+          default:
+            return 0;
+        }
       });
-    }
 
-    // ✅ Excel download feedback
-    const excelBtn = document.querySelector(".btn-export-excel");
-    if (excelBtn) {
-      excelBtn.addEventListener("click", function (e) {
-        const originalHTML = this.innerHTML;
-        this.innerHTML =
-          '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...';
-        this.style.pointerEvents = "none";
+      cards.forEach((card) => container.appendChild(card));
+    });
+  }
 
-        setTimeout(() => {
-          this.innerHTML = originalHTML;
-          this.style.pointerEvents = "auto";
-        }, 2000);
-      });
-    }
-  });
+  const excelBtn = document.querySelector(".btn-export-excel");
+  if (excelBtn) {
+    excelBtn.addEventListener("click", function (e) {
+      const originalHTML = this.innerHTML;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...';
+      this.style.pointerEvents = "none";
+
+      setTimeout(() => {
+        this.innerHTML = originalHTML;
+        this.style.pointerEvents = "auto";
+      }, 2000);
+    });
+  }
+});
 </script>
 
 <style>
-  /* ✅ FIXED: Modern Card Designs with Visible Text */
+.stat-card-modern {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  transition: all 0.3s ease;
+}
 
-  .stat-card-modern {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-    transition: all 0.3s ease;
-  }
+.stat-card-modern:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+}
 
-  .stat-card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
-  }
+.search-card-modern {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+}
 
-  .export-card-modern {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  }
+.export-card-modern, .filter-card-modern {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+}
 
-  .filter-card-modern {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  }
+.candidate-card-modern {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
 
-  .candidate-card-modern {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-  }
+.candidate-card-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3) !important;
+  border-color: rgba(99, 102, 241, 0.5);
+}
 
-  .candidate-card-modern:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3) !important;
-    border-color: rgba(99, 102, 241, 0.5);
-  }
+.card-body-modern {
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0 !important;
+}
 
-  /* ✅ FIXED: Card Body with Visible Text */
-  .card-body-modern {
-    background: rgba(30, 41, 59, 0.8);
-    color: #e2e8f0 !important;
-  }
+.score-section {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+}
 
-  .score-section {
-    background: rgba(59, 130, 246, 0.1);
-    border-left: 3px solid #3b82f6;
-  }
+.experience-section {
+  background: rgba(14, 165, 233, 0.1);
+  border-left: 3px solid #0ea5e9;
+}
 
-  .experience-section {
-    background: rgba(14, 165, 233, 0.1);
-    border-left: 3px solid #0ea5e9;
-  }
+.no-results-card {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+}
 
-  .no-results-card {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  }
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+}
 
-  /* ✅ FIXED: Header Gradient */
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-  }
+.match-score-display {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
 
-  /* ✅ FIXED: Match Score Badge */
-  .match-score-display {
-    font-size: 1.1rem;
-    font-weight: 700;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
+.candidate-card-modern .card-header {
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+  padding: 1rem 1.25rem;
+}
 
-  /* ✅ FIXED: Card Header */
-  .candidate-card-modern .card-header {
-    border-bottom: 2px solid rgba(99, 102, 241, 0.3);
-    padding: 1rem 1.25rem;
-  }
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  color: white !important;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+}
 
-  /* ✅ FIXED: Skills Badge */
-  .bg-gradient-secondary {
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
-    color: white !important;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-  }
+.btn-modern {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
 
-  /* ✅ FIXED: Modern Buttons */
-  .btn-modern {
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
+.btn-modern:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
 
-  .btn-modern:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
+.btn-export-excel {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  border: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-  /* ✅ Export Button Enhanced */
+.btn-export-excel:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-export-excel:active {
+  transform: translateY(-2px);
+}
+
+.btn-export-excel i.fa-file-excel {
+  font-size: 1.5rem;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.form-range::-webkit-slider-thumb {
+  background: #6366f1;
+}
+
+.form-range::-moz-range-thumb {
+  background: #6366f1;
+}
+
+.pagination .page-link {
+  transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover:not(.disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.pagination .page-item.active .page-link {
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.6);
+}
+
+@media (max-width: 768px) {
   .btn-export-excel {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    border: none;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    width: 100%;
+    padding: 1rem 2rem !important;
   }
 
-  .btn-export-excel:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  .btn-export-excel small {
+    font-size: 0.8rem !important;
   }
 
-  .btn-export-excel:active {
-    transform: translateY(-2px);
+  .pagination {
+    flex-wrap: wrap;
   }
+}
 
-  .btn-export-excel i.fa-file-excel {
-    font-size: 1.5rem;
-    animation: bounce 2s infinite;
-  }
+.btn-export-excel .fa-spinner {
+  animation: spin 1s linear infinite;
+}
 
-  @keyframes bounce {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-5px);
-    }
-  }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
-  /* ✅ Range Slider Modern */
-  .form-range::-webkit-slider-thumb {
-    background: #6366f1;
-  }
+::-webkit-scrollbar {
+  width: 8px;
+}
 
-  .form-range::-moz-range-thumb {
-    background: #6366f1;
-  }
+::-webkit-scrollbar-track {
+  background: #1a202c;
+}
 
-  /* ✅ Responsive adjustments */
-  @media (max-width: 768px) {
-    .btn-export-excel {
-      width: 100%;
-      padding: 1rem 2rem !important;
-    }
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+}
 
-    .btn-export-excel small {
-      font-size: 0.8rem !important;
-    }
-  }
-
-  /* ✅ Loading state */
-  .btn-export-excel .fa-spinner {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* ✅ Scrollbar Styling */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #1a202c;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #6366f1;
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #4f46e5;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
 </style>

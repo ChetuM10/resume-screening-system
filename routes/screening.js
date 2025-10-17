@@ -1,6 +1,6 @@
 /**
- * @fileoverview COMPLETELY FIXED Screening Routes with Excel Export
- * @version 2.4.0 - Added Multi-JD Excel Export Route
+ * @fileoverview COMPLETELY FIXED Screening Routes with Excel Export + SEARCH & PAGINATION
+ * @version 2.5.0 - Added Search & Pagination Support
  */
 
 const express = require("express");
@@ -21,14 +21,12 @@ function logScreeningOperation(operation, details = "") {
 }
 
 // ==================== GET ROUTES ====================
-
 /**
  * GET route - Enhanced Screening dashboard
  */
 router.get("/", async (req, res) => {
   try {
     logScreeningOperation("dashboard load");
-
     const [
       recentScreenings,
       totalResumeCount,
@@ -119,12 +117,10 @@ router.get("/", async (req, res) => {
 });
 
 // ==================== POST ROUTES ====================
-
 router.post("/", async (req, res) => {
   const startTime = Date.now();
   try {
     console.log("📥 ROUTE: Received single JD screening request");
-
     if (!screeningController.submitJobRequirement) {
       return res.status(500).json({
         success: false,
@@ -141,7 +137,6 @@ router.post("/", async (req, res) => {
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error("❌ ROUTE: Single screening route error:", error);
-
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
@@ -157,7 +152,6 @@ router.post("/multi", async (req, res) => {
   const startTime = Date.now();
   try {
     console.log("📥 ROUTE: Received MULTI-JD screening request");
-
     if (!screeningController.submitMultipleJobRequirements) {
       return res.status(500).json({
         success: false,
@@ -174,7 +168,6 @@ router.post("/multi", async (req, res) => {
           : req.body.jobDescriptions?.length || 0
       }`
     );
-
     console.log(
       "🔄 ROUTE: Calling submitMultipleJobRequirements controller..."
     );
@@ -183,7 +176,6 @@ router.post("/multi", async (req, res) => {
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error("❌ ROUTE: Multi-JD screening route error:", error);
-
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
@@ -196,11 +188,20 @@ router.post("/multi", async (req, res) => {
 });
 
 // ==================== RESULTS ROUTES ====================
-
+/**
+ * ✅ FIXED: Single JD Results Route with Search & Pagination
+ */
 router.get("/results/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    logScreeningOperation("view-results", `ID: ${id}`);
+    
+    // ✅ ADD: Get search query and pagination params
+    const searchQuery = (req.query.search || "").trim();
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10), 1), 100);
+    const skip = (page - 1) * limit;
+
+    logScreeningOperation("view-results", `ID: ${id}, Search: "${searchQuery}", Page: ${page}`);
 
     if (!isValidObjectId(id)) {
       return res.status(400).render("pages/error", {
@@ -222,30 +223,49 @@ router.get("/results/:id", async (req, res) => {
       });
     }
 
-    // Sort results by match score
-    if (screening.results && screening.results.length > 0) {
-      screening.results.sort(
-        (a, b) => (b.matchScore || 0) - (a.matchScore || 0)
-      );
+    // Get all results first
+    let allResults = screening.results || [];
+    
+    // ✅ ADD: Filter by search query if present
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      allResults = allResults.filter((result) => {
+        const resume = result.resumeId;
+        if (!resume) return false;
+        const candidateName = (resume.candidateName || "").toLowerCase();
+        const email = (resume.email || "").toLowerCase();
+        return candidateName.includes(searchLower) || email.includes(searchLower);
+      });
     }
 
-    const enhancedResults =
-      screening.results?.map((candidate, index) => ({
-        ...candidate,
-        displayRank: index + 1,
-        scoreClass:
-          candidate.matchScore >= 80
-            ? "score-excellent"
-            : candidate.matchScore >= 60
-            ? "score-good"
-            : candidate.matchScore >= 40
-            ? "score-average"
-            : "score-poor",
-      })) || [];
+    // Sort results by match score
+    if (allResults.length > 0) {
+      allResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    }
+    
+    // ✅ ADD: Apply pagination
+    const totalCount = allResults.length;
+    const paginatedResults = allResults.slice(skip, skip + limit);
+    
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
-    console.log(
-      `✅ Loaded ${enhancedResults.length} results for screening: ${screening.jobTitle}`
-    );
+    const enhancedResults = paginatedResults.map((candidate, index) => ({
+      ...candidate,
+      displayRank: skip + index + 1,
+      scoreClass:
+        candidate.matchScore >= 80
+          ? "score-excellent"
+          : candidate.matchScore >= 60
+          ? "score-good"
+          : candidate.matchScore >= 40
+          ? "score-average"
+          : "score-poor",
+    }));
+
+    console.log(`✅ Loaded ${enhancedResults.length} results (${totalCount} total) for screening: ${screening.jobTitle}`);
 
     res.render("pages/results", {
       title: `Results - ${screening.jobTitle}`,
@@ -263,6 +283,22 @@ router.get("/results/:id", async (req, res) => {
       },
       statistics: screening.statistics,
       hasResults: enhancedResults.length > 0,
+      
+      // ✅ CRITICAL FIX: Add these missing variables
+      searchQuery,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+        startIndex: totalCount > 0 ? skip + 1 : 0,
+        endIndex: Math.min(skip + limit, totalCount),
+      },
+      query: req.query,
     });
   } catch (error) {
     console.error("❌ Error loading single JD results:", error);
@@ -275,12 +311,19 @@ router.get("/results/:id", async (req, res) => {
 });
 
 /**
- * ✅ CRITICAL FIX: Multi-JD results route with enhanced score handling
+ * ✅ CRITICAL FIX: Multi-JD results route with enhanced score handling + SEARCH & PAGINATION
  */
 router.get("/multi-results/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    logScreeningOperation("view-multi-results", `ID: ${id}`);
+    
+    // ✅ ADD: Get search query and pagination params
+    const searchQuery = (req.query.search || "").trim();
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10), 1), 100);
+    const skip = (page - 1) * limit;
+
+    logScreeningOperation("view-multi-results", `ID: ${id}, Search: "${searchQuery}", Page: ${page}`);
 
     if (!isValidObjectId(id)) {
       return res.status(400).render("pages/error", {
@@ -291,6 +334,7 @@ router.get("/multi-results/:id", async (req, res) => {
     }
 
     const screening = await Screening.findById(id).lean();
+
     if (!screening) {
       return res.status(404).render("pages/error", {
         title: "Not Found",
@@ -307,29 +351,60 @@ router.get("/multi-results/:id", async (req, res) => {
       });
     }
 
-    // ✅ CRITICAL FIX: Enhanced result processing with proper score extraction
-    const enhancedResults =
-      screening.results?.map((candidate, index) => {
-        console.log(`Processing candidate ${candidate.candidateName}:`, {
-          bestJobMatch: candidate.bestJobMatch,
-          hasScore: candidate.bestJobMatch?.score !== undefined,
-        });
+    // Get all results first
+    let allResults = screening.results || [];
 
-        return {
-          ...candidate,
-          displayRank: index + 1,
-          bestJobScore:
-            candidate.bestJobMatch?.score ||
-            candidate.bestJobScore ||
-            candidate.score ||
-            0,
-          bestJobTitle: candidate.bestJobMatch?.jobTitle || "Unknown",
-          bestJobCategory: candidate.bestJobMatch?.category || "unknown",
-        };
-      }) || [];
+    // ✅ ADD: Enhanced result processing with proper score extraction
+    allResults = allResults.map((candidate) => {
+      console.log(`Processing candidate ${candidate.candidateName}:`, {
+        bestJobMatch: candidate.bestJobMatch,
+        hasScore: candidate.bestJobMatch?.score !== undefined,
+      });
+
+      return {
+        ...candidate,
+        bestJobScore:
+          candidate.bestJobMatch?.score ||
+          candidate.bestJobScore ||
+          candidate.score ||
+          0,
+        bestJobTitle: candidate.bestJobMatch?.jobTitle || "Unknown",
+        bestJobCategory: candidate.bestJobMatch?.category || "unknown",
+      };
+    });
+
+    // ✅ ADD: Filter by search query if present
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      allResults = allResults.filter((candidate) => {
+        const candidateName = (candidate.candidateName || "").toLowerCase();
+        const email = (candidate.email || "").toLowerCase();
+        return candidateName.includes(searchLower) || email.includes(searchLower);
+      });
+    }
+
+    // Sort results by best job score
+    if (allResults.length > 0) {
+      allResults.sort((a, b) => (b.bestJobScore || 0) - (a.bestJobScore || 0));
+    }
+
+    // ✅ ADD: Apply pagination
+    const totalCount = allResults.length;
+    const paginatedResults = allResults.slice(skip, skip + limit);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Add display rank for paginated results
+    const enhancedResults = paginatedResults.map((candidate, index) => ({
+      ...candidate,
+      displayRank: skip + index + 1,
+    }));
 
     console.log(
-      `✅ Loaded ${enhancedResults.length} multi-JD results for screening`
+      `✅ Loaded ${enhancedResults.length} multi-JD results for screening (${totalCount} total)`
     );
     console.log(
       "Score samples:",
@@ -352,6 +427,22 @@ router.get("/multi-results/:id", async (req, res) => {
       totalCandidates: screening.totalCandidates,
       hasResults: enhancedResults.length > 0,
       currentYear: new Date().getFullYear(),
+      
+      // ✅ CRITICAL FIX: Add these missing variables
+      searchQuery,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+        startIndex: totalCount > 0 ? skip + 1 : 0,
+        endIndex: Math.min(skip + limit, totalCount),
+      },
+      query: req.query,
     });
   } catch (error) {
     console.error("❌ Error loading multi-JD results:", error);
@@ -391,7 +482,6 @@ router.get("/multi-results/:id/export", async (req, res) => {
     console.log("✅ Excel export completed successfully");
   } catch (error) {
     console.error("❌ Error in multi-JD Excel export route:", error);
-
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
@@ -418,6 +508,7 @@ router.get("/candidate/:id", async (req, res) => {
     }
 
     const candidate = await Resume.findById(id).lean();
+
     if (!candidate) {
       return res.status(404).render("pages/error", {
         title: "Not Found",
@@ -453,11 +544,9 @@ router.get("/candidate/:id", async (req, res) => {
 });
 
 // ==================== DELETE ROUTE ====================
-
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     if (!isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
@@ -468,6 +557,7 @@ router.delete("/:id", async (req, res) => {
     const screening = await Screening.findById(id).select(
       "jobTitle statistics screeningType"
     );
+
     if (!screening) {
       return res.status(404).json({
         success: false,
@@ -496,7 +586,6 @@ router.delete("/:id", async (req, res) => {
 });
 
 // ==================== API ROUTES ====================
-
 router.get("/api/config", async (req, res) => {
   try {
     if (!screeningController.getScreeningConfig) {
@@ -505,6 +594,7 @@ router.get("/api/config", async (req, res) => {
         error: "Configuration function not available",
       });
     }
+
     await screeningController.getScreeningConfig(req, res);
   } catch (error) {
     res.status(500).json({
@@ -522,6 +612,7 @@ router.post("/api/validate", async (req, res) => {
         error: "Validation function not available",
       });
     }
+
     await screeningController.validateJobRequirements(req, res);
   } catch (error) {
     res.status(500).json({
@@ -539,6 +630,7 @@ router.get("/api/predefined-jobs", async (req, res) => {
         error: "Predefined jobs function not available",
       });
     }
+
     await screeningController.getPredefinedJobs(req, res);
   } catch (error) {
     res.status(500).json({

@@ -2,7 +2,7 @@
  * @fileoverview API Routes - RESTful API endpoints for external integrations
  * Provides CRUD operations for resumes, screenings, and system statistics
  * @author Resume Screening System
- * @version 1.0.0
+ * @version 1.1.0 - Added search endpoint
  */
 
 const express = require('express');
@@ -350,6 +350,113 @@ router.delete('/resumes', async (req, res) => {
   }
 });
 
+// ==================== 🆕 NEW: SEARCH ROUTES ====================
+
+/**
+ * 🆕 NEW: Search resumes by name with pagination
+ * Fast candidate name search using normalized name index
+ * @route GET /api/search
+ * @param {Object} req - Express request object
+ * @param {string} req.query.q - Search query (candidate name)
+ * @param {number} [req.query.page=1] - Page number for pagination
+ * @param {number} [req.query.limit=20] - Number of results per page
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} JSON response with search results
+ * @example
+ * GET /api/search?q=john&page=1&limit=20
+ * Response: {
+ *   "success": true,
+ *   "message": "Found 15 candidates matching 'john'",
+ *   "data": {
+ *     "candidates": [...],
+ *     "searchQuery": "john",
+ *     "pagination": {
+ *       "page": 1,
+ *       "limit": 20,
+ *       "total": 15,
+ *       "pages": 1
+ *     }
+ *   }
+ * }
+ */
+router.get('/search', async (req, res) => {
+  try {
+    const searchQuery = (req.query.q || '').trim();
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit || '20', 10), 1),
+      API_CONFIG.MAX_LIMIT
+    );
+    const skip = (page - 1) * limit;
+
+    // Validate search query
+    if (!searchQuery) {
+      return res.status(400).json(createApiResponse(
+        false,
+        'Search query (q) is required',
+        null,
+        RESPONSE_CODES.VALIDATION_ERROR
+      ));
+    }
+
+    logApiOperation('search', `query="${searchQuery}", page=${page}, limit=${limit}`);
+
+    // Escape regex special characters for security
+    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Build search filter using normalizedName for fast indexed search
+    const searchFilter = {
+      normalizedName: {
+        $regex: escapedQuery.toLowerCase(),
+        $options: 'i'
+      }
+    };
+
+    // Execute search with pagination
+    const [candidates, totalCount] = await Promise.all([
+      Resume.find(searchFilter)
+        .sort({ candidateName: 1 })
+        .skip(skip)
+        .limit(limit)
+        .select('candidateName email phone skills experience education isProcessed createdAt')
+        .lean(),
+      Resume.countDocuments(searchFilter)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    logApiOperation('search', `found ${totalCount} results for "${searchQuery}"`);
+
+    res.json(createApiResponse(
+      true,
+      `Found ${totalCount} candidate${totalCount !== 1 ? 's' : ''} matching '${searchQuery}'`,
+      {
+        candidates,
+        searchQuery,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          pages: totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      },
+      RESPONSE_CODES.SUCCESS
+    ));
+
+  } catch (error) {
+    logApiOperation('search', error.message, 'error');
+    
+    res.status(500).json(createApiResponse(
+      false,
+      'Server error performing search',
+      null,
+      RESPONSE_CODES.SERVER_ERROR
+    ));
+  }
+});
+
 // ==================== RESULTS AND CANDIDATE ROUTES ====================
 
 /**
@@ -363,6 +470,21 @@ router.delete('/resumes', async (req, res) => {
  * @middleware resultsController.getScreeningResults
  */
 router.get('/results/:id', resultsController.getScreeningResults);
+
+/**
+ * 🆕 NEW: Search candidates within a specific screening
+ * Search functionality for screening results page
+ * @route GET /api/results/:id/search
+ * @param {Object} req - Express request object
+ * @param {string} req.params.id - Screening document ID
+ * @param {string} req.query.search - Search query
+ * @param {number} [req.query.page=1] - Page number
+ * @param {number} [req.query.limit=20] - Results per page
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Filtered screening results (delegates to results controller)
+ * @middleware resultsController.searchCandidatesAPI
+ */
+router.get('/results/:id/search', resultsController.searchCandidatesAPI);
 
 /**
  * GET candidate detail by resume ID
@@ -468,7 +590,7 @@ router.get('/health', async (req, res) => {
     res.json(createApiResponse(true, 'API is healthy', {
       status: 'healthy',
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0'
+      version: process.env.npm_package_version || '1.1.0'
     }));
 
   } catch (error) {

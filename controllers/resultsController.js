@@ -1,7 +1,7 @@
 /**
- * @fileoverview Results Controller - WITH EXCEL EXPORT
+ * @fileoverview Results Controller - WITH EXCEL EXPORT + NAME SEARCH
  * @author Resume Screening System
- * @version 3.2.2 - Fixed Qualification Logic with Debug Logging
+ * @version 3.3.0 - Added Name Search & Pagination
  */
 
 const Screening = require("../models/Screening");
@@ -12,7 +12,23 @@ const ExcelJS = require("exceljs");
 
 const getScreeningResults = async (req, res) => {
   try {
-    const sc = await Screening.findById(req.params.id)
+    const screeningId = req.params.id;
+
+    // 🆕 NEW: Get search query and pagination params
+    const searchQuery = (req.query.search || "").trim();
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit || "20", 10), 1),
+      100
+    );
+    const skip = (page - 1) * limit;
+
+    console.log(`\n🔍 ========== RESULTS PAGE LOAD ==========`);
+    console.log(`Screening ID: ${screeningId}`);
+    console.log(`Search Query: "${searchQuery}"`);
+    console.log(`Page: ${page}, Limit: ${limit}`);
+
+    const sc = await Screening.findById(screeningId)
       .populate("results.resumeId")
       .lean();
 
@@ -24,10 +40,44 @@ const getScreeningResults = async (req, res) => {
       });
     }
 
-    // Sort results by match score
-    if (sc.results && sc.results.length > 0) {
-      sc.results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    // Get all results first
+    let allResults = sc.results || [];
+
+    // 🆕 NEW: Filter results by search query if present
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      allResults = allResults.filter((result) => {
+        const resume = result.resumeId;
+        if (!resume) return false;
+
+        const candidateName = (resume.candidateName || "").toLowerCase();
+        const email = (resume.email || "").toLowerCase();
+
+        return (
+          candidateName.includes(searchLower) || email.includes(searchLower)
+        );
+      });
+
+      console.log(
+        `✅ Filtered to ${allResults.length} results matching "${searchQuery}"`
+      );
     }
+
+    // Sort results by match score
+    allResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+
+    // 🆕 NEW: Apply pagination
+    const totalCount = allResults.length;
+    const paginatedResults = allResults.slice(skip, skip + limit);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    console.log(
+      `✅ Showing results ${skip + 1}-${Math.min(skip + limit, totalCount)} of ${totalCount}`
+    );
 
     // ✅ CRITICAL FIX: Ensure all template variables are defined
     const templateData = {
@@ -36,7 +86,7 @@ const getScreeningResults = async (req, res) => {
       totalCandidates: sc.statistics?.totalCandidates || 0,
       qualifiedCandidates: sc.statistics?.qualifiedCandidates || 0,
       averageScore: Math.round(sc.statistics?.averageScore || 0),
-      results: sc.results || [],
+      results: paginatedResults, // 🆕 NEW: Use paginated results
       screeningId: sc._id,
       createdAt: sc.createdAt,
       currentYear: new Date().getFullYear(),
@@ -45,14 +95,32 @@ const getScreeningResults = async (req, res) => {
         createdAtFormatted: new Date(sc.createdAt).toLocaleDateString(),
       },
       statistics: sc.statistics || {},
-      hasResults: sc.results && sc.results.length > 0,
+      hasResults: paginatedResults.length > 0,
+      // 🆕 NEW: Add search and pagination data
+      searchQuery,  // ✅ THIS IS THE FIX!
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+        startIndex: totalCount > 0 ? skip + 1 : 0,
+        endIndex: Math.min(skip + limit, totalCount),
+      },
+      query: req.query, // Pass original query for form persistence
     };
 
     console.log("✅ Template data being passed:", {
       jobTitle: templateData.jobTitle,
       totalCandidates: templateData.totalCandidates,
       resultsCount: templateData.results.length,
+      searchQuery: templateData.searchQuery,
+      pagination: templateData.pagination,
     });
+    console.log(`========== END RESULTS PAGE LOAD ==========\n`);
 
     res.render("pages/results", templateData);
   } catch (err) {
@@ -367,6 +435,79 @@ const exportScreeningToExcel = async (req, res) => {
   }
 };
 
+// 🆕 NEW: API endpoint for AJAX search (optional but recommended)
+/**
+ * Search candidates within a screening
+ * @route GET /api/results/:id/search
+ */
+const searchCandidatesAPI = async (req, res) => {
+  try {
+    const screeningId = req.params.id;
+    const searchQuery = (req.query.search || "").trim();
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit || "20", 10), 1),
+      100
+    );
+
+    const screening = await Screening.findById(screeningId)
+      .populate("results.resumeId")
+      .lean();
+
+    if (!screening) {
+      return res.status(404).json({
+        success: false,
+        error: "Screening not found",
+      });
+    }
+
+    let allResults = screening.results || [];
+
+    // Filter by search query
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      allResults = allResults.filter((result) => {
+        const resume = result.resumeId;
+        if (!resume) return false;
+
+        const candidateName = (resume.candidateName || "").toLowerCase();
+        const email = (resume.email || "").toLowerCase();
+
+        return (
+          candidateName.includes(searchLower) || email.includes(searchLower)
+        );
+      });
+    }
+
+    // Sort by match score
+    allResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+
+    // Paginate
+    const totalCount = allResults.length;
+    const paginatedResults = allResults.slice(
+      (page - 1) * limit,
+      page * limit
+    );
+
+    res.json({
+      success: true,
+      data: paginatedResults,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
+  } catch (err) {
+    console.error("API search error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Search failed",
+    });
+  }
+};
+
 // ==================== EXPORTS ====================
 
 module.exports = {
@@ -375,4 +516,5 @@ module.exports = {
   getResultsJson,
   downloadResume,
   exportScreeningToExcel,
+  searchCandidatesAPI, // 🆕 NEW: Export the new API search function
 };
