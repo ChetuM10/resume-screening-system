@@ -328,6 +328,16 @@ router.delete('/resumes/:id', async (req, res) => {
  */
 router.delete('/resumes', async (req, res) => {
   try {
+    // Safety guard — must pass ?confirm=all to prevent accidental wipes
+    if (req.query.confirm !== 'all') {
+      return res.status(400).json(createApiResponse(
+        false,
+        'Missing confirmation. Append ?confirm=all to proceed with bulk delete.',
+        null,
+        RESPONSE_CODES.VALIDATION_ERROR
+      ));
+    }
+
     logApiOperation('bulk delete', 'attempting to delete all resumes', 'warn');
 
     const result = await Resume.deleteMany({});
