@@ -8,12 +8,13 @@ const PDFParser = require("pdf2json");
 const mammoth = require("mammoth");
 const fs = require("fs");
 const path = require("path");
+const logger = require("../utils/logger");
 
 // ✅ Better text cleaning that PRESERVES email/phone
 function cleanExtractedText(rawText) {
   if (!rawText) return "";
 
-  console.log("🧹 Starting FIXED text cleaning...");
+  logger.debug("🧹 Starting FIXED text cleaning...");
 
   let text = rawText;
 
@@ -63,13 +64,13 @@ function cleanExtractedText(rawText) {
     text = text.replace(new RegExp(placeholder, "g"), value);
   });
 
-  console.log(`✅ Text cleaned: ${text.length} characters`);
+  logger.debug(`✅ Text cleaned: ${text.length} characters`);
   return text;
 }
 
 // ✅ PDF2JSON Alternative Extraction
 async function extractTextFromPDFAlternative(buffer) {
-  console.log("🔄 Trying PDF2JSON extraction...");
+  logger.debug("🔄 Trying PDF2JSON extraction...");
 
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
@@ -103,7 +104,7 @@ async function extractTextFromPDFAlternative(buffer) {
 
         const cleanedText = text.trim();
         if (cleanedText.length > 50) {
-          console.log(`✅ PDF2JSON successful: ${cleanedText.length} chars`);
+          logger.debug(`✅ PDF2JSON successful: ${cleanedText.length} chars`);
           resolve(cleanedText);
         } else {
           reject(new Error("PDF2JSON: Text too short"));
@@ -120,7 +121,7 @@ async function extractTextFromPDFAlternative(buffer) {
 
 // ✅ Enhanced PDF extraction with multiple strategies
 async function extractTextFromPDF(buffer, filename = "resume.pdf") {
-  console.log("📄 Starting ENHANCED PDF extraction...");
+  logger.debug("📄 Starting ENHANCED PDF extraction...");
 
   // ========== STRATEGY 1: pdf-parse with multiple options ==========
   const pdfParseMethods = [
@@ -152,17 +153,17 @@ async function extractTextFromPDF(buffer, filename = "resume.pdf") {
 
   for (const method of pdfParseMethods) {
     try {
-      console.log(`🔄 Trying pdf-parse: ${method.name}`);
+      logger.debug(`🔄 Trying pdf-parse: ${method.name}`);
       const data = await pdfParse(buffer, method.options);
 
       if (data.text && data.text.length > 50) {
-        console.log(
+        logger.debug(
           `✅ pdf-parse SUCCESS with ${method.name}: ${data.text.length} chars`
         );
         return cleanExtractedText(data.text);
       }
     } catch (error) {
-      console.log(`⚠️ pdf-parse ${method.name} failed:`, error.message);
+      logger.debug(`⚠️ pdf-parse ${method.name} failed:`, error.message);
     }
   }
 
@@ -173,7 +174,7 @@ async function extractTextFromPDF(buffer, filename = "resume.pdf") {
       return cleanExtractedText(text);
     }
   } catch (error) {
-    console.log("⚠️ PDF2JSON failed:", error.message);
+    logger.debug("⚠️ PDF2JSON failed:", error.message);
   }
 
   // ========== ALL METHODS FAILED ==========
@@ -184,18 +185,18 @@ async function extractTextFromPDF(buffer, filename = "resume.pdf") {
 
 // ✅ DOCX extraction
 async function extractTextFromDOCX(buffer) {
-  console.log("📄 Starting enhanced DOCX extraction...");
+  logger.debug("📄 Starting enhanced DOCX extraction...");
 
   try {
     // Method 1: Raw text extraction
     const rawResult = await mammoth.extractRawText({ buffer });
     if (rawResult.value && rawResult.value.length > 50) {
-      console.log(`✅ DOCX raw extraction: ${rawResult.value.length} chars`);
+      logger.debug(`✅ DOCX raw extraction: ${rawResult.value.length} chars`);
       return cleanExtractedText(rawResult.value);
     }
 
     // Method 2: HTML conversion fallback
-    console.log("🔄 Trying DOCX HTML conversion...");
+    logger.debug("🔄 Trying DOCX HTML conversion...");
     const htmlResult = await mammoth.convertToHtml({ buffer });
     const textFromHtml = htmlResult.value
       .replace(/<[^>]*>/g, " ")
@@ -203,13 +204,13 @@ async function extractTextFromDOCX(buffer) {
       .replace(/\s+/g, " ");
 
     if (textFromHtml && textFromHtml.length > 50) {
-      console.log(`✅ DOCX HTML extraction: ${textFromHtml.length} chars`);
+      logger.debug(`✅ DOCX HTML extraction: ${textFromHtml.length} chars`);
       return cleanExtractedText(textFromHtml);
     }
 
     throw new Error("DOCX content too short");
   } catch (error) {
-    console.error("❌ DOCX extraction failed:", error.message);
+    logger.error("❌ DOCX extraction failed:", error.message);
     throw new Error(`DOCX processing failed: ${error.message}`);
   }
 }
@@ -220,7 +221,7 @@ async function extractTextFromFile(file) {
     throw new Error("Invalid file object provided - missing originalname");
   }
 
-  console.log(`🔄 Processing file: ${file.originalname}`);
+  logger.debug(`🔄 Processing file: ${file.originalname}`);
 
   let buffer;
   let fileSize;
@@ -228,21 +229,21 @@ async function extractTextFromFile(file) {
   try {
     // Handle both buffer (memory) and path (disk storage)
     if (file.buffer) {
-      console.log("📊 Using memory storage buffer");
+      logger.debug("📊 Using memory storage buffer");
       buffer = file.buffer;
       fileSize = file.buffer.length;
     } else if (file.path) {
-      console.log(`📊 Reading from disk: ${file.path}`);
+      logger.debug(`📊 Reading from disk: ${file.path}`);
       if (!fs.existsSync(file.path)) {
         throw new Error(`File not found at path: ${file.path}`);
       }
-      buffer = fs.readFileSync(file.path);
+      buffer = await fs.promises.readFile(file.path);
       fileSize = buffer.length;
     } else {
       throw new Error("File object must have either buffer or path property");
     }
 
-    console.log(
+    logger.debug(
       `📊 Size: ${Math.round(fileSize / 1024)}KB, Type: ${file.mimetype}`
     );
 
@@ -264,13 +265,13 @@ async function extractTextFromFile(file) {
       extractedText = await extractTextFromDOCX(buffer);
     } else {
       // Unknown type - try both methods
-      console.log(
+      logger.debug(
         "⚠️ Unknown file type, trying multiple extraction methods..."
       );
       try {
         extractedText = await extractTextFromPDF(buffer, file.originalname);
       } catch (pdfError) {
-        console.log("PDF extraction failed, trying DOCX...");
+        logger.debug("PDF extraction failed, trying DOCX...");
         extractedText = await extractTextFromDOCX(buffer);
       }
     }
@@ -279,12 +280,12 @@ async function extractTextFromFile(file) {
       throw new Error("Extracted text is too short or empty");
     }
 
-    console.log(
+    logger.debug(
       `✅ Text extraction successful: ${extractedText.length} characters`
     );
     return extractedText;
   } catch (error) {
-    console.error(
+    logger.error(
       `❌ File processing failed for ${file.originalname}:`,
       error.message
     );

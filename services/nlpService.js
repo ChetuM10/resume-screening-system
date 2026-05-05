@@ -4,6 +4,7 @@
  */
 
 const natural = require("natural");
+const logger = require("../utils/logger");
 
 // ==================== GEMINI AI INTEGRATION ====================
 let geminiService = null;
@@ -13,9 +14,9 @@ const USE_AI = process.env.USE_AI_ENHANCEMENT === "true";
 if (USE_AI) {
   try {
     geminiService = require("./geminiService");
-    console.log("✅ Gemini AI service loaded successfully");
+    logger.debug("✅ Gemini AI service loaded successfully");
   } catch (error) {
-    console.log("⚠️ Gemini AI not available, using rule-based only");
+    logger.debug("⚠️ Gemini AI not available, using rule-based only");
   }
 }
 
@@ -227,10 +228,10 @@ function looksLikeJobTitleOrSkill(text) {
 
 // ✅ ULTIMATE: Name extraction with 4 strategies + DEBUG mode + FALLBACK
 function extractName(text) {
-  console.log("🔍 ULTIMATE: Starting name extraction...");
+  logger.debug("🔍 ULTIMATE: Starting name extraction...");
 
   if (!text || typeof text !== "string") {
-    console.log("❌ No valid text for name extraction");
+    logger.debug("❌ No valid text for name extraction");
     return "Unknown Candidate";
   }
 
@@ -239,12 +240,12 @@ function extractName(text) {
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
-  console.log(`📝 Processing ${lines.length} lines for name extraction`);
+  logger.debug(`📝 Processing ${lines.length} lines for name extraction`);
 
   // ✅ EXPANDED DEBUG: Show lines 0-20 to find the name
-  console.log("🐛 EXPANDED DEBUG: Lines 0-20:");
+  logger.debug("🐛 EXPANDED DEBUG: Lines 0-20:");
   for (let i = 0; i < Math.min(lines.length, 21); i++) {
-    console.log(`  Line ${i}: "${lines[i]}"`);
+    logger.debug(`  Line ${i}: "${lines[i]}"`);
   }
 
   // EXPANDED skip keywords
@@ -327,33 +328,33 @@ function extractName(text) {
   ];
 
   // ========== STRATEGY 1: Check first 10 lines ==========
-  console.log("🔍 Strategy 1: Looking for name in first 10 lines...");
+  logger.debug("🔍 Strategy 1: Looking for name in first 10 lines...");
 
   for (let i = 0; i < Math.min(lines.length, 10); i++) {
     const line = lines[i].trim();
 
     // Skip if contains @ or 6+ digits
     if (line.includes("@") || /\d{6,}/.test(line)) {
-      console.log(`⏭️ Skipping line ${i}: "${line}" (email/phone)`);
+      logger.debug(`⏭️ Skipping line ${i}: "${line}" (email/phone)`);
       continue;
     }
 
     // Skip if too long or too short
     if (line.length > 50 || line.length < 2) {
-      console.log(`⏭️ Skipping line ${i}: too long/short`);
+      logger.debug(`⏭️ Skipping line ${i}: too long/short`);
       continue;
     }
 
     // Skip if contains keywords
     const lowercaseLine = line.toLowerCase();
     if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
-      console.log(`⏭️ Skipping line ${i}: "${line}" (keyword)`);
+      logger.debug(`⏭️ Skipping line ${i}: "${line}" (keyword)`);
       continue;
     }
 
     // ✅ Skip if it looks like a job title or skill
     if (looksLikeJobTitleOrSkill(line)) {
-      console.log(`⏭️ Skipping line ${i}: "${line}" (job title/skill)`);
+      logger.debug(`⏭️ Skipping line ${i}: "${line}" (job title/skill)`);
       continue;
     }
 
@@ -376,40 +377,40 @@ function extractName(text) {
       });
 
       if (allAlphabetic) {
-        console.log(`✅ FOUND NAME (First 10 lines): "${line}" at line ${i}`);
+        logger.debug(`✅ FOUND NAME (First 10 lines): "${line}" at line ${i}`);
         return line;
       }
     }
   }
 
   // ========== STRATEGY 2: Look for ALL CAPS names in lines 10-40 ==========
-  console.log("🔍 Strategy 2: Looking for ALL CAPS names...");
+  logger.debug("🔍 Strategy 2: Looking for ALL CAPS names...");
 
   for (let i = 10; i < Math.min(lines.length, 40); i++) {
     const line = lines[i].trim();
 
     // Skip if contains @ or 6+ digits
     if (line.includes("@") || /\d{6,}/.test(line)) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
       continue;
     }
 
     // Skip if too long or too short
     if (line.length > 50 || line.length < 2) {
-      console.log(`  ⏭️ Line ${i}: too long/short`);
+      logger.debug(`  ⏭️ Line ${i}: too long/short`);
       continue;
     }
 
     // Skip if contains keywords
     const lowercaseLine = line.toLowerCase();
     if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (keyword)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (keyword)`);
       continue;
     }
 
     // ✅ Skip if it looks like a job title or skill
     if (looksLikeJobTitleOrSkill(line)) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
       continue;
     }
 
@@ -425,42 +426,42 @@ function extractName(text) {
       });
 
       if (allCaps) {
-        console.log(`✅ FOUND NAME (ALL CAPS): "${line}" at line ${i}`);
+        logger.debug(`✅ FOUND NAME (ALL CAPS): "${line}" at line ${i}`);
         return line;
       } else {
-        console.log(`  ⏭️ Line ${i}: "${line}" (not all caps)`);
+        logger.debug(`  ⏭️ Line ${i}: "${line}" (not all caps)`);
       }
     }
   }
 
   // ========== STRATEGY 3: Look for Title Case names in lines 10-30 ==========
-  console.log("🔍 Strategy 3: Looking for Title Case names...");
+  logger.debug("🔍 Strategy 3: Looking for Title Case names...");
 
   for (let i = 10; i < Math.min(lines.length, 30); i++) {
     const line = lines[i].trim();
 
     // Skip if contains @ or 6+ digits
     if (line.includes("@") || /\d{6,}/.test(line)) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (email/phone)`);
       continue;
     }
 
     // Skip if too long or too short
     if (line.length > 50 || line.length < 2) {
-      console.log(`  ⏭️ Line ${i}: too long/short`);
+      logger.debug(`  ⏭️ Line ${i}: too long/short`);
       continue;
     }
 
     // Skip if contains keywords
     const lowercaseLine = line.toLowerCase();
     if (skipKeywords.some((keyword) => lowercaseLine.includes(keyword))) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (keyword)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (keyword)`);
       continue;
     }
 
     // ✅ Skip if it looks like a job title or skill
     if (looksLikeJobTitleOrSkill(line)) {
-      console.log(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (job title/skill)`);
       continue;
     }
 
@@ -483,18 +484,18 @@ function extractName(text) {
       });
 
       if (isTitleCase) {
-        console.log(`✅ FOUND NAME (Title Case): "${line}" at line ${i}`);
+        logger.debug(`✅ FOUND NAME (Title Case): "${line}" at line ${i}`);
         return line;
       } else {
-        console.log(`  ⏭️ Line ${i}: "${line}" (not title case)`);
+        logger.debug(`  ⏭️ Line ${i}: "${line}" (not title case)`);
       }
     } else {
-      console.log(`  ⏭️ Line ${i}: "${line}" (word count: ${words.length})`);
+      logger.debug(`  ⏭️ Line ${i}: "${line}" (word count: ${words.length})`);
     }
   }
 
   // ========== STRATEGY 4: FALLBACK - Search entire text for name patterns ==========
-  console.log(
+  logger.debug(
     "🔍 Strategy 4: FALLBACK - Searching entire text for name pattern..."
   );
 
@@ -536,25 +537,25 @@ function extractName(text) {
 
   if (potentialNames.length > 0) {
     // Return the first potential name found
-    console.log(`✅ FOUND NAME (Fallback): "${potentialNames[0]}"`);
+    logger.debug(`✅ FOUND NAME (Fallback): "${potentialNames[0]}"`);
     if (potentialNames.length > 1) {
-      console.log(
+      logger.debug(
         `   Other candidates: ${potentialNames.slice(1, 5).join(", ")}`
       );
     }
     return potentialNames[0];
   }
 
-  console.log("❌ No name found in any strategy, using default");
+  logger.debug("❌ No name found in any strategy, using default");
   return "Unknown Candidate";
 }
 
 // ✅ FIXED: Simplified email extraction
 function extractEmail(text) {
-  console.log("🔍 FIXED: Starting email extraction...");
+  logger.debug("🔍 FIXED: Starting email extraction...");
 
   if (!text) {
-    console.log("❌ No text provided for email extraction");
+    logger.debug("❌ No text provided for email extraction");
     return null;
   }
 
@@ -564,20 +565,20 @@ function extractEmail(text) {
 
   if (matches && matches.length > 0) {
     const email = matches[0].toLowerCase();
-    console.log(`✅ FOUND EMAIL: ${email}`);
+    logger.debug(`✅ FOUND EMAIL: ${email}`);
     return email;
   }
 
-  console.log("❌ No email found");
+  logger.debug("❌ No email found");
   return null;
 }
 
 // ✅ BULLETPROOF: Phone extraction that handles ALL formats
 function extractPhone(text) {
-  console.log("🔍 FIXED: Starting phone extraction...");
+  logger.debug("🔍 FIXED: Starting phone extraction...");
 
   if (!text) {
-    console.log("❌ No text provided for phone extraction");
+    logger.debug("❌ No text provided for phone extraction");
     return null;
   }
 
@@ -590,7 +591,7 @@ function extractPhone(text) {
   while ((match = directPattern.exec(text)) !== null) {
     const phone = match[1] + match[2] + match[3];
     if (phone.length === 10) {
-      console.log(`✅ FOUND PHONE (Method 1): ${phone}`);
+      logger.debug(`✅ FOUND PHONE (Method 1): ${phone}`);
       return phone;
     }
   }
@@ -601,12 +602,12 @@ function extractPhone(text) {
 
   while ((match = standalonePattern.exec(text)) !== null) {
     const phone = match[1];
-    console.log(`✅ FOUND PHONE (Method 2): ${phone}`);
+    logger.debug(`✅ FOUND PHONE (Method 2): ${phone}`);
     return phone;
   }
 
   // ========== METHOD 3: Normalize and search ==========
-  console.log("🔄 Method 3: Trying normalized search...");
+  logger.debug("🔄 Method 3: Trying normalized search...");
   const normalizedText = text.replace(/[\s\-()]/g, "");
 
   const normalizedPatterns = [
@@ -620,14 +621,14 @@ function extractPhone(text) {
     while ((match = pattern.exec(normalizedText)) !== null) {
       const phone = match[1];
       if (phone.length === 10 && /^[6-9]/.test(phone)) {
-        console.log(`✅ FOUND PHONE (Method 3): ${phone}`);
+        logger.debug(`✅ FOUND PHONE (Method 3): ${phone}`);
         return phone;
       }
     }
   }
 
   // ========== METHOD 4: Line-by-line search ==========
-  console.log("🔄 Method 4: Trying line-by-line search...");
+  logger.debug("🔄 Method 4: Trying line-by-line search...");
   const lines = text.split("\n");
 
   for (let i = 0; i < Math.min(lines.length, 20); i++) {
@@ -637,7 +638,7 @@ function extractPhone(text) {
     const digitsOnly = line.replace(/\D/g, "");
 
     if (digitsOnly.length === 10 && /^[6-9]/.test(digitsOnly)) {
-      console.log(
+      logger.debug(
         `✅ FOUND PHONE (Method 4): ${digitsOnly} from line ${i}: "${line}"`
       );
       return digitsOnly;
@@ -645,23 +646,23 @@ function extractPhone(text) {
 
     if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) {
       const phone = digitsOnly.substring(2);
-      console.log(
+      logger.debug(
         `✅ FOUND PHONE (Method 4): ${phone} from line ${i}: "${line}"`
       );
       return phone;
     }
   }
 
-  console.log("❌ No phone found after all methods");
+  logger.debug("❌ No phone found after all methods");
   return null;
 }
 
 // ✅ AI-ENHANCED: Skills extraction with Gemini fallback
 async function extractSkills(text) {
-  console.log("🔍 AI-ENHANCED: Starting skills extraction...");
+  logger.debug("🔍 AI-ENHANCED: Starting skills extraction...");
 
   if (!text || typeof text !== "string") {
-    console.log("❌ No valid text for skills extraction");
+    logger.debug("❌ No valid text for skills extraction");
     return [];
   }
 
@@ -669,7 +670,7 @@ async function extractSkills(text) {
   const extractedSkills = new Set();
 
   // Method 1: Direct skill matching against common skills
-  console.log("📋 Method 1: Checking common skills...");
+  logger.debug("📋 Method 1: Checking common skills...");
   for (const skill of COMMON_SKILLS) {
     const skillPattern = new RegExp(
       `\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
@@ -681,7 +682,7 @@ async function extractSkills(text) {
   }
 
   // Method 2: Look for skills in dedicated sections
-  console.log("📋 Method 2: Checking skills sections...");
+  logger.debug("📋 Method 2: Checking skills sections...");
   const skillsSectionRegex =
     /(?:skills|technologies|technical\s+skills|programming|tools)[:\-\s]+(.*?)(?:\n\s*(?:experience|education|projects|objective|summary|work|employment|career)|$)/is;
   const skillsMatch = text.match(skillsSectionRegex);
@@ -712,29 +713,29 @@ async function extractSkills(text) {
   // Method 3: AI Enhancement (if available)
   if (geminiService && extractedSkills.size < 5) {
     try {
-      console.log("🤖 Method 3: Using AI to find more skills...");
+      logger.debug("🤖 Method 3: Using AI to find more skills...");
       const aiSkills = await geminiService.extractSkills(text);
       if (aiSkills && aiSkills.length > 0) {
         aiSkills.forEach((skill) => extractedSkills.add(skill.toLowerCase()));
-        console.log(`✅ AI found ${aiSkills.length} additional skills`);
+        logger.debug(`✅ AI found ${aiSkills.length} additional skills`);
       }
     } catch (error) {
-      console.log("⚠️ AI skills extraction failed, using rule-based only");
+      logger.debug("⚠️ AI skills extraction failed, using rule-based only");
     }
   }
 
   const finalSkills = Array.from(extractedSkills).slice(0, 25);
-  console.log(`✅ FOUND ${finalSkills.length} SKILLS:`, finalSkills);
+  logger.debug(`✅ FOUND ${finalSkills.length} SKILLS:`, finalSkills);
 
   return finalSkills;
 }
 
 // ✅ FIXED: Enhanced experience extraction (better pattern matching)
 function extractExperience(text) {
-  console.log("🔍 FIXED: Starting experience extraction...");
+  logger.debug("🔍 FIXED: Starting experience extraction...");
 
   if (!text) {
-    console.log("❌ No text for experience extraction");
+    logger.debug("❌ No text for experience extraction");
     return { years: 0, positions: [], companies: [] };
   }
 
@@ -756,7 +757,7 @@ function extractExperience(text) {
       const extractedYears = parseInt(match[1]) || 0;
       if (extractedYears > years && extractedYears <= 50) {
         years = extractedYears;
-        console.log(`  📌 Found experience: ${extractedYears} years`);
+        logger.debug(`  📌 Found experience: ${extractedYears} years`);
       }
     }
   }
@@ -774,16 +775,16 @@ function extractExperience(text) {
     positions.push("Intern");
   }
 
-  console.log(`✅ FOUND EXPERIENCE: ${years} years`);
+  logger.debug(`✅ FOUND EXPERIENCE: ${years} years`);
   return { years: Math.min(years, 50), positions, companies: [] };
 }
 
 // ✅ FIXED: Simple education extraction
 function extractEducation(text) {
-  console.log("🔍 FIXED: Starting education extraction...");
+  logger.debug("🔍 FIXED: Starting education extraction...");
 
   if (!text) {
-    console.log("❌ No text for education extraction");
+    logger.debug("❌ No text for education extraction");
     return "Not Specified";
   }
 
@@ -803,12 +804,12 @@ function extractEducation(text) {
 
   for (const { pattern, level } of educationPatterns) {
     if (pattern.test(textLower)) {
-      console.log(`✅ FOUND EDUCATION: ${level}`);
+      logger.debug(`✅ FOUND EDUCATION: ${level}`);
       return level;
     }
   }
 
-  console.log("❌ No education level found");
+  logger.debug("❌ No education level found");
   return "Not Specified";
 }
 
@@ -818,9 +819,9 @@ async function processResumeText(text) {
     throw new Error("Empty or invalid text provided");
   }
 
-  console.log("🔄 AI-ENHANCED: Starting resume processing...");
-  console.log(`📊 Text length: ${text.length} characters`);
-  console.log(`🤖 AI Mode: ${geminiService ? "ENABLED" : "DISABLED"}`);
+  logger.debug("🔄 AI-ENHANCED: Starting resume processing...");
+  logger.debug(`📊 Text length: ${text.length} characters`);
+  logger.debug(`🤖 AI Mode: ${geminiService ? "ENABLED" : "DISABLED"}`);
 
   const startTime = Date.now();
 
@@ -845,7 +846,7 @@ async function processResumeText(text) {
           !parsed.email || !parsed.phone || parsed.skills.length < 3;
 
         if (needsAI) {
-          console.log("🤖 Applying AI enhancement...");
+          logger.debug("🤖 Applying AI enhancement...");
           const aiEnhancements = await geminiService.enhanceResumeParsing(
             text,
             parsed
@@ -859,11 +860,11 @@ async function processResumeText(text) {
               ...new Set([...parsed.skills, ...(aiEnhancements.skills || [])]),
             ].slice(0, 25);
             parsed.aiEnhanced = true;
-            console.log("✅ AI enhancement applied successfully");
+            logger.debug("✅ AI enhancement applied successfully");
           }
         }
       } catch (aiError) {
-        console.log("⚠️ AI enhancement failed, using rule-based results only");
+        logger.debug("⚠️ AI enhancement failed, using rule-based results only");
       }
     }
 
@@ -880,8 +881,8 @@ async function processResumeText(text) {
 
     parsed.confidence = Math.min(100, confidence);
 
-    console.log(`✅ Processing completed in ${processingTime}ms`);
-    console.log(`📊 FINAL RESULT:`, {
+    logger.debug(`✅ Processing completed in ${processingTime}ms`);
+    logger.debug(`📊 FINAL RESULT:`, {
       name: parsed.name,
       email: parsed.email,
       phone: parsed.phone,
@@ -895,7 +896,7 @@ async function processResumeText(text) {
 
     return parsed;
   } catch (error) {
-    console.error("❌ Error in resume processing:", error);
+    logger.error("❌ Error in resume processing:", error);
     throw error;
   }
 }
