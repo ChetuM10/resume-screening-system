@@ -5,11 +5,12 @@
  */
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const logger = require("../utils/logger");
 
 // Configuration
 const API_KEY = process.env.GEMINI_API_KEY;
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
-const TEMPERATURE = parseFloat(process.env.AI_TEMPERATURE) || 0.7;
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const TEMPERATURE = parseFloat(process.env.AI_TEMPERATURE) || 0.1;
 const MAX_TOKENS = parseInt(process.env.AI_MAX_TOKENS) || 2000;
 const TIMEOUT = parseInt(process.env.AI_TIMEOUT) || 30000;
 
@@ -21,12 +22,12 @@ if (API_KEY && API_KEY !== "your_gemini_api_key_here") {
   try {
     genAI = new GoogleGenerativeAI(API_KEY);
     model = genAI.getGenerativeModel({ model: MODEL_NAME });
-    console.log(`✅ Gemini AI initialized: ${MODEL_NAME}`);
+    logger.debug(`✅ Gemini AI initialized: ${MODEL_NAME}`);
   } catch (error) {
-    console.error("❌ Failed to initialize Gemini AI:", error.message);
+    logger.error("❌ Failed to initialize Gemini AI:", error.message);
   }
 } else {
-  console.log("⚠️ Gemini API key not configured");
+  logger.debug("⚠️ Gemini API key not configured");
 }
 
 // ==================== EXISTING FUNCTIONS ====================
@@ -36,7 +37,7 @@ if (API_KEY && API_KEY !== "your_gemini_api_key_here") {
  */
 async function extractSkills(resumeText) {
   if (!model) {
-    console.log("⚠️ Gemini not available for skill extraction");
+    logger.debug("⚠️ Gemini not available for skill extraction");
     return [];
   }
 
@@ -67,7 +68,7 @@ Example output: ["javascript", "react", "node.js", "mongodb"]`;
 
     return [];
   } catch (error) {
-    console.log("⚠️ AI skill extraction failed:", error.message);
+    logger.debug("⚠️ AI skill extraction failed:", error.message);
     return [];
   }
 }
@@ -77,7 +78,7 @@ Example output: ["javascript", "react", "node.js", "mongodb"]`;
  */
 async function enhanceResumeParsing(resumeText, existingData) {
   if (!model) {
-    console.log("⚠️ Gemini not available for resume enhancement");
+    logger.debug("⚠️ Gemini not available for resume enhancement");
     return null;
   }
 
@@ -112,7 +113,7 @@ Example output: {"email": "john@example.com", "phone": "9876543210", "skills": [
 
     return null;
   } catch (error) {
-    console.log("⚠️ AI resume enhancement failed:", error.message);
+    logger.debug("⚠️ AI resume enhancement failed:", error.message);
     return null;
   }
 }
@@ -161,7 +162,7 @@ Provide ONLY the reasons as a JSON array of strings. Example: ["Strong React exp
 
     return [`Score: ${ruleBasedScore}%`];
   } catch (error) {
-    console.log("⚠️ AI reasoning generation failed:", error.message);
+    logger.debug("⚠️ AI reasoning generation failed:", error.message);
     return [`Rule-based score: ${ruleBasedScore}%`];
   }
 }
@@ -199,7 +200,7 @@ Output ONLY a number between 0-100:`;
     const score = parseInt(text.match(/\d+/)?.[0]);
     return score >= 0 && score <= 100 ? score : null;
   } catch (error) {
-    console.log("⚠️ AI semantic matching failed:", error.message);
+    logger.debug("⚠️ AI semantic matching failed:", error.message);
     return null;
   }
 }
@@ -215,7 +216,7 @@ Output ONLY a number between 0-100:`;
  */
 async function detectJobDomain(jobTitle, jobDescription, requiredSkills = []) {
   if (!model) {
-    console.log("⚠️ Gemini not available, using fallback detection");
+    logger.debug("⚠️ Gemini not available, using fallback detection");
     return { domain: "general", confidence: 0, method: "fallback" };
   }
 
@@ -271,12 +272,12 @@ Return ONLY a JSON object in this exact format:
     const jsonMatch = text.match(/\{[\s\S]*?\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      console.log(
+      logger.debug(
         `🤖 AI detected domain: ${parsed.domain} (${Math.round(
           parsed.confidence * 100
         )}% confident)`
       );
-      console.log(`   Reasoning: ${parsed.reasoning}`);
+      logger.debug(`   Reasoning: ${parsed.reasoning}`);
 
       return {
         domain: parsed.domain,
@@ -288,7 +289,7 @@ Return ONLY a JSON object in this exact format:
 
     throw new Error("Invalid AI response format");
   } catch (error) {
-    console.error("❌ AI job detection failed:", error.message);
+    logger.error("❌ AI job detection failed:", error.message);
     return {
       domain: "general",
       confidence: 0,
@@ -311,7 +312,7 @@ async function calculateSemanticMatchDetailed(
   jobDomain = "general"
 ) {
   if (!model) {
-    console.log("⚠️ Gemini not available for semantic matching");
+    logger.debug("⚠️ Gemini not available for semantic matching");
     return {
       score: 50,
       confidence: 0,
@@ -370,10 +371,10 @@ Return ONLY a JSON object in this exact format:
     const jsonMatch = text.match(/\{[\s\S]*?\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      console.log(
+      logger.debug(
         `🎯 AI match score: ${parsed.matchScore}% - ${parsed.recommendation}`
       );
-      console.log(`   Reasoning: ${parsed.reasoning}`);
+      logger.debug(`   Reasoning: ${parsed.reasoning}`);
 
       return {
         score: parsed.matchScore,
@@ -388,7 +389,7 @@ Return ONLY a JSON object in this exact format:
 
     throw new Error("Invalid AI response format");
   } catch (error) {
-    console.error("❌ AI semantic matching failed:", error.message);
+    logger.error("❌ AI semantic matching failed:", error.message);
     return {
       score: 50,
       confidence: 0,
