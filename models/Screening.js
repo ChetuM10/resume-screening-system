@@ -254,14 +254,6 @@ const ScreeningSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    // ✅ FIXED: Made optional with default
-    totalCandidates: {
-      type: Number,
-      required: false, // ✅ CHANGED: Made optional
-      default: 0, // ✅ ADDED: Default value
-      min: 0,
-    },
-
     // Metadata
     createdBy: {
       type: String,
