@@ -8,6 +8,9 @@
 const Resume = require("../models/Resume");
 const Screening = require("../models/Screening");
 const matching = require("../services/matchingEngine");
+const CONSTANTS = require("../config/constants");
+const Joi = require("joi");
+const logger = require("../utils/logger");
 
 // ==================== UTILITY IMPORTS ====================
 let pick;
@@ -29,7 +32,7 @@ const DEFAULT_SCREENING_CONFIG = {
   REQUIRED_SKILLS: ["JavaScript", "HTML"],
   EXPERIENCE_MIN: 0,
   EXPERIENCE_MAX: 5,
-  QUALIFYING_SCORE: 50,
+  QUALIFYING_SCORE: CONSTANTS.QUALIFYING_SCORE,
   MAX_RESULTS: 100,
 };
 
@@ -120,43 +123,51 @@ const PREDEFINED_JOBS = {
 
 // ==================== HELPER FUNCTIONS ====================
 
+// ==================== JOI VALIDATION SCHEMA ====================
+
 /**
- * Validate job requirements data
+ * Joi schema for incoming job requirement payloads.
+ * Single source of truth — replaces the hand-rolled validateJobRequirementsData.
  */
-function validateJobRequirementsData(requirements) {
-  const errors = [];
+const jobRequirementsSchema = Joi.object({
+  jobTitle: Joi.string().min(2).max(100).required(),
+  jobDescription: Joi.string().allow('').default(''),
+  requiredSkills: Joi.alternatives()
+    .try(Joi.array().items(Joi.string()), Joi.string())
+    .default([]),
+  minExp: Joi.number().min(0).max(50).default(0),
+  maxExp: Joi.number().min(0).max(50).default(50),
+  educationLevel: Joi.string().allow('').default(''),
+  location: Joi.string().allow('').default(''),
+}).options({ allowUnknown: true }); // tolerate extra fields from form submissions
 
-  if (!requirements.jobTitle || requirements.jobTitle.trim().length < 2) {
-    errors.push("Job title must be at least 2 characters long");
+/**
+ * Validate and normalise job requirements using Joi.
+ * Replaces validateJobRequirementsData + normalizeJobRequirementsData.
+ * @param {Object} raw - Raw request body
+ * @returns {{ value: Object, error: string|null }}
+ */
+function validateJobRequirementsData(raw) {
+  const { error, value } = jobRequirementsSchema.validate(raw, { abortEarly: false });
+
+  if (error) {
+    return {
+      isValid: false,
+      errors: error.details.map(d => d.message),
+      value: null,
+    };
   }
 
-  if (
-    requirements.requiredSkills &&
-    !Array.isArray(requirements.requiredSkills)
-  ) {
-    if (typeof requirements.requiredSkills !== "string") {
-      errors.push("Required skills must be an array or comma-separated string");
-    }
+  // Normalise skills — Joi already coerces but we still need to handle
+  // the comma-separated string case that forms sometimes send
+  if (typeof value.requiredSkills === 'string') {
+    value.requiredSkills = value.requiredSkills
+      .split(/[,;|\n]/)
+      .map(s => s.trim())
+      .filter(Boolean);
   }
 
-  if (
-    requirements.minExp !== undefined &&
-    (isNaN(requirements.minExp) || requirements.minExp < 0)
-  ) {
-    errors.push("Minimum experience must be a valid non-negative number");
-  }
-
-  if (
-    requirements.maxExp !== undefined &&
-    (isNaN(requirements.maxExp) || requirements.maxExp < 0)
-  ) {
-    errors.push("Maximum experience must be a valid non-negative number");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return { isValid: true, errors: [], value };
 }
 
 /**
@@ -201,7 +212,7 @@ function normalizeJobRequirementsData(rawRequirements) {
  */
 async function scoreSingleCandidateData(resume, jobRequirements) {
   try {
-    console.log(
+    logger.debug(
       `🎯 Scoring: ${resume.candidateName} for ${jobRequirements.jobTitle}`
     );
 
@@ -214,7 +225,7 @@ async function scoreSingleCandidateData(resume, jobRequirements) {
       jobDescription: jobRequirements.jobDescription,
     });
 
-    console.log(
+    logger.debug(
       `✅ Score: ${resume.candidateName} - ${score.matchScore || 0}%`
     );
 
@@ -439,9 +450,9 @@ function calculateScreeningStatisticsData(screeningResults, isMultiJD = false) {
     const averageScore =
       validScores.length > 0
         ? Math.round(
-            validScores.reduce((sum, score) => sum + score, 0) /
-              validScores.length
-          )
+          validScores.reduce((sum, score) => sum + score, 0) /
+          validScores.length
+        )
         : 0;
     const qualifiedCandidates = validScores.filter(
       (score) => score >= DEFAULT_SCREENING_CONFIG.QUALIFYING_SCORE
@@ -660,8 +671,7 @@ exports.submitMultipleJobRequirements = async (req, res) => {
     for (let i = 0; i < resumes.length; i++) {
       const resume = resumes[i];
       console.log(
-        `Processing candidate ${i + 1}/${resumes.length}: ${
-          resume.candidateName
+        `Processing candidate ${i + 1}/${resumes.length}: ${resume.candidateName
         }`
       );
 
@@ -741,9 +751,8 @@ exports.submitMultipleJobRequirements = async (req, res) => {
 
     const screening = new Screening({
       jobTitle: "Multi-JD Screening",
-      jobDescription: `Screening across ${
-        jobDescriptions.length
-      } job types: ${jobDescriptions.map((j) => j.jobTitle).join(", ")}`,
+      jobDescription: `Screening across ${jobDescriptions.length
+        } job types: ${jobDescriptions.map((j) => j.jobTitle).join(", ")}`,
       requiredSkills: [
         ...new Set(jobDescriptions.flatMap((j) => j.requiredSkills)),
       ],
@@ -763,8 +772,7 @@ exports.submitMultipleJobRequirements = async (req, res) => {
 
     console.log(`✅ Multi-JD screening completed in ${processingTime}ms`);
     console.log(
-      `📊 Results: ${
-        rankedResults.length - errorCount
+      `📊 Results: ${rankedResults.length - errorCount
       } successful, ${errorCount} errors`
     );
 
@@ -804,10 +812,10 @@ exports.submitMultipleJobRequirements = async (req, res) => {
       details:
         process.env.NODE_ENV === "development"
           ? {
-              stack: error.stack,
-              message: error.message,
-              code: error.code,
-            }
+            stack: error.stack,
+            message: error.message,
+            code: error.code,
+          }
           : undefined,
       processingTimeMs: processingTime,
       timestamp: new Date().toISOString(),
@@ -863,9 +871,8 @@ exports.exportMultiJDToExcel = async (req, res) => {
     worksheet.mergeCells("A2:K2");
     worksheet.getCell("A2").value = `Date: ${new Date(
       screening.createdAt
-    ).toLocaleDateString()} | Total Candidates: ${
-      screening.results?.length || 0
-    } | Job Categories: ${screening.jobCategories?.length || 4}`;
+    ).toLocaleDateString()} | Total Candidates: ${screening.results?.length || 0
+      } | Job Categories: ${screening.jobCategories?.length || 4}`;
     worksheet.getCell("A2").font = { italic: true, size: 11 };
     worksheet.getCell("A2").alignment = { horizontal: "center" };
 
@@ -950,7 +957,7 @@ exports.exportMultiJDToExcel = async (req, res) => {
         bestJob.jobTitle || bestJob.category || "General",
         resume?.experience?.years ? `${resume.experience.years} yrs` : "N/A",
         (resume?.skills || candidate.skills || []).slice(0, 5).join(", ") ||
-          "N/A",
+        "N/A",
       ];
 
       // Add job scores for each category
@@ -1124,10 +1131,10 @@ exports.validateJobRequirements = async (req, res) => {
       suggestions: validation.isValid
         ? []
         : [
-            "Ensure job title is descriptive and at least 2 characters",
-            "Provide required skills as an array or comma-separated string",
-            "Set realistic experience ranges (0-50 years)",
-          ],
+          "Ensure job title is descriptive and at least 2 characters",
+          "Provide required skills as an array or comma-separated string",
+          "Set realistic experience ranges (0-50 years)",
+        ],
     });
   } catch (error) {
     res.status(500).json({
