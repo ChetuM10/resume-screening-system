@@ -105,23 +105,10 @@ const jobRequirementSchema = new mongoose.Schema({
     default: 'System'
   },
   
-  // Timestamps
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  },
-  
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+}, { timestamps: true });
 
 // ✅ ENHANCED: Pre-save middleware for validation
 jobRequirementSchema.pre('save', function(next) {
-  // Update timestamp
-  this.updatedAt = new Date();
-  
   // Validate experience range
   if (this.experienceLevel.min > this.experienceLevel.max) {
     return next(new Error('Minimum experience cannot be greater than maximum experience'));
