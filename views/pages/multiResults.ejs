@@ -145,7 +145,7 @@ jobCategories = jobCategories || [];
                 <option value="100" <%= (pagination && pagination.limit === 100) ? 'selected' : '' %>>100 per page</option>
               </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-2" style="padding-top: 2rem;">
               <button type="submit" class="btn btn-primary btn-lg w-100 btn-modern">
                 <i class="fas fa-search me-1"></i> Search
               </button>
@@ -259,203 +259,207 @@ jobCategories = jobCategories || [];
         </div>
       </div>
 
-      <!-- Candidates Grid -->
-      <div class="row" id="candidatesContainer">
-        <% results.forEach(function(candidate, index) { %> <% var candidateName
-        = candidate.candidateName || 'Unknown Candidate'; if (candidate.resumeId
-        && candidate.resumeId.candidateName) { candidateName =
-        candidate.resumeId.candidateName; } var email = candidate.email || '';
-        if (candidate.resumeId && candidate.resumeId.email) { email =
-        candidate.resumeId.email; } var phone = candidate.phone || ''; if
-        (candidate.resumeId && candidate.resumeId.phone) { phone =
-        candidate.resumeId.phone; } var bestJob = candidate.bestJobMatch ||
-        candidate.bestJob || {}; var matchScore = bestJob.score ||
-        candidate.matchScore || 0; var jobCategory = bestJob.category ||
-        bestJob.jobTitle || 'general'; var skills = candidate.skills || []; if
-        (candidate.resumeId && candidate.resumeId.skills) { skills =
-        candidate.resumeId.skills; } var experience = candidate.experienceYears
-        || 0; if (candidate.resumeId && candidate.resumeId.experience &&
-        candidate.resumeId.experience.years) { experience =
-        candidate.resumeId.experience.years; } var resumeId = candidate._id; if
-        (candidate.resumeId && candidate.resumeId._id) { resumeId =
-        candidate.resumeId._id; } else if (candidate.resumeId) { resumeId =
-        candidate.resumeId; } %>
+      <!-- Accordion Table Header (outside sortable container so sort doesn't move it) -->
+      <div class="acc-thead">
+        <div class="acc-th" style="width:55px;flex:none">Rank</div>
+        <div class="acc-th acc-th-grow">Candidate</div>
+        <div class="acc-th" style="width:90px;flex:none">Score</div>
+        <div class="acc-th" style="width:180px;flex:none">Best Job</div>
+        <div class="acc-th acc-th-exp" style="width:72px;flex:none">Exp</div>
+        <div class="acc-th acc-th-skills">Top Skills</div>
+        <div class="acc-th" style="width:122px;flex:none;text-align:right">Actions</div>
+      </div>
 
-        <div
-          class="col-lg-4 col-md-6 mb-4 candidate-result-card"
-          data-score="<%= matchScore %>"
-          data-category="<%= jobCategory.toLowerCase().replace(/\s+/g, '_') %>"
-          data-name="<%= candidateName.toLowerCase() %>"
-        >
-          <div class="card border-0 shadow-lg h-100 multi-candidate-card">
-            <!-- Card Header -->
-            <div
-              class="card-header multi-card-header text-white d-flex justify-content-between align-items-center"
-            >
-              <h5 class="mb-0 fw-bold">
-                <i class="fas fa-user-circle"></i>
-                <%= candidateName %>
-              </h5>
-              <span class="badge bg-light text-primary fs-6 fw-bold">
-                #<%= index + 1 %>
-              </span>
+      <!-- Sortable rows (direct children = acc-rows only) -->
+      <div id="candidatesContainer">
+        <% results.forEach(function(candidate, index) { %>
+        <%
+          var candidateName = candidate.candidateName || 'Unknown Candidate';
+          if (candidate.resumeId && candidate.resumeId.candidateName) { candidateName = candidate.resumeId.candidateName; }
+          var email = candidate.email || '';
+          if (candidate.resumeId && candidate.resumeId.email) { email = candidate.resumeId.email; }
+          var phone = candidate.phone || '';
+          if (candidate.resumeId && candidate.resumeId.phone) { phone = candidate.resumeId.phone; }
+          var bestJob = candidate.bestJobMatch || candidate.bestJob || {};
+          var matchScore = bestJob.score || candidate.matchScore || 0;
+          var jobCategory = bestJob.category || bestJob.jobTitle || 'general';
+          var skills = candidate.skills || [];
+          if (candidate.resumeId && candidate.resumeId.skills) { skills = candidate.resumeId.skills; }
+          var experience = candidate.experienceYears || 0;
+          if (candidate.resumeId && candidate.resumeId.experience && candidate.resumeId.experience.years) { experience = candidate.resumeId.experience.years; }
+          var resumeId = candidate._id;
+          if (candidate.resumeId && candidate.resumeId._id) { resumeId = candidate.resumeId._id; }
+          else if (candidate.resumeId) { resumeId = candidate.resumeId; }
+          var initials = candidateName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2) || '?';
+          var scoreClass = matchScore >= 75 ? 'score-high' : matchScore >= 50 ? 'score-mid' : 'score-low';
+
+          // Use global rank (works correctly across pagination pages)
+          var globalRank = (pagination && pagination.startIndex) ? (pagination.startIndex + index) : (index + 1);
+          var rankClass  = globalRank === 1 ? 'rank-gold' : globalRank === 2 ? 'rank-silver' : globalRank === 3 ? 'rank-bronze' : 'rank-normal';
+          var avatarGrad = globalRank === 1 ? 'linear-gradient(135deg,#ffd700,#e67e00)' :
+                           globalRank === 2 ? 'linear-gradient(135deg,#b0bec5,#78909c)' :
+                           globalRank === 3 ? 'linear-gradient(135deg,#cd7f32,#8d5524)' :
+                                              'linear-gradient(135deg,#6366f1,#8b5cf6)';
+
+          var catKey = jobCategory.toLowerCase().replace(/[\s_]+/g,'');
+          var jobDisplayTitle = (bestJob.jobTitle || jobCategory).replace(/_/g,' ').replace(/\b\w/g, function(l){return l.toUpperCase();});
+          // Shorten long job titles so they fit in the pill without truncating
+          var JOB_SHORT = {
+            'Software Development Intern': 'Software Dev Intern',
+            'Software Development': 'Software Dev',
+            'Full Stack Developer': 'Full Stack Dev',
+            'Network Engineer': 'Network Eng',
+          };
+          var jobDisplayShort = JOB_SHORT[jobDisplayTitle] || jobDisplayTitle;
+          // Tooltip listing skills beyond the first 3
+          var extraSkillsTitle = skills.length > 3 ? skills.slice(3).join(', ') : '';
+        %>
+
+        <div class="acc-row candidate-result-card"
+             data-score="<%= matchScore %>"
+             data-category="<%= jobCategory.toLowerCase().replace(/\s+/g,'_') %>"
+             data-name="<%= candidateName.toLowerCase() %>"
+             id="row-<%= index %>">
+
+          <!-- Main row (always visible) -->
+          <div class="acc-row-main" data-row-idx="<%= index %>" onclick="toggleAccRow(+this.dataset.rowIdx)">
+
+            <div class="acc-cell" style="width:58px;flex:none">
+              <div class="rank-badge <%= rankClass %>">#<%= globalRank %></div>
             </div>
 
-            <div class="card-body multi-card-body">
-              <!-- Match Score -->
-              <div
-                class="d-flex justify-content-between align-items-center mb-3 p-2 rounded multi-score-section"
-              >
-                <span class="text-white fw-bold">
-                  <i class="fas fa-chart-bar me-2"></i>Best Match Score:
-                </span>
-                <span
-                  class="badge bg-<%= matchScore >= 75 ? 'success' : matchScore >= 50 ? 'warning' : 'danger' %> fs-5 match-score-display"
-                >
-                  <%= Math.round(matchScore) %>%
-                </span>
+            <!-- Candidate name + email preview -->
+            <div class="acc-cell acc-cell-candidate">
+              <div class="cand-avatar" data-grad="<%= avatarGrad %>"><%= initials %></div>
+              <div class="cand-info">
+                <div class="cand-name"><%= candidateName %></div>
+                <% if (email) { %><div class="cand-email-preview"><%= email %></div><% } %>
               </div>
+            </div>
 
-              <!-- Best Job Category -->
-              <div class="mb-3 p-2 rounded multi-job-section">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-white fw-bold">
-                    <i class="fas fa-star me-2"></i>Best Job Match:
-                  </span>
-                  <span class="badge bg-info fs-6">
-                    <%= bestJob.jobTitle || jobCategory %>
-                  </span>
-                </div>
-              </div>
+            <!-- Match score -->
+            <div class="acc-cell" style="width:90px;flex:none">
+              <span class="score-pill <%= scoreClass %>"><%= Math.round(matchScore) %>%</span>
+            </div>
 
-              <!-- Contact Info -->
-              <div class="mb-3 multi-contact-section">
-                <% if (email) { %>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="fas fa-envelope text-info me-2"></i>
-                  <small class="text-light text-truncate"><%= email %></small>
-                </div>
-                <% } %> <% if (phone) { %>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="fas fa-phone text-success me-2"></i>
-                  <small class="text-light"><%= phone %></small>
-                </div>
-                <% } %>
-              </div>
+            <div class="acc-cell" style="width:185px;flex:none">
+              <span class="job-pill job-pill-<%= catKey %>" title="<%= jobDisplayTitle %>"><%= jobDisplayShort %></span>
+            </div>
 
-              <!-- Experience -->
+            <!-- Experience -->
+            <div class="acc-cell acc-cell-exp" style="width:72px;flex:none">
               <% if (experience > 0) { %>
-              <div class="mb-3">
-                <div
-                  class="d-flex justify-content-between align-items-center p-2 rounded multi-exp-section"
-                >
-                  <span class="text-white fw-bold">
-                    <i class="fas fa-briefcase me-2"></i>Experience:
-                  </span>
-                  <span class="badge bg-secondary fs-6">
-                    <%= experience %> years
-                  </span>
-                </div>
-              </div>
-              <% } %>
-
-              <!-- Skills Preview -->
-              <% if (skills && skills.length > 0) { %>
-              <div class="mb-3 multi-skills-section">
-                <h6 class="text-secondary fw-bold mb-2">
-                  <i class="fas fa-code me-2"></i>Top Skills:
-                </h6>
-                <div class="d-flex flex-wrap gap-2">
-                  <% skills.slice(0, 3).forEach(function(skill) { %>
-                  <span class="badge bg-gradient-skill fs-6"><%= skill %></span>
-                  <% }); %> <% if (skills.length > 3) { %>
-                  <span class="badge bg-dark text-warning fs-6">
-                    +<%= skills.length - 3 %> more
-                  </span>
-                  <% } %>
-                </div>
-              </div>
-              <% } %>
-
-              <!-- All Job Scores Preview -->
-              <% if (candidate.allJobScores &&
-              Object.keys(candidate.allJobScores).length > 0) { %>
-              <div class="mb-3 multi-scores-preview">
-                <h6 class="text-info fw-bold mb-3">
-                  <i class="fas fa-chart-bar"></i> All Job Matches:
-                </h6>
-                <div class="progress-container">
-                  <% var jobScoresArray = []; for (var jobKey in
-                  candidate.allJobScores) { if
-                  (candidate.allJobScores.hasOwnProperty(jobKey)) { var jobData
-                  = candidate.allJobScores[jobKey]; var jobScore =
-                  jobData.matchScore || jobData.score || 0; var jobTitle =
-                  jobData.jobTitle || jobKey; jobScoresArray.push({ title:
-                  jobTitle, score: jobScore, key: jobKey }); } }
-                  jobScoresArray.sort(function(a, b) { return b.score - a.score;
-                  }); %> <% jobScoresArray.forEach(function(job, idx) { %>
-                  <div class="job-score-item mb-3">
-                    <div
-                      class="d-flex justify-content-between align-items-center mb-2"
-                    >
-                      <div class="d-flex align-items-center">
-                        <span class="badge bg-secondary me-2"
-                          ><%= idx + 1 %></span
-                        >
-                        <small
-                          class="text-white fw-bold text-truncate"
-                          style="max-width: 200px"
-                        >
-                          <%= job.title.replace(/[_]/g, ' ').replace(/\b\w/g,
-                          function(l) { return l.toUpperCase(); }) %>
-                        </small>
-                      </div>
-                      <span
-                        class="badge bg-<%= job.score >= 75 ? 'success' : job.score >= 50 ? 'warning' : 'danger' %> fs-6"
-                      >
-                        <%= Math.round(job.score) %>%
-                      </span>
-                    </div>
-                    <!-- ✅ CLEANEST: Calculate width separately -->
-                    <% var progressWidth = (job.score || 0); %> <% var
-                    progressColor = progressWidth >= 75 ? 'success' :
-                    progressWidth >= 50 ? 'warning' : 'danger'; %>
-                    <div class="progress" style="height: 8px">
-                      <div
-                        class="progress-bar bg-<%= progressColor %>"
-                        style="width: <%= progressWidth %>%"
-                        title="Score: <%= Math.round(progressWidth) %>%"
-                      ></div>
-                    </div>
-                  </div>
-                  <% }); %>
-                </div>
-              </div>
+              <span class="exp-badge"><%= experience %>yr<%= experience !== 1 ? 's' : '' %></span>
+              <% } else { %>
+              <span class="exp-badge exp-fresher">Fresher</span>
               <% } %>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="card-footer bg-transparent border-0 pt-0">
-              <div class="d-flex gap-2">
-                <a
-                  href="/candidate/<%= resumeId %>"
-                  class="btn btn-primary flex-fill btn-modern"
-                >
-                  <i class="fas fa-eye"></i> VIEW DETAILS
+            <!-- Top skills preview -->
+            <div class="acc-cell acc-cell-skills">
+              <div class="skills-preview">
+                <% skills.slice(0,3).forEach(function(sk){ %><span class="skill-chip"><%= sk %></span><% }); %>
+                <% if (skills.length > 3) { %><span class="skill-more" title="<%= extraSkillsTitle %>">+<%= skills.length - 3 %> more</span><% } %>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="acc-cell" style="width:122px;flex:none">
+              <div class="acc-actions">
+                <a href="/candidate/<%= resumeId %>" class="btn-acc-icon btn-acc-view"
+                   title="View Details" onclick="event.stopPropagation()">
+                  <i class="fas fa-eye"></i>
                 </a>
-                <a
-                  href="/candidate/<%= resumeId %>/download"
-                  class="btn btn-outline-light btn-modern"
-                  target="_blank"
-                >
+                <a href="/candidate/<%= resumeId %>/download" class="btn-acc-icon btn-acc-dl"
+                   title="Download Resume" target="_blank" onclick="event.stopPropagation()">
                   <i class="fas fa-download"></i>
                 </a>
+                <button class="btn-acc-toggle" id="toggle-btn-<%= index %>" aria-label="Toggle details">
+                  <i class="fas fa-chevron-down"></i>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
+
+          </div><!-- /.acc-row-main -->
+
+          <!-- Expandable panel -->
+          <div class="acc-panel" id="panel-<%= index %>">
+            <div class="acc-panel-inner">
+
+              <!-- Left: contact + all skills -->
+              <div class="panel-left">
+                <div class="panel-label"><i class="fas fa-id-card me-2"></i>Contact &amp; Profile</div>
+                <% if (email) { %>
+                <div class="panel-info-row">
+                  <i class="fas fa-envelope"></i>
+                  <span class="panel-info-val"><%= email %></span>
+                </div>
+                <% } %>
+                <% if (phone) { %>
+                <div class="panel-info-row">
+                  <i class="fas fa-phone"></i>
+                  <span class="panel-info-val"><%= phone %></span>
+                </div>
+                <% } %>
+                <div class="panel-info-row">
+                  <i class="fas fa-briefcase"></i>
+                  <span class="panel-info-val">
+                    <% if (experience > 0) { %><%= experience %> year<%= experience !== 1 ? 's' : '' %> experience
+                    <% } else { %>Fresher / No experience listed<% } %>
+                  </span>
+                </div>
+
+                <% if (skills && skills.length > 0) { %>
+                <div class="panel-label mt-3"><i class="fas fa-code me-2"></i>All Skills (<%= skills.length %>)</div>
+                <div class="panel-skills-all">
+                  <% skills.forEach(function(sk){ %><span class="skill-chip"><%= sk %></span><% }); %>
+                </div>
+                <% } %>
+              </div><!-- /.panel-left -->
+
+              <!-- Right: job score bars -->
+              <div class="panel-right">
+                <div class="panel-label"><i class="fas fa-chart-bar me-2"></i>All Job Match Scores</div>
+                <% if (candidate.allJobScores && Object.keys(candidate.allJobScores).length > 0) {
+                  var jsa = [];
+                  for (var jk in candidate.allJobScores) {
+                    if (candidate.allJobScores.hasOwnProperty(jk)) {
+                      var jd = candidate.allJobScores[jk];
+                      jsa.push({ title: jd.jobTitle || jk, score: jd.matchScore || jd.score || 0 });
+                    }
+                  }
+                  jsa.sort(function(a,b){ return b.score - a.score; });
+                %>
+                <% jsa.forEach(function(jb, ji){ %>
+                <%
+                  var barClr = jb.score >= 75 ? '#10b981' : jb.score >= 50 ? '#f59e0b' : '#ef4444';
+                  var pbCls  = jb.score >= 75 ? 'score-high' : jb.score >= 50 ? 'score-mid' : 'score-low';
+                %>
+                <div class="panel-job-bar">
+                  <div class="panel-bar-header">
+                    <div class="panel-bar-title">
+                      <span class="panel-bar-idx"><%= ji + 1 %></span>
+                      <%= jb.title.replace(/[_]/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();}) %>
+                      <% if (ji === 0) { %><span class="tag-best-match">Best</span><% } %>
+                    </div>
+                    <span class="score-pill score-pill-sm <%= pbCls %>"><%= Math.round(jb.score) %>%</span>
+                  </div>
+                  <div class="panel-track">
+                    <div class="panel-fill" data-width="<%= jb.score %>" data-color="<%= barClr %>"></div>
+                  </div>
+                </div>
+                <% }); %>
+                <% } else { %>
+                <p class="text-muted small">No detailed scores stored for this candidate.</p>
+                <% } %>
+              </div><!-- /.panel-right -->
+
+            </div><!-- /.acc-panel-inner -->
+          </div><!-- /.acc-panel -->
+
+        </div><!-- /.acc-row -->
         <% }); %>
-      </div>
+      </div><!-- /#candidatesContainer -->
 
       <!-- Pagination Controls -->
       <% if (pagination && pagination.totalPages > 1) { %>
@@ -579,114 +583,103 @@ jobCategories = jobCategories || [];
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    var scoreSlider = document.getElementById("minMatchScore");
-    var scoreDisplay = document.getElementById("scoreDisplay");
-    var sortSelect = document.getElementById("sortResults");
-    var categoryFilter = document.getElementById("categoryFilter");
-    var candidateCards = document.querySelectorAll(".candidate-result-card");
-    var visibleCountSpan = document.getElementById("visibleCount");
+  // ── Accordion row toggle ──────────────────────────────────────────────────
+  function toggleAccRow(idx) {
+    var panel = document.getElementById('panel-' + idx);
+    var btn   = document.getElementById('toggle-btn-' + idx);
+    var row   = document.getElementById('row-' + idx);
+    if (!panel) return;
+    var isOpen = panel.classList.contains('open');
 
+    // Close any currently open panel
+    document.querySelectorAll('.acc-panel.open').forEach(function (p) { p.classList.remove('open'); });
+    document.querySelectorAll('.btn-acc-toggle.open').forEach(function (b) { b.classList.remove('open'); });
+    document.querySelectorAll('.acc-row.row-open').forEach(function (r) { r.classList.remove('row-open'); });
+
+    if (!isOpen) {
+      panel.classList.add('open');
+      btn.classList.add('open');
+      row.classList.add('row-open');
+
+      // Animate fills after panel is visible
+      setTimeout(function () {
+        panel.querySelectorAll('.panel-fill').forEach(function (f) {
+          var target = f.getAttribute('data-width') || '0';
+          var color  = f.getAttribute('data-color') || '#6b7280';
+          f.style.width = target + '%';
+          f.style.background = color;
+        });
+      }, 60);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Apply avatar gradients from data-grad attributes
+    document.querySelectorAll('.cand-avatar[data-grad]').forEach(function (el) {
+      el.style.background = el.getAttribute('data-grad');
+    });
+    var scoreSlider    = document.getElementById('minMatchScore');
+    var scoreDisplay   = document.getElementById('scoreDisplay');
+    var sortSelect     = document.getElementById('sortResults');
+    var categoryFilter = document.getElementById('categoryFilter');
+    var visibleCountSpan = document.getElementById('visibleCount');
+
+    // Score slider
     if (scoreSlider) {
-      scoreSlider.addEventListener("input", function () {
-        var minScore = parseInt(this.value);
-        scoreDisplay.textContent = minScore;
+      scoreSlider.addEventListener('input', function () {
+        if (scoreDisplay) scoreDisplay.textContent = this.value;
         filterCandidates();
       });
     }
+    // Category filter
+    if (categoryFilter) { categoryFilter.addEventListener('change', filterCandidates); }
+    // Sort
+    if (sortSelect) { sortSelect.addEventListener('change', function () { sortCandidates(this.value); }); }
 
-    if (categoryFilter) {
-      categoryFilter.addEventListener("change", filterCandidates);
-    }
-
-    if (sortSelect) {
-      sortSelect.addEventListener("change", function () {
-        sortCandidates(this.value);
-      });
-    }
+    function getRows() { return document.querySelectorAll('.candidate-result-card'); }
 
     function filterCandidates() {
       var minScore = scoreSlider ? parseInt(scoreSlider.value) : 0;
-      var selectedCategory = categoryFilter ? categoryFilter.value : "";
-
-      var visibleCount = 0;
-
-      candidateCards.forEach(function (card) {
-        var cardScore = parseInt(card.dataset.score || 0);
-        var cardCategory = card.dataset.category || "";
-
-        var scoreMatch = cardScore >= minScore;
-        var categoryMatch =
-          !selectedCategory ||
-          cardCategory.indexOf(selectedCategory.toLowerCase()) !== -1;
-
-        if (scoreMatch && categoryMatch) {
-          card.style.display = "";
-          card.classList.add("fade-in");
-          visibleCount++;
-        } else {
-          card.style.display = "none";
-          card.classList.remove("fade-in");
-        }
+      var selCat   = categoryFilter ? categoryFilter.value : '';
+      var visible  = 0;
+      getRows().forEach(function (row) {
+        var sc  = parseInt(row.dataset.score || 0);
+        var cat = row.dataset.category || '';
+        var show = sc >= minScore && (!selCat || cat.indexOf(selCat.toLowerCase()) !== -1);
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
       });
-
-      if (visibleCountSpan) {
-        visibleCountSpan.textContent = visibleCount;
-      }
+      if (visibleCountSpan) visibleCountSpan.textContent = visible;
     }
 
-    function sortCandidates(sortType) {
-      var container = document.getElementById("candidatesContainer");
-      var cards = Array.from(container.children);
-
-      cards.sort(function (a, b) {
-        switch (sortType) {
-          case "score-desc":
-            return (
-              parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0)
-            );
-          case "score-asc":
-            return (
-              parseInt(a.dataset.score || 0) - parseInt(b.dataset.score || 0)
-            );
-          case "name-asc":
-            return a.dataset.name.localeCompare(b.dataset.name);
-          case "name-desc":
-            return b.dataset.name.localeCompare(a.dataset.name);
-          case "category":
-            var catA = a.dataset.category || "zzz";
-            var catB = b.dataset.category || "zzz";
-            if (catA !== catB) return catA.localeCompare(catB);
-            return (
-              parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0)
-            );
-          default:
-            return 0;
+    function sortCandidates(type) {
+      var container = document.getElementById('candidatesContainer');
+      var rows = Array.from(container.querySelectorAll('.acc-row'));
+      rows.sort(function (a, b) {
+        switch (type) {
+          case 'score-desc': return (+b.dataset.score || 0) - (+a.dataset.score || 0);
+          case 'score-asc':  return (+a.dataset.score || 0) - (+b.dataset.score || 0);
+          case 'name-asc':   return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+          case 'name-desc':  return (b.dataset.name || '').localeCompare(a.dataset.name || '');
+          case 'category':
+            var ca = a.dataset.category || 'zzz', cb = b.dataset.category || 'zzz';
+            if (ca !== cb) return ca.localeCompare(cb);
+            return (+b.dataset.score || 0) - (+a.dataset.score || 0);
+          default: return 0;
         }
       });
-
-      cards.forEach(function (card, index) {
-        card.style.animationDelay = index * 0.05 + "s";
-        container.appendChild(card);
-      });
+      rows.forEach(function (r) { container.appendChild(r); });
     }
 
-    // Excel download with loading feedback
-    var excelBtn = document.getElementById("exportButton");
+    // Excel download feedback
+    var excelBtn = document.getElementById('exportButton');
     if (excelBtn) {
-      excelBtn.addEventListener("click", function (e) {
-        var originalHTML = this.innerHTML;
-        this.innerHTML =
-          '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...<small class="d-block mt-1">Please wait...</small>';
-        this.style.opacity = "0.8";
-        this.style.pointerEvents = "none";
-
+      excelBtn.addEventListener('click', function () {
+        var orig = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...<small class="d-block mt-1">Please wait...</small>';
+        this.style.opacity = '0.8'; this.style.pointerEvents = 'none';
         setTimeout(function () {
-          if (excelBtn) {
-            excelBtn.innerHTML = originalHTML;
-            excelBtn.style.opacity = "1";
-            excelBtn.style.pointerEvents = "auto";
-          }
+          if (excelBtn) { excelBtn.innerHTML = orig; excelBtn.style.opacity = '1'; excelBtn.style.pointerEvents = 'auto'; }
         }, 2500);
       });
     }
@@ -948,4 +941,163 @@ jobCategories = jobCategories || [];
       font-size: 0.95rem;
     }
   }
+
+  /* ===== ACCORDION TABLE ===================================================== */
+  .acc-thead {
+    display: flex; align-items: center;
+    padding: 0 16px 0 20px; margin-bottom: 6px; gap: 0;
+    position: sticky; top: 0; z-index: 10;
+    background: #0d1117;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding-top: 8px; padding-bottom: 8px;
+    margin-bottom: 8px; border-radius: 8px;
+  }
+  .acc-th {
+    font-size: 0.62rem; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: .1em; flex: 1;
+  }
+  .acc-th-grow { flex: 1; min-width: 160px; }
+  .acc-th-skills { flex: 1; }
+  @media (max-width:900px)  { .acc-th-exp,.acc-cell-exp,.acc-th-skills,.acc-cell-skills { display:none !important; } }
+  @media (max-width:620px)  { .cand-email-preview { display:none; } }
+
+  /* Row */
+  .acc-row {
+    background: #161d2f;
+    border-radius: 10px; margin-bottom: 5px;
+    border: 1px solid rgba(255,255,255,.06);
+    overflow: hidden; transition: border-color .2s, box-shadow .2s;
+  }
+  .acc-row:hover { border-color: rgba(99,102,241,.3); }
+  .acc-row.row-open {
+    border-color: rgba(99,102,241,.55);
+    box-shadow: 0 4px 20px rgba(99,102,241,.12);
+  }
+  .acc-row-main {
+    display: flex; align-items: center;
+    padding: 11px 16px; gap: 12px;
+    cursor: pointer; user-select: none; transition: background .15s;
+  }
+  .acc-row-main:hover { background: rgba(255,255,255,.02); }
+  .acc-cell { flex: 1; min-width: 0; }
+
+  /* Rank - pill shape so #10, #15, #20 don't clip */
+  .rank-badge {
+    min-width: 38px; height: 26px; border-radius: 8px;
+    padding: 0 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 800; color: #fff;
+    background: rgba(255,255,255,.08); flex-shrink: 0; white-space: nowrap;
+  }
+  .rank-gold   { background: linear-gradient(135deg,#ffd700,#e67e00); color: #1a1200 !important; }
+  .rank-silver { background: linear-gradient(135deg,#c0c0c0,#7f8c8d); }
+  .rank-bronze { background: linear-gradient(135deg,#cd7f32,#8d5524); }
+
+  /* Candidate */
+  .acc-cell-candidate { display:flex; align-items:center; gap:11px; min-width:160px; }
+  .cand-avatar {
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.82rem; font-weight:700; color:#fff; flex-shrink:0;
+  }
+  .cand-name { font-size:.87rem; font-weight:600; color:#f0f4ff; line-height:1.25; }
+  .cand-email-preview { font-size:.68rem; color:#4b5563; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+
+  /* Score pill */
+  .score-pill {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:52px; padding:4px 10px;
+    border-radius:20px; font-size:.8rem; font-weight:700;
+  }
+  .score-pill-sm { min-width:44px; padding:3px 8px; font-size:.72rem; }
+  .score-high { background:rgba(16,185,129,.18); color:#10b981; border:1px solid rgba(16,185,129,.35); }
+  .score-mid  { background:rgba(245,158,11,.18);  color:#f59e0b; border:1px solid rgba(245,158,11,.35); }
+  .score-low  { background:rgba(239,68,68,.18);   color:#ef4444; border:1px solid rgba(239,68,68,.35); }
+
+  /* Job pill */
+  .job-pill {
+    display:inline-block;
+    background:rgba(99,102,241,.15); color:#818cf8;
+    border:1px solid rgba(99,102,241,.28);
+    padding:4px 10px; border-radius:20px;
+    font-size:.71rem; font-weight:600; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; max-width:175px;
+  }
+  .job-pill-networkengineer      { background:rgba(6,182,212,.12);  color:#22d3ee; border-color:rgba(6,182,212,.28); }
+  .job-pill-fullstackdeveloper   { background:rgba(16,185,129,.12); color:#34d399; border-color:rgba(16,185,129,.28); }
+  .job-pill-softwaredeveloper    { background:rgba(59,130,246,.12); color:#60a5fa; border-color:rgba(59,130,246,.28); }
+  .job-pill-financeintern        { background:rgba(245,158,11,.12); color:#fbbf24; border-color:rgba(245,158,11,.28); }
+
+  /* Experience */
+  .exp-badge { display:inline-block; background:rgba(100,116,139,.2); color:#94a3b8; padding:3px 9px; border-radius:6px; font-size:.71rem; font-weight:600; }
+  .exp-fresher { background:rgba(59,130,246,.12); color:#60a5fa; }
+
+  /* Skills */
+  .acc-cell-skills { min-width:0; }
+  .skills-preview { display:flex; flex-wrap:nowrap; gap:4px; overflow:hidden; }
+  .skill-chip {
+    display:inline-block;
+    background:rgba(139,92,246,.14); color:#a78bfa;
+    border:1px solid rgba(139,92,246,.22);
+    padding:2px 7px; border-radius:4px; font-size:.67rem; white-space:nowrap;
+  }
+  .skill-more { display:inline-block; background:rgba(255,255,255,.05); color:#4b5563; padding:2px 7px; border-radius:4px; font-size:.67rem; font-weight:700; white-space:nowrap; }
+
+  /* Actions */
+  .acc-actions { display:flex; align-items:center; gap:5px; justify-content:flex-end; }
+  .btn-acc-icon {
+    width:30px; height:30px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.78rem; text-decoration:none; transition:all .15s; border:none;
+  }
+  .btn-acc-view { background:rgba(99,102,241,.2); color:#818cf8; }
+  .btn-acc-view:hover { background:rgba(99,102,241,.4); color:#a5b4fc; }
+  .btn-acc-dl { background:rgba(100,116,139,.12); color:#64748b; }
+  .btn-acc-dl:hover { background:rgba(16,185,129,.18); color:#10b981; }
+  .btn-acc-toggle {
+    width:28px; height:28px; border-radius:6px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+    color:#4b5563; font-size:.72rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .25s, color .15s, border-color .15s;
+  }
+  .btn-acc-toggle.open { transform:rotate(180deg); color:#818cf8; border-color:rgba(99,102,241,.4); }
+
+  /* Accordion panel */
+  .acc-panel { max-height:0; overflow:hidden; transition:max-height .35s cubic-bezier(.4,0,.2,1); }
+  .acc-panel.open { max-height:500px; }
+  .acc-panel-inner {
+    display:flex; gap:24px; flex-wrap:wrap;
+    padding:16px 20px 20px;
+    background:rgba(0,0,0,.28);
+    border-top:1px solid rgba(255,255,255,.06);
+  }
+  .panel-left  { flex:1; min-width:220px; max-width:290px; }
+  .panel-right { flex:2; min-width:260px; }
+
+  .panel-label {
+    font-size:.62rem; font-weight:700; color:#475569;
+    text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px;
+  }
+  .panel-info-row { display:flex; align-items:center; gap:9px; font-size:.8rem; color:#94a3b8; margin-bottom:7px; }
+  .panel-info-row i { color:#6366f1; width:14px; text-align:center; }
+  .panel-info-val { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .panel-skills-all { display:flex; flex-wrap:wrap; gap:4px; }
+
+  /* Job score bars */
+  .panel-job-bar { margin-bottom:12px; }
+  .panel-bar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .panel-bar-title { display:flex; align-items:center; gap:7px; font-size:.78rem; color:#cbd5e1; }
+  .panel-bar-idx {
+    width:18px; height:18px; border-radius:50%;
+    background:rgba(255,255,255,.08); font-size:.62rem; font-weight:700; color:#475569;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .tag-best-match {
+    background:rgba(16,185,129,.15); color:#10b981;
+    font-size:.6rem; font-weight:700; padding:1px 6px;
+    border-radius:4px; border:1px solid rgba(16,185,129,.3);
+  }
+  .panel-track { height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+  .panel-fill  { height:100%; border-radius:3px; width:0; transition:width .6s ease; }
 </style>
