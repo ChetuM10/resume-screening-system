@@ -31,7 +31,9 @@ const SERVER_CONFIG = {
   PORT: process.env.PORT || 3000,
   NODE_ENV: process.env.NODE_ENV || "development",
   REQUEST_TIMEOUT: 600000, // ✅ 10 minutes for large uploads
-  BODY_LIMIT: "1000mb", // ✅ 1GB for 100 files (10MB each)
+  // Multer handles individual file size limits (10MB each).
+  // This limit only applies to non-file JSON/urlencoded request bodies.
+  BODY_LIMIT: "5mb",
   STATIC_CACHE_AGE: "0",
   MAX_FILES: 100, // ✅ Maximum files allowed per upload
 };
@@ -130,7 +132,7 @@ app.use(
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: SERVER_CONFIG.NODE_ENV === "production" ? 100 : 1000,
+  max: SERVER_CONFIG.NODE_ENV === "production" ? 500 : 1000,
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -138,7 +140,7 @@ const apiLimiter = rateLimit({
 
 const screeningLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: SERVER_CONFIG.NODE_ENV === "production" ? 5 : 50,
+  max: SERVER_CONFIG.NODE_ENV === "production" ? 50 : 200,
   message: { error: "Too many screening requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -146,7 +148,7 @@ const screeningLimiter = rateLimit({
 
 const candidateLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: SERVER_CONFIG.NODE_ENV === "production" ? 20 : 200,
+  max: SERVER_CONFIG.NODE_ENV === "production" ? 100 : 200,
   message: { error: "Too many candidate requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -155,7 +157,7 @@ const candidateLimiter = rateLimit({
 // ✅ NEW: Upload rate limiter for large file uploads
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: SERVER_CONFIG.NODE_ENV === "production" ? 10 : 100,
+  max: SERVER_CONFIG.NODE_ENV === "production" ? 50 : 100,
   message: {
     error: "Too many upload requests. Please try again later.",
     retryAfter: "1 hour",
@@ -255,15 +257,6 @@ app.get("/health", (req, res) => {
       dashboard: "✅ Registered",
       analytics: "✅ Registered",
     },
-  });
-});
-
-app.delete("/test-delete", (req, res) => {
-  console.log("✅ Test DELETE endpoint working!");
-  res.json({
-    success: true,
-    message: "DELETE is working!",
-    timestamp: new Date().toISOString(),
   });
 });
 
@@ -379,13 +372,13 @@ async function startApplication() {
     await initializeDatabase();
 
     const server = app.listen(SERVER_CONFIG.PORT, "0.0.0.0", () => {
-      console.log("🎉 Server startup complete!");
-      console.log(`🚀 Server running on port ${SERVER_CONFIG.PORT}`);
-      console.log(`📊 Environment: ${SERVER_CONFIG.NODE_ENV}`);
-      console.log("🔄 Caching: DISABLED");
+      console.log("Server startup complete!");
+      console.log(`Server running on port ${SERVER_CONFIG.PORT}`);
+      console.log(`Environment: ${SERVER_CONFIG.NODE_ENV}`);
+      console.log("Caching: DISABLED");
 
       if (SERVER_CONFIG.NODE_ENV === "production") {
-        console.log("🚀 Production server ready!");
+        console.log("Production server ready!");
         console.log(
           "⚠️  Note: 100 file uploads require adequate server resources"
         );
